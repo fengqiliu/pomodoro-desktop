@@ -2,7 +2,7 @@
 
 > 一款扁平风格的桌面番茄钟，专注、安静、不打扰。
 
-一个基于 **Tauri 2** 的单窗口桌面番茄钟（380×580，不可缩放）。前端 React 18 + TypeScript + Vite，后端是一层极薄的 Rust/Tauri 外壳——没有任何自定义命令，所有原生能力都通过 Tauri 插件 API 从 JS 侧调用。默认语言为简体中文，内置 English。
+一个基于 **Tauri 2** 的单窗口桌面番茄钟（380×580，不可缩放，产品名 `Pomodoro`，标识符 `com.flat.pomodoro`）。前端 React 18 + TypeScript + Vite，后端是一层极薄的 Rust/Tauri 外壳——没有任何自定义命令，所有原生能力都通过 Tauri 插件 API 从 JS 侧调用。默认语言为简体中文，内置 English。
 
 ## 功能
 
@@ -105,4 +105,4 @@ pomodoro-desktop/
 
 ## 许可证
 
-本项目未声明开源许可证。如需使用或分发，请联系作者。
+本项目采用 **Apache License 2.0** 开源，详见根目录的 `LICENSE` 文件。

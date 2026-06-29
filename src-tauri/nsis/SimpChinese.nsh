@@ -1,0 +1,33 @@
+; Tauri NSIS 安装程序自定义消息 —— 简体中文翻译
+; 对应 Tauri 内置的 English.nsh，键名与占位符必须保持一致：
+;   ${PRODUCTNAME} ${VERSION} $R4 $0 $1 {{product_name}}  —— 不要翻译或删除这些变量
+; 仅翻译 LangString 的文字部分。NSIS 标准界面文字（欢迎页/许可证/完成页等）
+; 由 NSIS 自带的 SimpChinese.nsh 提供，本文件只覆盖 Tauri 额外添加的提示。
+
+LangString addOrReinstall ${LANG_SIMPCHINESE} "添加/重新安装组件"
+LangString alreadyInstalled ${LANG_SIMPCHINESE} "已安装"
+LangString alreadyInstalledLong ${LANG_SIMPCHINESE} "${PRODUCTNAME} ${VERSION} 已安装。请选择要执行的操作，然后点击“下一步”继续。"
+LangString appRunning ${LANG_SIMPCHINESE} "{{product_name}} 正在运行！请先关闭它再重试。"
+LangString appRunningOkKill ${LANG_SIMPCHINESE} "{{product_name}} 正在运行！$\n点击“确定”结束进程"
+LangString chooseMaintenanceOption ${LANG_SIMPCHINESE} "请选择要执行的维护操作。"
+LangString choowHowToInstall ${LANG_SIMPCHINESE} "请选择 ${PRODUCTNAME} 的安装方式。"
+LangString createDesktop ${LANG_SIMPCHINESE} "创建桌面快捷方式"
+LangString dontUninstall ${LANG_SIMPCHINESE} "不卸载"
+LangString dontUninstallDowngrade ${LANG_SIMPCHINESE} "不卸载（此安装程序已禁用不卸载直接降级）"
+LangString failedToKillApp ${LANG_SIMPCHINESE} "结束 {{product_name}} 进程失败。请先手动关闭它再重试"
+LangString installingWebview2 ${LANG_SIMPCHINESE} "正在安装 WebView2……"
+LangString newerVersionInstalled ${LANG_SIMPCHINESE} "系统中已安装更新版本的 ${PRODUCTNAME}！不建议安装旧版本。如确需安装旧版本，建议先卸载当前版本。请选择要执行的操作，然后点击“下一步”继续。"
+LangString older ${LANG_SIMPCHINESE} "更旧"
+LangString olderOrUnknownVersionInstalled ${LANG_SIMPCHINESE} "系统中已安装 $R4 版本的 ${PRODUCTNAME}。建议在安装前先卸载当前版本。请选择要执行的操作，然后点击“下一步”继续。"
+LangString silentDowngrades ${LANG_SIMPCHINESE} "此安装程序已禁用降级，无法以静默方式安装，请改用图形界面安装程序。$\n"
+LangString unableToUninstall ${LANG_SIMPCHINESE} "无法卸载！"
+LangString uninstallApp ${LANG_SIMPCHINESE} "卸载 ${PRODUCTNAME}"
+LangString uninstallBeforeInstalling ${LANG_SIMPCHINESE} "安装前先卸载"
+LangString unknown ${LANG_SIMPCHINESE} "未知"
+LangString webview2AbortError ${LANG_SIMPCHINESE} "安装 WebView2 失败！应用缺少它将无法运行，请重新运行安装程序。"
+LangString webview2DownloadError ${LANG_SIMPCHINESE} "错误：下载 WebView2 失败 - $0"
+LangString webview2DownloadSuccess ${LANG_SIMPCHINESE} "WebView2 引导程序下载成功"
+LangString webview2Downloading ${LANG_SIMPCHINESE} "正在下载 WebView2 引导程序……"
+LangString webview2InstallError ${LANG_SIMPCHINESE} "错误：安装 WebView2 失败，退出码 $1"
+LangString webview2InstallSuccess ${LANG_SIMPCHINESE} "WebView2 安装成功"
+LangString deleteAppData ${LANG_SIMPCHINESE} "删除应用数据"
