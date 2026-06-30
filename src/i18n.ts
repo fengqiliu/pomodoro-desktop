@@ -82,6 +82,9 @@ const DICT: Dict = {
   "settings.long": ["长休息（分钟）", "Long break (min)"],
   "settings.longEvery": ["每几个番茄后长休息", "Long break every N pomodoros"],
   "settings.sound": ["完成提示音", "Completion sound"],
+  "settings.notifications": ["完成时通知", "Notifications"],
+  "settings.autoStartBreaks": ["专注后自动进入休息", "Auto-start breaks"],
+  "settings.autoStartFocus": ["休息后自动开始专注", "Auto-start focus"],
   "settings.noiseType": ["噪音类型", "Noise type"],
   "settings.noiseType.brown": ["棕噪音（低频，最柔和）", "Brown (low, softest)"],
   "settings.noiseType.white": ["白噪音", "White"],
@@ -94,6 +97,11 @@ const DICT: Dict = {
   ],
   "settings.reset": ["恢复默认", "Reset to defaults"],
   "settings.done": ["完成", "Done"],
+
+  // phase-complete notifications (native system notification)
+  "notif.title": ["专注完成", "Focus complete"],
+  "notif.title.break": ["休息结束", "Break complete"],
+  "notif.body": ["开始 {next}", "Starting {next}"],
 
   // noise labels (for the top-bar tooltip)
   "noise.white": ["白噪音", "White"],

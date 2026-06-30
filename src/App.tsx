@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import "./App.css";
 import { NoiseEngine, type NoiseType } from "./noise";
 import {
@@ -7,6 +7,7 @@ import {
   registerShortcut,
   unregisterShortcut,
   isDesktop,
+  notifyPhaseDone,
 } from "./platform";
 import { translate, weekdayLabel, LANGS, type Lang } from "./i18n";
 
@@ -27,6 +28,9 @@ interface Settings {
   long: number;
   longEvery: number; // long break after this many focus sessions
   sound: boolean;
+  notifications: boolean;
+  autoStartBreaks: boolean;
+  autoStartFocus: boolean;
   hotkey: string;
   noiseType: NoiseType;
   noiseVolume: number; // 0..1
@@ -44,6 +48,9 @@ const DEFAULT_SETTINGS: Settings = {
   long: 15,
   longEvery: 4,
   sound: true,
+  notifications: true,
+  autoStartBreaks: false,
+  autoStartFocus: false,
   hotkey: "CommandOrControl+Shift+P",
   noiseType: "brown",
   noiseVolume: 0.3,
@@ -157,12 +164,25 @@ function fmt(sec: number): string {
   return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
 }
 
+// Shared AudioContext for the completion chime. Reused across chimes instead of
+// new+close each time — avoids hitting the browser's AudioContext instance cap
+// and repeated autoplay-policy warnings.
+let chimeCtx: AudioContext | null = null;
+function getChimeCtx(): AudioContext | null {
+  if (typeof window === "undefined") return null;
+  const Ctor =
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!Ctor) return null;
+  if (!chimeCtx) chimeCtx = new Ctor();
+  if (chimeCtx.state === "suspended") void chimeCtx.resume();
+  return chimeCtx;
+}
+
 function playChime(phase: Phase) {
   try {
-    const Ctx =
-      window.AudioContext ||
-      (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-    const ctx = new Ctx();
+    const ctx = getChimeCtx();
+    if (!ctx) return;
     const notes = phase === "focus" ? [880, 660, 523] : [523, 659, 784];
     notes.forEach((freq, i) => {
       const osc = ctx.createOscillator();
@@ -178,7 +198,6 @@ function playChime(phase: Phase) {
       osc.start(start);
       osc.stop(start + 0.55);
     });
-    setTimeout(() => ctx.close(), 1500);
   } catch {
     /* audio unavailable */
   }
@@ -199,6 +218,7 @@ export default function App() {
   const [completedToday, setCompletedToday] = useState(initial.completedToday);
   const [focusMinutesToday, setFocusMinutesToday] = useState(initial.focusMinutesToday);
   const [noise, setNoise] = useState<NoisePref>(initial.noise);
+  const [history, setHistory] = useState<Record<string, DayRecord>>(() => loadHistory());
 
   const [phase, setPhase] = useState<Phase>("focus");
   const [secondsLeft, setSecondsLeft] = useState(settings.focus * 60);
@@ -228,6 +248,11 @@ export default function App() {
   runningRef.current = running;
   const noiseRef = useRef(noise);
   noiseRef.current = noise;
+
+  // Wall-clock end timestamp for the running countdown. Recomputed when (re)starting;
+  // the tick derives remaining time from this so setInterval jitter / background
+  // throttling can't drift the timer over a long session.
+  const endAtRef = useRef<number | null>(null);
 
   // Persistent singletons.
   const noiseEngine = useRef<NoiseEngine | null>(null);
@@ -278,6 +303,16 @@ export default function App() {
     else eng.stop();
   }, [noise]);
 
+  // ---- close settings modal on Escape ----
+  useEffect(() => {
+    if (!showSettings) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setShowSettings(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [showSettings]);
+
   // ---- helpers ----
   const phaseMinutes = useCallback((p: Phase, s: Settings) => {
     return p === "focus" ? s.focus : p === "short" ? s.short : s.long;
@@ -291,45 +326,69 @@ export default function App() {
     [completedToday]
   );
 
+  // When the current phase's duration changes while paused, keep secondsLeft in
+  // sync so the ring and countdown reflect the new length. A running session is
+  // left untouched (don't silently stretch/shrink an in-progress timer).
+  useEffect(() => {
+    if (running) return;
+    setSecondsLeft(phaseMinutes(phase, settings) * 60);
+  }, [phase, settings, phaseMinutes, running]);
+
   const commitFocusToHistory = useCallback((minutes: number) => {
-    try {
-      const hist = loadHistory();
-      const key = todayKey();
-      const cur =
-        hist[key] || { date: key, dayIndex: new Date().getDay(), pomodoros: 0, minutes: 0 };
-      hist[key] = { ...cur, pomodoros: cur.pomodoros + 1, minutes: cur.minutes + minutes };
-      localStorage.setItem(HISTORY_KEY, JSON.stringify(hist));
-    } catch {
-      /* ignore */
-    }
+    const key = todayKey();
+    setHistory((prev) => {
+      const cur = prev[key] || { date: key, dayIndex: new Date().getDay(), pomodoros: 0, minutes: 0 };
+      const next = {
+        ...prev,
+        [key]: { ...cur, pomodoros: cur.pomodoros + 1, minutes: cur.minutes + minutes },
+      };
+      try {
+        localStorage.setItem(HISTORY_KEY, JSON.stringify(next));
+      } catch {
+        /* ignore */
+      }
+      return next;
+    });
   }, []);
 
   // ---- ticking loop ----
   useEffect(() => {
     if (!running) return;
+    // Seed the end timestamp from the current remaining seconds when (re)starting.
+    endAtRef.current = Date.now() + secondsLeft * 1000;
     const id = setInterval(() => {
-      setSecondsLeft((prev) => {
-        if (prev <= 1) {
-          const finished = phase;
-          if (settingsRef.current.sound) playChime(finished);
-          if (finished === "focus") {
-            const mins = settingsRef.current.focus;
-            setCompletedToday((c) => c + 1);
-            setFocusMinutesToday((m) => m + mins);
-            commitFocusToHistory(mins);
-            setTasks((ts) =>
-              ts.map((t) =>
-                t.id === activeTaskId ? { ...t, pomodoros: t.pomodoros + 1 } : t
-              )
-            );
-          }
-          const np = nextPhase(finished);
-          setPhase(np);
-          setRunning(false);
-          return phaseMinutes(np, settingsRef.current) * 60;
+      const remaining = Math.max(0, Math.round((endAtRef.current! - Date.now()) / 1000));
+      if (remaining <= 0) {
+        const finished = phase;
+        if (settingsRef.current.sound) playChime(finished);
+        if (finished === "focus") {
+          const mins = settingsRef.current.focus;
+          setCompletedToday((c) => c + 1);
+          setFocusMinutesToday((m) => m + mins);
+          commitFocusToHistory(mins);
+          setTasks((ts) =>
+            ts.map((t) =>
+              t.id === activeTaskId ? { ...t, pomodoros: t.pomodoros + 1 } : t
+            )
+          );
         }
-        return prev - 1;
-      });
+        const np = nextPhase(finished);
+        // Native notification on every phase end (guarded by the toggle).
+        if (settingsRef.current.notifications) {
+          const title =
+            finished === "focus" ? tr("notif.title") : tr("notif.title.break");
+          void notifyPhaseDone(title, tr("notif.body", { next: tr(PHASE_KEY[np]) }));
+        }
+        // Auto-advance into the next phase when the corresponding toggle is set.
+        const shouldAuto =
+          (finished === "focus" && settingsRef.current.autoStartBreaks) ||
+          (finished !== "focus" && settingsRef.current.autoStartFocus);
+        setPhase(np);
+        setRunning(shouldAuto);
+        setSecondsLeft(phaseMinutes(np, settingsRef.current) * 60);
+        return;
+      }
+      setSecondsLeft(remaining);
     }, 1000);
     return () => clearInterval(id);
   }, [running, phase, activeTaskId, nextPhase, phaseMinutes, commitFocusToHistory]);
@@ -366,17 +425,17 @@ export default function App() {
     [phaseMinutes, settings]
   );
 
-  const reset = () => {
+  const reset = useCallback(() => {
     setRunning(false);
     setSecondsLeft(phaseMinutes(phase, settings) * 60);
-  };
+  }, [phase, settings, phaseMinutes]);
 
-  const skip = () => {
+  const skip = useCallback(() => {
     const np = nextPhase(phase);
     setPhase(np);
     setRunning(false);
     setSecondsLeft(phaseMinutes(np, settings) * 60);
-  };
+  }, [phase, settings, nextPhase, phaseMinutes]);
 
   // ---- tasks ----
   const addTask = () => {
@@ -404,10 +463,15 @@ export default function App() {
   const accent = PHASE_COLOR[phase];
   const activeTask = tasks.find((t) => t.id === activeTaskId) || null;
 
-  const week = last7Days(loadHistory());
-  const weekPomos = week.reduce((s, d) => s + d.pomodoros, 0);
-  const weekMinutes = week.reduce((s, d) => s + d.minutes, 0);
-  const maxVal = Math.max(1, ...week.map((d) => (chartMetric === "pomodoros" ? d.pomodoros : d.minutes)));
+  // Chart is derived from `history` state (not a fresh localStorage parse each render),
+  // so a per-second timer tick no longer re-parses the history JSON on the timer tab.
+  const week = useMemo(() => last7Days(history), [history]);
+  const weekPomos = useMemo(() => week.reduce((s, d) => s + d.pomodoros, 0), [week]);
+  const weekMinutes = useMemo(() => week.reduce((s, d) => s + d.minutes, 0), [week]);
+  const maxVal = useMemo(
+    () => Math.max(1, ...week.map((d) => (chartMetric === "pomodoros" ? d.pomodoros : d.minutes))),
+    [week, chartMetric]
+  );
   const chartW = 300;
   const chartH = 150;
   const barGap = 12;
@@ -823,6 +887,42 @@ export default function App() {
                   className={settings.sound ? "switch on" : "switch"}
                   onClick={() => setSettings((s) => ({ ...s, sound: !s.sound }))}
                   aria-label={tr("settings.sound")}
+                >
+                  <span className="switch-knob" />
+                </button>
+              </label>
+              <label className="field switch-field">
+                <span>{tr("settings.notifications")}</span>
+                <button
+                  className={settings.notifications ? "switch on" : "switch"}
+                  onClick={() =>
+                    setSettings((s) => ({ ...s, notifications: !s.notifications }))
+                  }
+                  aria-label={tr("settings.notifications")}
+                >
+                  <span className="switch-knob" />
+                </button>
+              </label>
+              <label className="field switch-field">
+                <span>{tr("settings.autoStartBreaks")}</span>
+                <button
+                  className={settings.autoStartBreaks ? "switch on" : "switch"}
+                  onClick={() =>
+                    setSettings((s) => ({ ...s, autoStartBreaks: !s.autoStartBreaks }))
+                  }
+                  aria-label={tr("settings.autoStartBreaks")}
+                >
+                  <span className="switch-knob" />
+                </button>
+              </label>
+              <label className="field switch-field">
+                <span>{tr("settings.autoStartFocus")}</span>
+                <button
+                  className={settings.autoStartFocus ? "switch on" : "switch"}
+                  onClick={() =>
+                    setSettings((s) => ({ ...s, autoStartFocus: !s.autoStartFocus }))
+                  }
+                  aria-label={tr("settings.autoStartFocus")}
                 >
                   <span className="switch-knob" />
                 </button>

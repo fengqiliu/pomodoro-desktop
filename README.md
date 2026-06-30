@@ -16,6 +16,7 @@
 - **窗口置顶** —— 一键钉在最前（Tauri 窗口能力）
 - **全局快捷键** —— 开始 / 暂停，默认 `CommandOrControl+Shift+P`，可在设置中修改
 - **本地持久化** —— 全部状态保存在 localStorage，跨重启保留；每日自动重置今日计数
+- **中文安装包** —— Windows NSIS 安装器已本地化为简体中文（含语言选择框），详见 `docs/NSIS-中文化.md`
 
 ## 技术栈
 
@@ -63,6 +64,7 @@ npm run preview       # 预览构建产物
 
 npm run tauri dev     # 桌面应用开发模式
 npm run tauri build   # 打包桌面应用（先自动执行 npm run build）
+npx tauri build --bundles nsis   # 只重打 NSIS 安装包（Rust 已缓存时更快）
 
 python3 gen_icons.py  # 重新生成应用图标（需 Pillow），输出到 src-tauri/icons/
 ```
@@ -82,9 +84,11 @@ pomodoro-desktop/
 ├── src-tauri/              # Rust/Tauri 外壳
 │   ├── src/lib.rs          # 注册两个插件、运行上下文（无自定义命令）
 │   ├── src/main.rs         # Windows 下隐藏控制台窗口
-│   ├── tauri.conf.json     # 窗口与打包配置
+│   ├── tauri.conf.json     # 窗口与打包配置（含 NSIS 中文化）
 │   ├── capabilities/default.json   # 原生权限白名单
+│   ├── nsis/SimpChinese.nsh        # NSIS 安装器简体中文翻译（27 条 Tauri 自定义消息）
 │   └── icons/              # 应用图标
+├── docs/NSIS-中文化.md     # NSIS 安装包中文化配置说明
 ├── gen_icons.py            # 图标生成脚本（Pillow 绘制扁平番茄时钟）
 ├── index.html
 ├── vite.config.ts          # 固定 1420 端口（Tauri 期望）

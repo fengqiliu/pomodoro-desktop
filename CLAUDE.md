@@ -17,6 +17,7 @@ npm run preview      # serve the built dist/
 
 npm run tauri dev    # full app: launches Vite (beforeDevCommand) + native window
 npm run tauri build  # bundled desktop app (runs npm run build first via beforeBuildCommand)
+npx tauri build --bundles nsis  # rebuild only the NSIS .exe (faster when Rust is cached)
 ```
 
 There is no test runner and no linter configured. `npm run typecheck` is the only static check.
@@ -58,3 +59,10 @@ CSS custom properties in `App.css`: a `:root` (light) block and a `[data-theme="
 
 ### Native layer (`src-tauri/`)
 Intentionally minimal. `lib.rs` registers `tauri-plugin-shell` and `tauri-plugin-global-shortcut` and runs the context — no `#[tauri::command]` functions, no IPC beyond the plugins. Window config and bundle targets live in `tauri.conf.json`. Permissions (window always-on-top, shell open, global-shortcut register/unregister/is-registered) are granted in `capabilities/default.json`. The global start/pause hotkey (default `CommandOrControl+Shift+P`) is registered from `App.tsx` and re-registers when `settings.hotkey` changes.
+
+### NSIS installer localization (`src-tauri/nsis/SimpChinese.nsh`)
+The Windows NSIS (`.exe`) installer is localized to Simplified Chinese. NSIS installer text comes from **two layers**, both configured in `tauri.conf.json` under `bundle.windows.nsis`:
+- **NSIS standard UI** (welcome/license/finish pages) — auto-loaded by listing the language name in `languages` (e.g. `"SimpChinese"`). No manual work.
+- **Tauri custom messages** (27 `LangString`s like "正在安装 WebView2……", "卸载 ${PRODUCTNAME}") — *not* in NSIS's built-in files, so a Chinese `.nsh` is required and wired up via `customLanguageFiles: { "SimpChinese": "nsis/SimpChinese.nsh" }`.
+
+`languages` order is priority (first = default); `displayLanguageSelector: true` shows a pre-install language picker. When editing `SimpChinese.nsh`: `LangString` keys and `${LANG_SIMPCHINESE}` are fixed, and placeholders (`${PRODUCTNAME}`, `${VERSION}`, `$R4`, `$0`, `$1`, `$\n`, `{{product_name}}`) must be preserved verbatim — translate only the prose. MSI (`.msi`) uses WiX localization, a separate mechanism not covered here. Full details in `docs/NSIS-中文化.md`.
