@@ -11,6 +11,7 @@ A single-window Tauri 2 desktop Pomodoro timer (380×580, non-resizable). React 
 ```bash
 npm install
 npm run dev          # Vite dev server only — port 1420 (strictPort; Tauri expects this). Works in a plain browser too (see platform.ts).
+npm test             # Vitest regression tests for pure timer rules
 npm run typecheck    # tsc --noEmit
 npm run build        # tsc -b && vite build  →  dist/
 npm run preview      # serve the built dist/
@@ -20,7 +21,7 @@ npm run tauri build  # bundled desktop app (runs npm run build first via beforeB
 npx tauri build --bundles nsis  # rebuild only the NSIS .exe (faster when Rust is cached)
 ```
 
-There is no test runner and no linter configured. `npm run typecheck` is the only static check.
+Vitest covers the pure timer rules in `src/timer/timerRules.test.ts`; there is no linter configured. `npm run typecheck` remains the TypeScript static check.
 
 Regenerate the app icon set (needs Pillow): `python3 gen_icons.py` → writes `src-tauri/icons/`.
 
@@ -45,14 +46,14 @@ A flat `DICT` mapping keys to `[zh, en]` tuples, plus `translate(lang, key, para
 
 ### State, persistence, and daily reset
 Everything persists to versioned `localStorage` keys (defined at the top of `App.tsx`):
-- `pomodoro-state-v2` — settings, tasks, `completedToday`, `focusMinutesToday`, `noise`, and a `date` string (`YYYY-M-D`).
+- `pomodoro-state-v3` — settings, tasks, daily progress (`completedToday`, `focusMinutesToday`, `date`), `cycleFocusCount`, and `noise`.
 - `pomodoro-history-v1` — `Record<dateKey, DayRecord>` powering the 7-day chart.
 - `pomodoro-theme`, `pomodoro-pinned`, `pomodoro-lang`.
 
-`loadState()` merges stored state over `DEFAULT_SETTINGS` and **resets `completedToday`/`focusMinutesToday` to 0 when the stored `date` != today**. When changing persisted state shapes, bump the key suffix (`-v2`, `-v1`) rather than migrating.
+`loadState()` merges stored state over `DEFAULT_SETTINGS` and **resets `completedToday`/`focusMinutesToday` to 0 when the stored `date` != today**. Runtime guards repeat that check at midnight, on focus/visibility restoration, before a completed focus is recorded, and before persistence. `cycleFocusCount` is independent from the daily statistics and resets only after a long break is due. When changing persisted state shapes, bump the key suffix rather than migrating.
 
 ### Timer tick
-`setInterval(…, 1000)` runs only while `running`. The interval closure reads fresh values through refs (`settingsRef`, `runningRef`) rather than re-subscribing each tick. On a focus phase ending: play chime (if `settings.sound`), bump `completedToday` + `focusMinutesToday`, `commitFocusToHistory`, increment the active task's `pomodoros`, then `nextPhase()` picks `long` vs `short` using `completedToday + 1 >= settings.longEvery`. `phaseMinutes()` converts phase → duration in minutes.
+`setInterval(…, 1000)` runs only while `running`. The interval closure reads fresh values through refs (`settingsRef`, `runningRef`) rather than re-subscribing each tick. On a focus phase ending: play chime (if `settings.sound`), normalize and bump the daily statistics, `commitFocusToHistory`, increment the active task's `pomodoros`, then `completeFocusCycle()` advances the persisted cycle counter and picks `long` exactly every `settings.longEvery` sessions. `skip()` uses a separate rule and never records a completed focus. `phaseMinutes()` converts phase → duration in minutes.
 
 ### Theming
 CSS custom properties in `App.css`: a `:root` (light) block and a `[data-theme="dark"]` override. The phase accent color (`--accent`, red/green/blue by phase) is set as an inline style on the root `.app` div each render, overriding the CSS default. `index.css` is just the 7-line browser reset.

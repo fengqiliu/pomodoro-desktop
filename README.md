@@ -58,7 +58,8 @@ npm run dev           # 仅 Vite，端口 1420，可在普通浏览器打开
 ```bash
 npm install           # 安装依赖
 npm run dev           # 仅前端开发（浏览器，:1420）
-npm run typecheck     # tsc --noEmit —— 项目唯一的静态检查（无 lint / 无测试）
+npm test              # Vitest 回归测试（计时规则）
+npm run typecheck     # tsc --noEmit —— TypeScript 静态检查（无 lint）
 npm run build         # tsc -b && vite build → dist/
 npm run preview       # 预览构建产物
 
@@ -99,7 +100,9 @@ pomodoro-desktop/
 
 - **单一 UI 文件**：`App.tsx` 承载整个界面与状态。无路由、无状态库，使用 `useState`/`useRef` + `localStorage`。三个标签页（计时 / 任务 / 统计）条件渲染。
 - **平台抽象层**：`platform.ts` 通过 `__TAURI_INTERNALS__` 判断是否在桌面环境，并惰性动态导入 Tauri API——这样在普通浏览器里不会因无法解析 `@tauri-apps/*` 而崩溃。新增原生功能请走这一层，不要在 `App.tsx` 直接 import。
-- **持久化与每日重置**：状态写入带版本后缀的 localStorage 键（`pomodoro-state-v2`、`pomodoro-history-v1` 等）。`loadState()` 在存储日期与今日不符时自动清零当日计数。**修改持久化结构时，递增键的后缀**（如 `-v3`），不做迁移。
+- **持久化与每日重置**：状态写入带版本后缀的 localStorage 键（`pomodoro-state-v3`、`pomodoro-history-v1` 等）。日报会在启动、午夜、窗口恢复、完成专注和持久化前校验日期，避免长期驻留托盘时跨日污染数据。**修改持久化结构时，递增键的后缀**，不做迁移。
+- **番茄循环**：今日统计与长休息循环分别记录。`cycleFocusCount` 在每次完成专注后推进、触发长休息后归零，并会跨日期延续，因此“每 N 个番茄长休息”不受每日统计重置影响。
+- **测试**：计时规则位于 `src/timer/timerRules.ts`，通过 Vitest 覆盖长休息周期、跳过阶段、跨日重置和延迟回调的剩余时间计算。
 - **原生层**：`src-tauri/src/lib.rs` 仅注册 `shell` 与 `global-shortcut` 两个插件，无 `#[tauri::command]`。全局开始/暂停快捷键在 `App.tsx` 注册，随 `settings.hotkey` 变化自动重注册。
 - **主题**：CSS 变量在 `App.css` 的 `:root`（浅色）与 `[data-theme="dark"]`（深色）定义；阶段强调色 `--accent`（红/绿/蓝）在每次渲染时以行内样式覆盖。
 

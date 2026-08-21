@@ -10,8 +10,17 @@ import {
   notifyPhaseDone,
 } from "./platform";
 import { translate, weekdayLabel, LANGS, type Lang } from "./i18n";
+import {
+  completeFocusCycle,
+  focusesUntilLongBreak,
+  nextPhaseAfterCompletedBreak,
+  nextPhaseAfterSkip,
+  remainingSeconds,
+  resetDailyProgressIfNeeded,
+  type DailyProgress,
+  type Phase,
+} from "./timer/timerRules";
 
-type Phase = "focus" | "short" | "long";
 type Theme = "light" | "dark";
 type ChartMetric = "pomodoros" | "minutes";
 
@@ -62,7 +71,7 @@ const PHASE_COLOR: Record<Phase, string> = {
   long: "#4a90e2",
 };
 
-const STATE_KEY = "pomodoro-state-v2";
+const STATE_KEY = "pomodoro-state-v3";
 const THEME_KEY = "pomodoro-theme";
 const PIN_KEY = "pomodoro-pinned";
 const HISTORY_KEY = "pomodoro-history-v1";
@@ -86,6 +95,7 @@ interface PersistedState {
   completedToday: number;
   focusMinutesToday: number;
   date: string; // YYYY-M-D for daily reset
+  cycleFocusCount: number; // completed focus sessions since the last long break
   noise: NoisePref;
 }
 
@@ -107,6 +117,7 @@ function loadState(): PersistedState {
     completedToday: 0,
     focusMinutesToday: 0,
     date: todayKey(),
+    cycleFocusCount: 0,
     noise: { on: false, type: DEFAULT_SETTINGS.noiseType, volume: DEFAULT_SETTINGS.noiseVolume },
   };
   try {
@@ -119,11 +130,17 @@ function loadState(): PersistedState {
       settings: { ...DEFAULT_SETTINGS, ...parsed.settings },
       noise: { ...fallback.noise, ...parsed.noise },
     };
-    if (merged.date !== todayKey()) {
-      merged.completedToday = 0;
-      merged.focusMinutesToday = 0;
-      merged.date = todayKey();
-    }
+    const dailyProgress = resetDailyProgressIfNeeded(
+      {
+        date: merged.date,
+        completedToday: merged.completedToday,
+        focusMinutesToday: merged.focusMinutesToday,
+      },
+      todayKey()
+    );
+    merged.date = dailyProgress.date;
+    merged.completedToday = dailyProgress.completedToday;
+    merged.focusMinutesToday = dailyProgress.focusMinutesToday;
     return merged;
   } catch {
     return fallback;
@@ -215,8 +232,12 @@ export default function App() {
 
   const [settings, setSettings] = useState<Settings>(initial.settings);
   const [tasks, setTasks] = useState<Task[]>(initial.tasks);
-  const [completedToday, setCompletedToday] = useState(initial.completedToday);
-  const [focusMinutesToday, setFocusMinutesToday] = useState(initial.focusMinutesToday);
+  const [dailyProgress, setDailyProgress] = useState<DailyProgress>({
+    date: initial.date,
+    completedToday: initial.completedToday,
+    focusMinutesToday: initial.focusMinutesToday,
+  });
+  const [cycleFocusCount, setCycleFocusCount] = useState(initial.cycleFocusCount);
   const [noise, setNoise] = useState<NoisePref>(initial.noise);
   const [history, setHistory] = useState<Record<string, DayRecord>>(() => loadHistory());
 
@@ -248,6 +269,8 @@ export default function App() {
   runningRef.current = running;
   const noiseRef = useRef(noise);
   noiseRef.current = noise;
+  const cycleFocusCountRef = useRef(cycleFocusCount);
+  cycleFocusCountRef.current = cycleFocusCount;
 
   // Wall-clock end timestamp for the running countdown. Recomputed when (re)starting;
   // the tick derives remaining time from this so setInterval jitter / background
@@ -260,16 +283,55 @@ export default function App() {
 
   // ---- persist core state ----
   useEffect(() => {
+    const currentDailyProgress = resetDailyProgressIfNeeded(dailyProgress, todayKey());
+    if (currentDailyProgress !== dailyProgress) {
+      setDailyProgress(currentDailyProgress);
+      return;
+    }
+
     const state: PersistedState = {
       settings,
       tasks,
-      completedToday,
-      focusMinutesToday,
-      date: todayKey(),
+      completedToday: dailyProgress.completedToday,
+      focusMinutesToday: dailyProgress.focusMinutesToday,
+      date: dailyProgress.date,
+      cycleFocusCount,
       noise,
     };
     localStorage.setItem(STATE_KEY, JSON.stringify(state));
-  }, [settings, tasks, completedToday, focusMinutesToday, noise]);
+  }, [settings, tasks, dailyProgress, cycleFocusCount, noise]);
+
+  // Daily statistics are calendar-bound, while cycleFocusCount deliberately
+  // continues across midnight. Check at midnight and whenever the app returns
+  // to the foreground; completion and persistence each check defensively too.
+  const rollOverDailyProgress = useCallback(() => {
+    setDailyProgress((progress) => resetDailyProgressIfNeeded(progress, todayKey()));
+  }, []);
+
+  useEffect(() => {
+    const onWindowFocus = () => rollOverDailyProgress();
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "visible") rollOverDailyProgress();
+    };
+    const scheduleNextMidnight = () => {
+      const now = new Date();
+      const nextMidnight = new Date(now);
+      nextMidnight.setHours(24, 0, 0, 50);
+      return window.setTimeout(() => {
+        rollOverDailyProgress();
+        midnightTimeout = scheduleNextMidnight();
+      }, Math.max(0, nextMidnight.getTime() - now.getTime()));
+    };
+
+    let midnightTimeout = scheduleNextMidnight();
+    window.addEventListener("focus", onWindowFocus);
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      window.clearTimeout(midnightTimeout);
+      window.removeEventListener("focus", onWindowFocus);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [rollOverDailyProgress]);
 
   // ---- language ----
   useEffect(() => {
@@ -318,14 +380,6 @@ export default function App() {
     return p === "focus" ? s.focus : p === "short" ? s.short : s.long;
   }, []);
 
-  const nextPhase = useCallback(
-    (justFinished: Phase): Phase => {
-      if (justFinished !== "focus") return "focus";
-      return completedToday + 1 >= settingsRef.current.longEvery ? "long" : "short";
-    },
-    [completedToday]
-  );
-
   // When the current phase's duration changes while paused, keep secondsLeft in
   // sync so the ring and countdown reflect the new length. A running session is
   // left untouched (don't silently stretch/shrink an in-progress timer).
@@ -357,22 +411,37 @@ export default function App() {
     // Seed the end timestamp from the current remaining seconds when (re)starting.
     endAtRef.current = Date.now() + secondsLeft * 1000;
     const id = setInterval(() => {
-      const remaining = Math.max(0, Math.round((endAtRef.current! - Date.now()) / 1000));
+      const remaining = remainingSeconds(endAtRef.current!, Date.now());
       if (remaining <= 0) {
         const finished = phase;
         if (settingsRef.current.sound) playChime(finished);
+        let np: Phase;
         if (finished === "focus") {
           const mins = settingsRef.current.focus;
-          setCompletedToday((c) => c + 1);
-          setFocusMinutesToday((m) => m + mins);
+          const cycle = completeFocusCycle(
+            cycleFocusCountRef.current,
+            settingsRef.current.longEvery
+          );
+          cycleFocusCountRef.current = cycle.cycleFocusCount;
+          setCycleFocusCount(cycle.cycleFocusCount);
+          np = cycle.nextPhase;
+          setDailyProgress((progress) => {
+            const current = resetDailyProgressIfNeeded(progress, todayKey());
+            return {
+              ...current,
+              completedToday: current.completedToday + 1,
+              focusMinutesToday: current.focusMinutesToday + mins,
+            };
+          });
           commitFocusToHistory(mins);
           setTasks((ts) =>
             ts.map((t) =>
               t.id === activeTaskId ? { ...t, pomodoros: t.pomodoros + 1 } : t
             )
           );
+        } else {
+          np = nextPhaseAfterCompletedBreak();
         }
-        const np = nextPhase(finished);
         // Native notification on every phase end (guarded by the toggle).
         if (settingsRef.current.notifications) {
           const title =
@@ -391,7 +460,7 @@ export default function App() {
       setSecondsLeft(remaining);
     }, 1000);
     return () => clearInterval(id);
-  }, [running, phase, activeTaskId, nextPhase, phaseMinutes, commitFocusToHistory]);
+  }, [running, phase, activeTaskId, phaseMinutes, commitFocusToHistory]);
 
   // ---- toggle (used by button + global hotkey) ----
   const toggle = useCallback(() => setRunning((r) => !r), []);
@@ -431,11 +500,11 @@ export default function App() {
   }, [phase, settings, phaseMinutes]);
 
   const skip = useCallback(() => {
-    const np = nextPhase(phase);
+    const np = nextPhaseAfterSkip(phase);
     setPhase(np);
     setRunning(false);
     setSecondsLeft(phaseMinutes(np, settings) * 60);
-  }, [phase, settings, nextPhase, phaseMinutes]);
+  }, [phase, settings, phaseMinutes]);
 
   // ---- tasks ----
   const addTask = () => {
@@ -465,7 +534,7 @@ export default function App() {
 
   // Chart is derived from `history` state (not a fresh localStorage parse each render),
   // so a per-second timer tick no longer re-parses the history JSON on the timer tab.
-  const week = useMemo(() => last7Days(history), [history]);
+  const week = useMemo(() => last7Days(history), [history, dailyProgress.date]);
   const weekPomos = useMemo(() => week.reduce((s, d) => s + d.pomodoros, 0), [week]);
   const weekMinutes = useMemo(() => week.reduce((s, d) => s + d.minutes, 0), [week]);
   const maxVal = useMemo(
@@ -651,16 +720,16 @@ export default function App() {
 
           <div className="stats">
             <div className="stat">
-              <div className="stat-num">{completedToday}</div>
+              <div className="stat-num">{dailyProgress.completedToday}</div>
               <div className="stat-label">{tr("stat.todayPomos")}</div>
             </div>
             <div className="stat">
-              <div className="stat-num">{focusMinutesToday}</div>
+              <div className="stat-num">{dailyProgress.focusMinutesToday}</div>
               <div className="stat-label">{tr("stat.focusMins")}</div>
             </div>
             <div className="stat">
               <div className="stat-num">
-                {settings.longEvery - (completedToday % settings.longEvery)}
+                {focusesUntilLongBreak(cycleFocusCount, settings.longEvery)}
               </div>
               <div className="stat-label">{tr("stat.toLong")}</div>
             </div>
