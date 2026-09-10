@@ -10,6 +10,23 @@ export function isDesktop(): boolean {
 let winApi: typeof import("@tauri-apps/api/window") | null = null;
 let shortcutApi: typeof import("@tauri-apps/plugin-global-shortcut") | null = null;
 let notifApi: typeof import("@tauri-apps/plugin-notification") | null = null;
+let coreApi: typeof import("@tauri-apps/api/core") | null = null;
+let eventApi: typeof import("@tauri-apps/api/event") | null = null;
+
+export interface NativeTimerSnapshot {
+  running: boolean;
+  remainingMs: number;
+  generation: number;
+}
+
+export interface NativeTimerNotification {
+  title: string;
+  body: string;
+}
+
+export interface NativeTimerCompletion extends NativeTimerSnapshot {
+  notificationSent: boolean;
+}
 
 async function loadWin() {
   if (!winApi) winApi = await import("@tauri-apps/api/window");
@@ -26,6 +43,16 @@ async function loadNotif() {
   if (!notifApi)
     notifApi = await import("@tauri-apps/plugin-notification");
   return notifApi;
+}
+
+async function loadNativeTimer() {
+  if (!coreApi || !eventApi) {
+    [coreApi, eventApi] = await Promise.all([
+      import("@tauri-apps/api/core"),
+      import("@tauri-apps/api/event"),
+    ]);
+  }
+  return { core: coreApi!, event: eventApi! };
 }
 
 export async function setAlwaysOnTop(on: boolean): Promise<void> {
@@ -67,6 +94,57 @@ export async function unregisterShortcut(keys: string): Promise<void> {
   } catch {
     /* ignore */
   }
+}
+
+export async function startNativeTimer(
+  seconds: number,
+  notification?: NativeTimerNotification
+): Promise<NativeTimerSnapshot | null> {
+  if (!isDesktop()) return null;
+  try {
+    const { core } = await loadNativeTimer();
+    return await core.invoke<NativeTimerSnapshot>("native_timer_start", {
+      durationMs: Math.max(1, Math.round(seconds * 1000)),
+      notification: notification ?? null,
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function pauseNativeTimer(): Promise<NativeTimerSnapshot | null> {
+  if (!isDesktop()) return null;
+  try {
+    const { core } = await loadNativeTimer();
+    return await core.invoke<NativeTimerSnapshot>("native_timer_pause");
+  } catch {
+    return null;
+  }
+}
+
+export async function cancelNativeTimer(
+  expectedGeneration?: number
+): Promise<NativeTimerSnapshot | null> {
+  if (!isDesktop()) return null;
+  try {
+    const { core } = await loadNativeTimer();
+    return await core.invoke<NativeTimerSnapshot>("native_timer_cancel", {
+      generation: expectedGeneration ?? null,
+    });
+  } catch {
+    /* native timer cancellation is best-effort during shutdown/reset */
+    return null;
+  }
+}
+
+export async function listenNativeTimerCompleted(
+  handler: (completion: NativeTimerCompletion) => void
+): Promise<() => void> {
+  if (!isDesktop()) return () => {};
+  const { event } = await loadNativeTimer();
+  return event.listen<NativeTimerCompletion>("native-timer-completed", ({ payload }) => {
+    handler(payload);
+  });
 }
 
 // Best-effort native phase-complete notification. Permission is requested inside

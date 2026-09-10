@@ -1,12 +1,32 @@
+mod native_timer;
+
+use native_timer::{NativeTimer, TimerSnapshot, COMPLETED_EVENT};
+use serde::{Deserialize, Serialize};
 use tauri::{
     menu::{Menu, MenuItem},
     tray::TrayIconBuilder,
-    Manager, WindowEvent,
+    Emitter, Manager, State, WindowEvent,
 };
+use tauri_plugin_notification::NotificationExt;
 
 // Tray menu item ids.
 const ID_TOGGLE: &str = "toggle";
 const ID_QUIT: &str = "quit";
+
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+struct CompletionNotification {
+    title: String,
+    body: String,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct TimerCompletedEvent {
+    #[serde(flatten)]
+    snapshot: TimerSnapshot,
+    notification_sent: bool,
+}
 
 fn toggle_window(app: &tauri::AppHandle) {
     if let Some(win) = app.get_webview_window("main") {
@@ -20,12 +40,63 @@ fn toggle_window(app: &tauri::AppHandle) {
     }
 }
 
+#[tauri::command]
+fn native_timer_start(
+    app: tauri::AppHandle,
+    timer: State<'_, NativeTimer>,
+    duration_ms: u64,
+    notification: Option<CompletionNotification>,
+) -> TimerSnapshot {
+    let (snapshot, ticket) = timer.start(duration_ms);
+    let timer = timer.inner().clone();
+    timer.spawn_completion_worker(ticket, move |snapshot| {
+        let notification_sent = if let Some(notification) = notification {
+            app
+                .notification()
+                .builder()
+                .title(notification.title)
+                .body(notification.body)
+                .show()
+                .is_ok()
+        } else {
+            false
+        };
+        let _ = app.emit(
+            COMPLETED_EVENT,
+            TimerCompletedEvent {
+                snapshot,
+                notification_sent,
+            },
+        );
+    });
+
+    snapshot
+}
+
+#[tauri::command]
+fn native_timer_pause(timer: State<'_, NativeTimer>) -> TimerSnapshot {
+    timer.pause()
+}
+
+#[tauri::command]
+fn native_timer_cancel(
+    timer: State<'_, NativeTimer>,
+    generation: Option<u64>,
+) -> TimerSnapshot {
+    timer.cancel(generation)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_shell::init())
+        .manage(NativeTimer::default())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_notification::init())
+        .invoke_handler(tauri::generate_handler![
+            native_timer_start,
+            native_timer_pause,
+            native_timer_cancel
+        ])
         .setup(|app| {
             let toggle = MenuItem::with_id(app, ID_TOGGLE, "显示/隐藏", true, None::<&str>)?;
             let quit = MenuItem::with_id(app, ID_QUIT, "退出", true, None::<&str>)?;
