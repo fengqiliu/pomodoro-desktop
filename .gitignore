@@ -11,3 +11,4 @@ src-tauri/gen/
 
 # OS / editor
 .DS_Store
+.vscode/
