@@ -3,6 +3,21 @@
 
 export type Lang = "zh" | "en";
 
+import type { NoiseType } from "./noise";
+import type { Phase } from "./timer/timerRules";
+
+export const PHASE_KEY: Record<Phase, string> = {
+  focus: "phase.focus",
+  short: "phase.short",
+  long: "phase.long",
+};
+
+export const NOISE_KEY: Record<NoiseType, string> = {
+  white: "noise.white",
+  brown: "noise.brown",
+  pink: "noise.pink",
+};
+
 export const LANGS: { code: Lang; label: string }[] = [
   { code: "zh", label: "简体中文" },
   { code: "en", label: "English" },
@@ -51,6 +66,7 @@ const DICT: Dict = {
   "task.pomoCount": ["已用番茄数", "Pomodoros used"],
   "task.delete": ["删除", "Delete"],
   "task.footer": ["共 {total} 个任务 · 已完成 {done} 个", "{total} tasks · {done} done"],
+  "task.clearDone": ["清除已完成", "Clear done"],
 
   // stats view
   "stats.card.today": ["今日", "Today"],
@@ -95,8 +111,25 @@ const DICT: Dict = {
     "桌面端生效。可用修饰键：CommandOrControl、Shift、Alt、Super，普通键如 P / Space。示例：",
     "Desktop only. Modifiers: CommandOrControl, Shift, Alt, Super; keys like P / Space. Example:",
   ],
+  "settings.hotkey.error.empty": ["请输入快捷键。", "Enter a shortcut."],
+  "settings.hotkey.error.registration": [
+    "该快捷键无法注册，请换一个组合键后重试。",
+    "This shortcut could not be registered. Try another combination.",
+  ],
   "settings.reset": ["恢复默认", "Reset to defaults"],
   "settings.done": ["完成", "Done"],
+  "settings.section.data": ["数据", "Data"],
+  "settings.export": ["导出数据（复制到剪贴板）", "Export data (copies to clipboard)"],
+  "settings.import": ["从剪贴板导入数据", "Import data from clipboard"],
+  "settings.import.prompt": [
+    "剪贴板不可用，请粘贴备份数据：",
+    "Clipboard unavailable — paste your backup:",
+  ],
+
+  // toasts
+  "toast.exported": ["备份已复制到剪贴板", "Backup copied to clipboard"],
+  "toast.copyFailed": ["复制失败，请重试", "Copy failed — please retry"],
+  "toast.importFailed": ["导入失败：备份数据无效", "Import failed: invalid backup data"],
 
   // phase-complete notifications (native system notification)
   "notif.title": ["专注完成", "Focus complete"],

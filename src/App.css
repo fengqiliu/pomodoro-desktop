@@ -474,10 +474,63 @@ input {
 }
 
 .tasks-foot {
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   font-size: 11px;
   color: var(--text-faint);
   padding-top: 12px;
+}
+
+.link-btn {
+  font-size: 11px;
+  color: var(--text-dim);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  padding: 2px 4px;
+  border-radius: 6px;
+}
+
+.link-btn:hover {
+  color: var(--accent);
+}
+
+/* toast: transient feedback for clipboard export/import etc. */
+.toast {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--text);
+  color: var(--bg);
+  font-size: 12px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  box-shadow: 0 8px 24px -8px rgba(0, 0, 0, 0.4);
+  z-index: 60;
+  animation: toast-in 0.18s ease-out;
+  white-space: nowrap;
+}
+
+@keyframes toast-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.data-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.data-actions .ghost-btn {
+  flex: 1;
 }
 
 /* ---------- modal ---------- */
@@ -499,6 +552,9 @@ input {
 
 .modal {
   width: 320px;
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
   background: var(--bg-elev);
   border-radius: 18px;
   padding: 4px;
@@ -523,6 +579,8 @@ input {
 
 .modal-body {
   padding: 6px 16px 12px;
+  overflow-y: auto;
+  min-height: 0; /* let the flex child shrink so the footer stays pinned */
 }
 
 .field {
@@ -798,6 +856,13 @@ input {
   border-radius: 4px;
   font-size: 11px;
   color: var(--text-dim);
+}
+
+.field-error {
+  font-size: 11px;
+  color: #d94141;
+  line-height: 1.5;
+  padding: 0 0 6px;
 }
 
 /* dark-mode tweak: keep switch knob legible, soften shadows */
