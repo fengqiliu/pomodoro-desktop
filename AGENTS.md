@@ -34,7 +34,7 @@ The frontend is split into layers; new features go into the matching layer inste
 - `src/domain/` — pure rules, no IO/React/Tauri: `timer/` (phase, pomodoro cycle, daily progress, countdown math + `timer.test.ts`), `tasks/` (+ `task.test.ts`), `stats/` (focus history: record, 7-day view, 60-day prune + `focusHistory.test.ts`), `settings/` (defaults, persisted-state merge & daily-reset rules).
 - `src/application/` — ports and use cases: `ports.ts` (`WindowPort` / `ShortcutPort` / `NotificationPort` / `NativeTimerPort` / `StateStore` / `HistoryStore`), `backupService.ts` (build/validate JSON backup + test).
 - `src/infrastructure/` — adapters implementing the ports: `platform/` (desktop detection + lazy Tauri imports → `windowAdapter` / `shortcutAdapter` / `notificationAdapter` / `nativeTimerAdapter`), `storage/` (localStorage stores with versioned keys), `audio/` (`noiseEngine.ts`, `chime.ts`).
-- `src/presentation/` — `App.tsx` (state composition & wiring), `components/`, `hooks/usePomodoroEngine.ts` (countdown, native bridge, generation cancel), `i18n.ts`, `uiTypes.ts`.
+- `src/presentation/` — `App.tsx` (composition root: hook wiring + JSX only), `components/`, `hooks/` (`usePomodoroEngine.ts` countdown/native bridge/generation cancel; `usePomodoroSession.ts` end-of-phase business rules; `usePersistedState`/`useTaskList`/`useSettingsDialog`/`useHotkey`/`useAppShortcuts`/`useBackup`/`useToast`/`useTheme`/`usePinned`/`useLanguage`/`useNoise`/`useDocumentTitle` state & side effects), `i18n.ts`, `uiTypes.ts`.
 - `src/shared/date.ts` — `todayKey()` shared date helper.
 
 Dependencies point inward: presentation → application/domain/infrastructure; domain and application must stay free of React/Tauri imports. Unit tests live next to the code they cover (`*.test.ts`).
@@ -48,7 +48,7 @@ The app must run both as a Tauri desktop window *and* in a plain browser during 
 Always go through this layer; never import `@tauri-apps/*` directly from presentation code or it breaks browser dev.
 
 ### `src/infrastructure/audio/` — WebAudio, no audio assets
-Generates white/brown/pink noise procedurally into a 2s `AudioBuffer` that loops, with a controllable `GainNode`. `setType()` rebuilds the buffer gap-free while playing. `App.tsx` owns one `NoiseEngine` instance in a `useRef`. The completion chime (`playChime`) is a separate short oscillator sequence, not part of the engine.
+Generates white/brown/pink noise procedurally into a 2s `AudioBuffer` that loops, with a controllable `GainNode`. `setType()` rebuilds the buffer gap-free while playing. `presentation/hooks/useNoise.ts` owns one `NoiseEngine` instance in a `useRef`. The completion chime (`playChime`) is a separate short oscillator sequence, not part of the engine.
 
 ### i18n — hand-rolled, no library
 `src/presentation/i18n.ts` is a flat `DICT` mapping keys to `[zh, en]` tuples, plus `translate(lang, key, params)` with `{param}` interpolation and `weekdayLabel(lang, dayIndex)`. To add a language: extend the `Lang` type, add it to `LANGS`, and add a third tuple element (then update `INDEX`). Keys are referenced throughout presentation code via the `tr()` callback.

@@ -60,7 +60,7 @@
 ```
 ┌────────────────────────────── 前端 (React + TypeScript) ──────────────────────────────┐
 │                                                                                      │
-│  presentation/  App.tsx(组装) · components/ · hooks/usePomodoroEngine · i18n · uiTypes │
+│  presentation/  App.tsx(组装) · components/ · hooks/（状态/副作用/引擎） · i18n · uiTypes │
 │        │  只依赖 ▼                                                                                        │
 │  application/   ports.ts(六个端口) · backupService(备份用例)                                             │
 │        │  实现于 ▼                       │  编排调用 ▼                                                     │
@@ -121,9 +121,10 @@ src/
 │   └── audio/                   # WebAudio 适配
 │       ├── chime.ts / noiseEngine.ts
 ├── presentation/                # 表现层：组装 + 渲染
-│   ├── App.tsx                  # 组装根：状态、端口接线、阶段完成规则
+│   ├── App.tsx                  # 组装根：hook 组装、派生值、渲染
 │   ├── App.css / i18n.ts / uiTypes.ts
-│   ├── hooks/usePomodoroEngine.ts   # 倒计时机制（不含业务规则）
+│   ├── hooks/                      # usePomodoroEngine（倒计时机制，不含业务规则）
+│   │                               # + usePersistedState/usePomodoroSession/useSettingsDialog/…（状态与副作用）
 │   └── components/              # TopBar · TimerView · TasksView · StatsView · SettingsModal
 ├── shared/
 │   └── date.ts                  # todayKey() —— 跨上下文共享的纯日期工具
@@ -185,7 +186,12 @@ src/
 
 ### 4.5 表现层（`src/presentation/`）
 
-- **`App.tsx`（组装根）**：`useRef(stateStore.load())` 初始化全部持久化状态；启动即 `pruneHistory(historyStore.load())` 并回写；接线四个 platform 适配器与两个 store；定义阶段完成业务规则 `onPhaseComplete`（提示音 → 日统计 `addCompletedFocus` → `recordFocus` → `recordPomodoro` → `completeFocusCycle` → `nextPhaseAfterCompletedBreak` 选长/短休 → 通知回退 → 自动开始判定）；导出/导入走 `buildBackup`/`parseBackup`；跨日守卫（午夜调度、window focus、visibilitychange）。**不含新增业务规则，只编排。**
+- **`App.tsx`（组装根）**：仅组合 `hooks/*` 与 `components/*`，自身只保留 UI 态（tab/chartMetric）与派生值（progress/accent/week）。**不含新增业务规则，只编排。**
+- **`hooks/`（状态与副作用，13 + 引擎）**：
+  - `usePersistedState`：`useRef(stateStore.load())` 初始化全部持久化状态；启动即 `pruneHistory(historyStore.load())` 并回写；持久化保存；跨日守卫（午夜调度、window focus、visibilitychange）。
+  - `usePomodoroSession`：接线引擎并定义阶段完成业务规则 `onPhaseComplete`（提示音 → 日统计 `addCompletedFocus` → `recordFocus` → `recordPomodoro` → `completeFocusCycle` → `nextPhaseAfterCompletedBreak` 选长/短休 → 通知回退 → 自动开始判定），持有 ref 镜像。
+  - `useBackup`：导出/导入走 `buildBackup`/`parseBackup`（剪贴板往返）。
+  - `useTaskList` / `useSettingsDialog` / `useHotkey` / `useAppShortcuts` / `useToast` / `useTheme` / `usePinned` / `useLanguage` / `useNoise` / `useDocumentTitle`：任务操作、设置弹窗（热键草稿确认制）、全局热键注册、窗口内快捷键及各窗口偏好。
 - **`hooks/usePomodoroEngine.ts`（计时机制）**：只管机制 —— 墙钟 `endAtRef`、1s 绘制循环、原生桥接（start/pause/cancel + 完成监听）、代际与动作序号双重防陈旧（`countdownActionRef`）、全局热键防双发（`toggleInFlightRef`）、`completionInFlightRef` 防重复完成。业务规则经 `onPhaseComplete` 回调**注入**，返回 `PhaseCompletion { nextPhase, nextSeconds, autoStart }`。对外 API：`toggle/reset/switchTo/skip/syncIfIdle`。
 - **`components/`**：五个纯展示组件，只收 props。
 - **`i18n.ts`**：手写 `DICT: Record<key, [zh, en]>` + `translate(lang, key, params)`（`{param}` 插值）+ `weekdayLabel`。
@@ -385,14 +391,14 @@ src-tauri/src/
 | L1 | **本机缺 MSVC 工具链与 Windows SDK**，`cargo check/test` 无法执行（link.exe 缺失，在依赖构建脚本阶段即失败） | Rust 侧未经编译器验证 | 已做 `rustfmt --check` 语法解析（5 文件全过）+ 命令签名/serde/导入人工逐行比对；**待装 VS Build Tools 后执行 `cargo test --manifest-path src-tauri/Cargo.toml native_timer --lib`（5 例）与 `npm run tauri dev` 手测** |
 | L2 | 桌面端行为仅靠静态验证与推演，未实机回归 | 原生计时/托盘/通知路径存在未知偏差可能 | §8.3 八项手测清单，工具链就绪后逐项执行 |
 | L3 | barrel `index.ts` 的 `export *` 可能掩盖同名冲突 | 编译期可发现（重复导出报错） | 当前各上下文命名不冲突；新增同名导出时改为显式命名导出 |
-| L4 | `App.tsx` 仍是最大单文件（组装根职责集中） | 可读性上限 | 属组装而非业务；后续可按 §11 拆 hooks，业务规则不得回流 |
+| L4 | `App.tsx` 曾是最大单文件（组装根职责集中） | 可读性上限 | **已解决**：按 §11.1 拆为 `presentation/hooks/*`（usePersistedState/usePomodoroSession/useSettingsDialog/useHotkey/useBackup 等 13 个钩子），App 仅剩组装与 JSX（≈210 行）；业务规则不得回流 |
 | L5 | 历史文档 `docs/superpowers/specs/*` 含旧结构表述 | 新读者可能混淆 | 刻意保留（历史决策快照），文首可加「结构以 AGENTS.md 为准」提示 |
 
 ---
 
 ## 11. 后续演进方向（超出本次范围）
 
-1. **`App.tsx` 继续瘦身**：跨日守卫、Toast、设置弹窗各自收敛为 `presentation/hooks/*`；业务规则若变复杂，抽 `application/` 用例（如 `completePhaseUseCase`）而非写进组件。
+1. **`App.tsx` 继续瘦身**（**已完成**：跨日守卫 → `usePersistedState`、Toast → `useToast`、设置弹窗 → `useSettingsDialog`，连同热键/备份/主题等一并收敛为 `presentation/hooks/*`）；业务规则若变复杂，抽 `application/` 用例（如 `completePhaseUseCase`）而非写进组件。
 2. **统计上下文扩展**：新增周报/导出 CSV 时，规则进 `domain/stats`，仅视图进 `StatsView`。
 3. **Rust 侧告警/持久化**：若原生层需要记录日志或落盘，作为 `timer` 上下文的仓储端口（trait）注入，组合根装配实现——保持 `engine.rs` 纯逻辑可测。
 4. **依赖约束 CI**：用 `dependency-cruiser` 或简单 grep 规则把 §3.2 的 R1–R4 固化（domain/application 禁 React/Tauri/localStorage）。

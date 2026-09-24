@@ -3,6 +3,9 @@
 
 export type Lang = "zh" | "en";
 
+/** Translator callback passed from the language hook into components/hooks. */
+export type Tr = (key: string, params?: Record<string, string | number>) => string;
+
 import type { NoiseType } from "../domain/settings";
 import type { Phase } from "../domain/timer";
 

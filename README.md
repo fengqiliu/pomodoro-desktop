@@ -84,7 +84,7 @@ pomodoro-desktop/
 │   ├── domain/             # 纯领域规则：timer/ tasks/ stats/ settings/（含 *.test.ts）
 │   ├── application/        # 端口 ports.ts + 用例 backupService（含测试）
 │   ├── infrastructure/     # 适配器：platform/（惰性加载 Tauri API） storage/ audio/
-│   ├── presentation/       # App.tsx 组装 + components/ + hooks/usePomodoroEngine.ts + i18n.ts
+│   ├── presentation/       # App.tsx 组装 + components/ + hooks/（状态/副作用/计时引擎）+ i18n.ts
 │   ├── shared/date.ts      # todayKey() 共享日期工具
 │   ├── main.tsx            # React 入口
 │   └── index.css           # 浏览器重置（7 行）
@@ -113,7 +113,7 @@ pomodoro-desktop/
 
 ## 工作原理（要点）
 
-- **分层架构（DDD）**：前端按 `domain/`（纯规则）/ `application/`（端口与用例）/ `infrastructure/`（适配器）/ `presentation/`（组装与展示）分层；计时机制收敛在 `presentation/hooks/usePomodoroEngine.ts`（倒计时、原生桥接、代际取消），阶段结束的业务规则通过 `onPhaseComplete` 回调注入；领域与应用层不含 IO/React/Tauri，可被 Vitest 直接测试。新增功能先找对应层，不往 `App.tsx` 堆。
+- **分层架构（DDD）**：前端按 `domain/`（纯规则）/ `application/`（端口与用例）/ `infrastructure/`（适配器）/ `presentation/`（组装与展示）分层；计时机制收敛在 `presentation/hooks/usePomodoroEngine.ts`（倒计时、原生桥接、代际取消），阶段结束的业务规则通过 `onPhaseComplete` 回调注入并由 `hooks/usePomodoroSession.ts` 持有；持久化、跨日守卫、快捷键、设置弹窗、备份等副作用同样收敛在 `presentation/hooks/*`，`App.tsx` 只做组装；领域与应用层不含 IO/React/Tauri，可被 Vitest 直接测试。新增功能先找对应层，不往 `App.tsx` 堆。
 - **平台抽象层**：`infrastructure/platform/` 通过 `__TAURI_INTERNALS__` 判断是否在桌面环境，并惰性动态导入 Tauri API（window/shortcut/notification/nativeTimer 四个适配器）——这样在普通浏览器里不会因无法解析 `@tauri-apps/*` 而崩溃。新增原生功能请走这一层（实现 `application/ports.ts` 端口），不要在组件里直接 import。
 - **持久化与每日重置**：状态写入带版本后缀的 localStorage 键（`pomodoro-state-v3`、`pomodoro-history-v1` 等）。日报会在启动、午夜、窗口恢复、完成专注和持久化前校验日期，避免长期驻留托盘时跨日污染数据。**修改持久化结构时，递增键的后缀**，不做迁移。
 - **番茄循环**：今日统计与长休息循环分别记录。`cycleFocusCount` 在每次完成专注后推进、触发长休息后归零，并会跨日期延续，因此“每 N 个番茄长休息”不受每日统计重置影响。
