@@ -212,4 +212,38 @@ describe("completePhase use case", () => {
     expect(result.playSound).toBe(false);
     expect(result.notification).toBeUndefined();
   });
+
+  it("flags goalReachedJustNow when completing a focus session hits the dailyGoal", () => {
+    const goalSettings: Settings = {
+      ...baseSettings,
+      dailyGoal: 3,
+    };
+
+    // Before this session, completedToday is 2. Now becomes 3 -> reached!
+    const result1 = completePhase({
+      finished: "focus",
+      settings: goalSettings,
+      dailyProgress: { date: "2026-9-28", completedToday: 2, focusMinutesToday: 50 },
+      cycleFocusCount: 0,
+      tasks: initialTasks,
+      activeTaskId: null,
+      history: initialHistory,
+      now: fixedDate,
+    });
+    expect(result1.goalReachedJustNow).toBe(true);
+
+    // If next session finishes, completedToday was 3 (already met) -> false
+    const result2 = completePhase({
+      finished: "focus",
+      settings: goalSettings,
+      dailyProgress: { date: "2026-9-28", completedToday: 3, focusMinutesToday: 75 },
+      cycleFocusCount: 1,
+      tasks: initialTasks,
+      activeTaskId: null,
+      history: initialHistory,
+      now: fixedDate,
+    });
+    expect(result2.goalReachedJustNow).toBe(false);
+  });
 });
+

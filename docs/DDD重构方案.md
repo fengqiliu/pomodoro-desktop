@@ -100,9 +100,10 @@ src/
 │   │   ├── index.ts             # barrel：统一导出
 │   │   ├── phase.ts             # Phase 值对象 + 阶段时长查询
 │   │   ├── pomodoroCycle.ts     # 长休周期推进 / 跳过 / 距长休余数
-│   │   ├── dailyProgress.ts     # 每日进度：跨日重置 + 完成累计
+│   │   ├── dailyProgress.ts     # 每日进度：跨日重置 + 完成累计 + 目标判断与达成率
 │   │   ├── countdown.ts         # 墙上时间倒计时数学
-│   │   └── timer.test.ts        # 9 例
+│   │   └── timer.test.ts        # 11 例（含目标达成与百分比换算）
+
 │   ├── stats/                   # 专注历史上下文
 │   │   ├── index.ts / focusHistory.ts / focusHistory.test.ts (11 例：7 天图表、60 天修剪、连续打卡 Streak、历史累计)
 
@@ -115,7 +116,8 @@ src/
 ├── application/                 # 应用层：端口 + 用例（无具体 IO 实现）
 │   ├── index.ts / ports.ts      # 端口接口（纯类型）
 │   ├── backupService.ts         # 备份构建/校验用例 + backupService.test.ts (4 例)
-│   └── completePhase.ts         # 阶段完成跨域协调用例 + completePhase.test.ts (11 例)
+│   └── completePhase.ts         # 阶段完成跨域协调用例 + completePhase.test.ts (12 例，含目标达成成就判断)
+
 ├── infrastructure/              # 基础设施层：端口的具体适配器
 │   ├── platform/                # Tauri/浏览器适配（懒加载动态 import）
 │   │   ├── index.ts / runtime.ts / windowAdapter.ts / shortcutAdapter.ts

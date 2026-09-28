@@ -122,7 +122,23 @@ export function SettingsModal({
               onChange={(e) => onSettingsChange((s) => ({ ...s, longEvery: Number(e.target.value) || 4 }))}
             />
           </label>
+          <label className="field">
+            <span>{tr("settings.dailyGoal")}</span>
+            <input
+              type="number"
+              min="1"
+              max="30"
+              value={settings.dailyGoal ?? 8}
+              onChange={(e) =>
+                onSettingsChange((s) => ({
+                  ...s,
+                  dailyGoal: Math.max(1, Math.min(30, Number(e.target.value) || 1)),
+                }))
+              }
+            />
+          </label>
           <label className="field switch-field">
+
             <span>{tr("settings.sound")}</span>
             <Switch
               on={settings.sound}

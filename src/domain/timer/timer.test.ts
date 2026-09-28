@@ -2,12 +2,15 @@ import { describe, expect, it } from "vitest";
 import {
   addCompletedFocus,
   completeFocusCycle,
+  getDailyGoalPercent,
+  isDailyGoalReached,
   nextPhaseAfterSkip,
   phaseMinutes,
   remainingSeconds,
   resetDailyProgressIfNeeded,
   type DailyProgress,
 } from "./index";
+
 
 describe("completeFocusCycle", () => {
   it("uses a long break for every fourth completed focus session", () => {
@@ -82,7 +85,26 @@ describe("addCompletedFocus", () => {
   });
 });
 
+describe("isDailyGoalReached & getDailyGoalPercent", () => {
+  it("determines if the daily pomodoro goal has been reached", () => {
+    const progress: DailyProgress = { date: "2026-08-22", completedToday: 7, focusMinutesToday: 175 };
+    expect(isDailyGoalReached(progress, 8)).toBe(false);
+    expect(isDailyGoalReached(progress, 7)).toBe(true);
+    expect(isDailyGoalReached(progress, 6)).toBe(true);
+    expect(isDailyGoalReached(progress, 0)).toBe(false);
+  });
+
+  it("calculates completion percentage capped at 100", () => {
+    const progress: DailyProgress = { date: "2026-08-22", completedToday: 4, focusMinutesToday: 100 };
+    expect(getDailyGoalPercent(progress, 8)).toBe(50);
+    expect(getDailyGoalPercent(progress, 4)).toBe(100);
+    expect(getDailyGoalPercent(progress, 2)).toBe(100);
+    expect(getDailyGoalPercent(progress, 0)).toBe(0);
+  });
+});
+
 describe("phaseMinutes", () => {
+
   it("maps each phase to its configured duration", () => {
     const durations = { focus: 25, short: 5, long: 15 };
     expect(phaseMinutes("focus", durations)).toBe(25);

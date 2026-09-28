@@ -4,12 +4,14 @@ import { recordPomodoro, type Task } from "../domain/tasks";
 import {
   addCompletedFocus,
   completeFocusCycle,
+  isDailyGoalReached,
   nextPhaseAfterCompletedBreak,
   phaseMinutes,
   resetDailyProgressIfNeeded,
   type DailyProgress,
   type Phase,
 } from "../domain/timer";
+
 import { todayKey } from "../shared/date";
 
 export interface PredictNextPhaseInput {
@@ -84,7 +86,9 @@ export interface CompletePhaseResult {
   nextHistory: History;
   playSound: boolean;
   notification?: PhaseNotificationDescriptor;
+  goalReachedJustNow: boolean;
 }
+
 
 /**
  * Application use case: coordinates domain logic when a pomodoro phase completes.
@@ -109,6 +113,7 @@ export function completePhase({
   let nextDailyProgress = dailyProgress;
   let nextHistory = history;
   let nextTasks = tasks;
+  let goalReachedJustNow = false;
 
   if (finished === "focus") {
     const focusMins = settings.focus;
@@ -119,6 +124,13 @@ export function completePhase({
     // Advance daily progress with auto cross-day reset
     const freshProgress = resetDailyProgressIfNeeded(dailyProgress, today);
     nextDailyProgress = addCompletedFocus(freshProgress, focusMins);
+
+    // Goal reached precisely upon finishing this focus session
+    const goal = settings.dailyGoal ?? 0;
+    goalReachedJustNow =
+      goal > 0 &&
+      !isDailyGoalReached(freshProgress, goal) &&
+      isDailyGoalReached(nextDailyProgress, goal);
 
     // Record into history
     nextHistory = recordFocus(history, focusMins, currentDate);
@@ -151,6 +163,8 @@ export function completePhase({
     nextHistory,
     playSound: settings.sound,
     notification,
+    goalReachedJustNow,
   };
+
 }
 

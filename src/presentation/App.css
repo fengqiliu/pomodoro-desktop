@@ -299,9 +299,31 @@ input {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--text);
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.stat-sub {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim);
+  margin-left: 1px;
+}
+
+.stat-goal-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #f59e0b;
+  margin-left: 3px;
+  padding: 0 3px;
+  border-radius: 4px;
+  background: rgba(245, 158, 11, 0.15);
+  line-height: 1.2;
 }
 
 .stat-label {
+
   font-size: 11px;
   color: var(--text-dim);
   margin-top: 3px;
@@ -795,7 +817,11 @@ input {
   font-weight: 600;
   font-variant-numeric: tabular-nums;
   color: var(--text);
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
 }
+
 
 .summary-label {
   font-size: 11px;

@@ -1,5 +1,11 @@
 import { PHASE_KEY } from "../i18n";
-import { focusesUntilLongBreak, type DailyProgress, type Phase } from "../../domain/timer";
+import {
+  focusesUntilLongBreak,
+  getDailyGoalPercent,
+  isDailyGoalReached,
+  type DailyProgress,
+  type Phase,
+} from "../../domain/timer";
 
 interface Props {
   tr: (key: string, params?: Record<string, string | number>) => string;
@@ -10,6 +16,7 @@ interface Props {
   accent: string;
   activeTaskTitle: string | null;
   dailyProgress: DailyProgress;
+  dailyGoal?: number;
   cycleFocusCount: number;
   longEvery: number;
   onToggle: () => void;
@@ -17,6 +24,7 @@ interface Props {
   onSkip: () => void;
   onSwitchPhase: (p: Phase) => void;
 }
+
 
 function fmt(sec: number): string {
   const m = Math.floor(sec / 60);
@@ -33,6 +41,7 @@ export function TimerView({
   accent,
   activeTaskTitle,
   dailyProgress,
+  dailyGoal,
   cycleFocusCount,
   longEvery,
   onToggle,
@@ -40,6 +49,7 @@ export function TimerView({
   onSkip,
   onSwitchPhase,
 }: Props) {
+
   const R = 132;
   const CIRC = 2 * Math.PI * R;
 
@@ -117,8 +127,26 @@ export function TimerView({
       </div>
 
       <div className="stats">
-        <div className="stat">
-          <div className="stat-num">{dailyProgress.completedToday}</div>
+        <div
+          className="stat"
+          title={
+            dailyGoal && dailyGoal > 0
+              ? tr("stat.goalProgress", {
+                  goal: dailyGoal,
+                  percent: getDailyGoalPercent(dailyProgress, dailyGoal),
+                })
+              : undefined
+          }
+        >
+          <div className="stat-num">
+            {dailyProgress.completedToday}
+            {dailyGoal && dailyGoal > 0 && <span className="stat-sub">/{dailyGoal}</span>}
+            {dailyGoal && dailyGoal > 0 && isDailyGoalReached(dailyProgress, dailyGoal) && (
+              <span className="stat-goal-badge" title={tr("stat.goalReached")}>
+                ✓
+              </span>
+            )}
+          </div>
           <div className="stat-label">{tr("stat.todayPomos")}</div>
         </div>
         <div className="stat">
@@ -130,6 +158,7 @@ export function TimerView({
           <div className="stat-label">{tr("stat.toLong")}</div>
         </div>
       </div>
+
     </div>
   );
 }

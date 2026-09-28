@@ -22,6 +22,7 @@ interface Options {
   activeTaskId: string | null;
   history: History;
   tr: Tr;
+  showToast?: (message: string) => void;
   setCycleFocusCount: Dispatch<SetStateAction<number>>;
   setDailyProgress: Dispatch<SetStateAction<DailyProgress>>;
   setHistory: Dispatch<SetStateAction<History>>;
@@ -39,11 +40,13 @@ export function usePomodoroSession({
   activeTaskId,
   history,
   tr,
+  showToast,
   setCycleFocusCount,
   setDailyProgress,
   setHistory,
   setTasks,
 }: Options) {
+
   // Latest-value refs for callbacks that must read state outside render
   // (completion path, native notification builder).
   const settingsRef = useRef(settings);
@@ -60,8 +63,11 @@ export function usePomodoroSession({
   historyRef.current = history;
   const trRef = useRef(tr);
   trRef.current = tr;
+  const showToastRef = useRef(showToast);
+  showToastRef.current = showToast;
 
   // The engine owns the authoritative phase; keep a ref for code that runs
+
   // outside render (notification builder reads it before a countdown starts).
   const enginePhaseRef = useRef<Phase>("focus");
 
@@ -108,7 +114,14 @@ export function usePomodoroSession({
       historyStore.save(result.nextHistory);
       setTasks(result.nextTasks);
 
+      if (result.goalReachedJustNow && showToastRef.current) {
+        showToastRef.current(
+          trRef.current("toast.goalReached", { goal: String(settingsRef.current.dailyGoal ?? 0) })
+        );
+      }
+
       if (result.notification && !nativeNotificationSent) {
+
         const translateNow = trRef.current;
         const title = translateNow(result.notification.titleKey);
         const body = translateNow(result.notification.bodyKey, {

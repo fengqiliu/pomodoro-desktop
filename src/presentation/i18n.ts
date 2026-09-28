@@ -58,6 +58,9 @@ const DICT: Dict = {
   "stat.todayPomos": ["今日番茄", "Today"],
   "stat.focusMins": ["专注分钟", "Focus min"],
   "stat.toLong": ["距长休息", "To long break"],
+  "stat.goalReached": ["今日目标已达成", "Daily goal reached"],
+  "stat.goalProgress": ["今日目标: {goal} 个 (达成率 {percent}%)", "Daily goal: {goal} (Progress {percent}%)"],
+
 
   // tasks view
   "task.addPlaceholder": ["添加一个任务…", "Add a task…"],
@@ -115,7 +118,9 @@ const DICT: Dict = {
   "settings.short": ["短休息（分钟）", "Short break (min)"],
   "settings.long": ["长休息（分钟）", "Long break (min)"],
   "settings.longEvery": ["每几个番茄后长休息", "Long break every N pomodoros"],
+  "settings.dailyGoal": ["每日目标（番茄数）", "Daily goal (pomodoros)"],
   "settings.sound": ["完成提示音", "Completion sound"],
+
   "settings.notifications": ["完成时通知", "Notifications"],
   "settings.autoStartBreaks": ["专注后自动进入休息", "Auto-start breaks"],
   "settings.autoStartFocus": ["休息后自动开始专注", "Auto-start focus"],
@@ -150,6 +155,11 @@ const DICT: Dict = {
   "toast.exported": ["备份已复制到剪贴板", "Backup copied to clipboard"],
   "toast.copyFailed": ["复制失败，请重试", "Copy failed — please retry"],
   "toast.importFailed": ["导入失败：备份数据无效", "Import failed: invalid backup data"],
+  "toast.goalReached": [
+    "🎉 太棒了！今日每日目标（{goal} 个番茄）已达成！",
+    "🎉 Fantastic! Daily goal of {goal} pomodoro(s) reached!",
+  ],
+
 
   // phase-complete notifications (native system notification)
   "notif.title": ["专注完成", "Focus complete"],

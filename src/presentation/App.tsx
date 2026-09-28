@@ -76,11 +76,13 @@ export default function App() {
     activeTaskId,
     history,
     tr,
+    showToast,
     setCycleFocusCount,
     setDailyProgress,
     setHistory,
     setTasks,
   });
+
 
   useNoise({ noise, running, phase });
 
@@ -165,6 +167,7 @@ export default function App() {
               : null
           }
           dailyProgress={dailyProgress}
+          dailyGoal={settings.dailyGoal}
           cycleFocusCount={cycleFocusCount}
           longEvery={settings.longEvery}
           onToggle={() => void toggle()}
@@ -193,10 +196,12 @@ export default function App() {
           lang={lang}
           week={week}
           history={history}
+          dailyGoal={settings.dailyGoal}
           chartMetric={chartMetric}
           accent={accent}
           onChartMetricChange={setChartMetric}
         />
+
       )}
 
 

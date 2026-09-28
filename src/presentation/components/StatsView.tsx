@@ -13,6 +13,7 @@ interface Props {
   lang: Lang;
   week: DayRecord[];
   history: History;
+  dailyGoal?: number;
   chartMetric: ChartMetric;
   accent: string;
   onChartMetricChange: (m: ChartMetric) => void;
@@ -23,10 +24,12 @@ export function StatsView({
   lang,
   week,
   history,
+  dailyGoal,
   chartMetric,
   accent,
   onChartMetricChange,
 }: Props) {
+
   const weekPomos = useMemo(() => week.reduce((s, d) => s + d.pomodoros, 0), [week]);
   const weekMinutes = useMemo(() => week.reduce((s, d) => s + d.minutes, 0), [week]);
   const streak = useMemo(() => calculateStreak(history), [history]);
@@ -48,11 +51,25 @@ export function StatsView({
   return (
     <div className="stats-view">
       <div className="stats-summary">
-        <div className="summary-card">
-          <div className="summary-num">{todayRecord.pomodoros}</div>
+        <div
+          className="summary-card"
+          title={
+            dailyGoal && dailyGoal > 0
+              ? tr("stat.goalProgress", {
+                  goal: dailyGoal,
+                  percent: Math.min(100, Math.round((todayRecord.pomodoros / dailyGoal) * 100)),
+                })
+              : undefined
+          }
+        >
+          <div className="summary-num">
+            {todayRecord.pomodoros}
+            {dailyGoal && dailyGoal > 0 && <span className="stat-sub">/{dailyGoal}</span>}
+          </div>
           <div className="summary-label">{tr("stats.card.today")}</div>
         </div>
         <div className="summary-card" title={tr("stats.card.bestStreak", { days: streak.bestStreak })}>
+
           <div className="summary-num" style={{ color: streak.currentStreak > 0 ? "var(--accent)" : undefined }}>
             {streak.currentStreak}
           </div>

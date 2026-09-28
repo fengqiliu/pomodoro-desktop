@@ -7,6 +7,7 @@ export interface Settings {
   short: number;
   long: number;
   longEvery: number; // long break after this many focus sessions
+  dailyGoal: number; // target completed pomodoros per day
   sound: boolean;
   notifications: boolean;
   autoStartBreaks: boolean;
@@ -29,6 +30,7 @@ export const DEFAULT_SETTINGS: Settings = {
   short: 5,
   long: 15,
   longEvery: 4,
+  dailyGoal: 8,
   sound: true,
   notifications: true,
   autoStartBreaks: false,
@@ -37,3 +39,4 @@ export const DEFAULT_SETTINGS: Settings = {
   noiseType: "brown",
   noiseVolume: 0.3,
 };
+

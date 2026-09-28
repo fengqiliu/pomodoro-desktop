@@ -26,3 +26,13 @@ export function addCompletedFocus(progress: DailyProgress, minutes: number): Dai
     focusMinutesToday: progress.focusMinutesToday + minutes,
   };
 }
+
+export function isDailyGoalReached(progress: DailyProgress, goal: number): boolean {
+  return goal > 0 && progress.completedToday >= goal;
+}
+
+export function getDailyGoalPercent(progress: DailyProgress, goal: number): number {
+  if (goal <= 0) return 0;
+  return Math.min(100, Math.round((progress.completedToday / goal) * 100));
+}
+
