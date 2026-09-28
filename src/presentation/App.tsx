@@ -67,8 +67,11 @@ export default function App() {
   // ---- countdown engine + end-of-phase business rules ----
   const { phase, secondsLeft, running, toggle, reset, switchTo, skip } = usePomodoroSession({
     settings,
+    dailyProgress,
     cycleFocusCount,
+    tasks,
     activeTaskId,
+    history,
     tr,
     setCycleFocusCount,
     setDailyProgress,

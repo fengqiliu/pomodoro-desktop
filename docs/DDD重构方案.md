@@ -341,6 +341,7 @@ src-tauri/src/
 | task | `src/domain/tasks/task.test.ts` | 6 | 增删切换、清已完成、activeId 为空、pomodoro 计数 |
 | focusHistory | `src/domain/stats/focusHistory.test.ts` | 4 | 7 天视图、缺日补齐、60 天裁剪、记录累计 |
 | backupService | `src/application/backupService.test.ts` | 4 | 构建往返、非法 JSON、错误 app 标识、形状校验 |
+| completePhase | `src/application/completePhase.test.ts` | 11 | 阶段完成编排、长休判定、跨日统计重置、任务累加、通知与声音意图 |
 | Rust engine | `src-tauri/src/timer/engine.rs` `#[cfg(test)]` | 5 | 墙钟暂停保持、代际独占完成、取消失效、定向取消不误杀、worker 到点完成 |
 
 ### 8.2 验证结果（本次实施实测）
