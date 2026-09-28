@@ -339,6 +339,25 @@ input {
   border-color: var(--accent);
 }
 
+.task-est-input {
+  width: 54px;
+  height: 40px;
+  padding: 0 4px;
+  font-size: 13px;
+  text-align: center;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text);
+  outline: none;
+  transition: border 0.15s;
+}
+
+.task-est-input:focus {
+  border-color: var(--accent);
+}
+
+
 .add-btn {
   height: 40px;
   padding: 0 16px;
@@ -453,7 +472,42 @@ input {
   flex-shrink: 0;
 }
 
+.task-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.task-reorder-btn {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  color: var(--text-faint);
+  font-size: 11px;
+  display: grid;
+  place-items: center;
+  opacity: 0;
+  transition: opacity 0.15s, background 0.15s, color 0.15s;
+}
+
+.task:hover .task-reorder-btn {
+  opacity: 0.7;
+}
+
+.task-reorder-btn:hover:not(:disabled) {
+  opacity: 1;
+  background: var(--bg);
+  color: var(--accent);
+}
+
+.task-reorder-btn:disabled {
+  opacity: 0.15 !important;
+  cursor: default;
+}
+
 .task-del {
+
   width: 22px;
   height: 22px;
   border-radius: 6px;

@@ -107,7 +107,8 @@ src/
 │   │   ├── index.ts / focusHistory.ts / focusHistory.test.ts (11 例：7 天图表、60 天修剪、连续打卡 Streak、历史累计)
 
 │   ├── tasks/                   # 任务上下文
-│   │   ├── index.ts / task.ts / task.test.ts (6 例)
+│   │   ├── index.ts / task.ts / task.test.ts (10 例：创建/添加、完成切换、删除、清理、增加番茄、预估目标、安全重排与进度格式化)
+
 │   └── settings/                # 设置上下文
 │       ├── index.ts / settings.ts / persistedState.ts / persistedState.test.ts
 ├── application/                 # 应用层：端口 + 用例（无具体 IO 实现）

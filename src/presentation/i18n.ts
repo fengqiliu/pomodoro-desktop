@@ -61,15 +61,20 @@ const DICT: Dict = {
 
   // tasks view
   "task.addPlaceholder": ["添加一个任务…", "Add a task…"],
+  "task.estPlaceholder": ["预估", "Est."],
   "task.addBtn": ["添加", "Add"],
   "task.empty.title": ["还没有任务，添加一个开始专注吧", "No tasks yet — add one to start focusing"],
   "task.empty.icon": ["○", "○"],
   "task.activeHint": ["选为当前专注任务", "Set as current focus task"],
   "task.done.aria": ["完成", "Done"],
   "task.pomoCount": ["已用番茄数", "Pomodoros used"],
+  "task.estimated": ["预计番茄数", "Est. pomodoros"],
+  "task.moveUp": ["上移", "Move up"],
+  "task.moveDown": ["下移", "Move down"],
   "task.delete": ["删除", "Delete"],
   "task.footer": ["共 {total} 个任务 · 已完成 {done} 个", "{total} tasks · {done} done"],
   "task.clearDone": ["清除已完成", "Clear done"],
+
 
   // stats view
   "stats.card.today": ["今日", "Today"],

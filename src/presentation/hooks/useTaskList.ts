@@ -2,8 +2,10 @@ import { useCallback, useState, type Dispatch, type SetStateAction } from "react
 import {
   addTask as prependTask,
   clearCompletedTasks,
+  reorderTask,
   removeTask,
   toggleTaskDone,
+  updateTaskEstimate,
   type Task,
 } from "../../domain/tasks";
 
@@ -17,23 +19,31 @@ interface Options {
 export function useTaskList({ tasks, setTasks }: Options) {
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
 
-  const addTask = useCallback((title: string) => {
-    setTasks((ts) => prependTask(ts, title, () => crypto.randomUUID()));
-  }, []);
+  const addTask = useCallback((title: string, estimatedPomodoros?: number) => {
+    setTasks((ts) => prependTask(ts, title, () => crypto.randomUUID(), estimatedPomodoros));
+  }, [setTasks]);
 
   const toggleTask = useCallback(
     (id: string) => setTasks((ts) => toggleTaskDone(ts, id)),
-    []
+    [setTasks]
   );
 
   const deleteTask = useCallback((id: string) => {
     setTasks((ts) => removeTask(ts, id));
     setActiveTaskId((cur) => (cur === id ? null : cur));
-  }, []);
+  }, [setTasks]);
 
   const clearDoneTasks = useCallback(() => {
     setTasks((ts) => clearCompletedTasks(ts));
-  }, []);
+  }, [setTasks]);
+
+  const moveTask = useCallback((fromIndex: number, toIndex: number) => {
+    setTasks((ts) => reorderTask(ts, fromIndex, toIndex));
+  }, [setTasks]);
+
+  const updateEstimate = useCallback((id: string, estimated?: number) => {
+    setTasks((ts) => updateTaskEstimate(ts, id, estimated));
+  }, [setTasks]);
 
   const activeTask = tasks.find((t) => t.id === activeTaskId) || null;
 
@@ -45,5 +55,7 @@ export function useTaskList({ tasks, setTasks }: Options) {
     toggleTask,
     deleteTask,
     clearDoneTasks,
+    moveTask,
+    updateEstimate,
   };
 }

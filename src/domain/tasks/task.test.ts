@@ -2,11 +2,15 @@ import { describe, expect, it } from "vitest";
 import {
   addTask,
   clearCompletedTasks,
+  formatTaskProgress,
   recordPomodoro,
   removeTask,
+  reorderTask,
   toggleTaskDone,
+  updateTaskEstimate,
   type Task,
 } from "./index";
+
 
 let nextId = 0;
 const generateId = () => `t${++nextId}`;
@@ -59,3 +63,34 @@ describe("recordPomodoro", () => {
     expect(recordPomodoro(tasks, null)).toBe(tasks);
   });
 });
+
+describe("task estimates & reordering", () => {
+  it("creates and adds task with optional estimate", () => {
+    const tasks = addTask(fixture(), "新任务", generateId, 4);
+    expect(tasks[0].estimatedPomodoros).toBe(4);
+    expect(formatTaskProgress(tasks[0])).toBe("0/4");
+  });
+
+  it("updates task estimate", () => {
+    const updated = updateTaskEstimate(fixture(), "a", 5);
+    expect(updated[0].estimatedPomodoros).toBe(5);
+    expect(formatTaskProgress(updated[0])).toBe("2/5");
+  });
+
+  it("reorders tasks safely", () => {
+    const list = fixture(); // ["a", "b"]
+    const reordered = reorderTask(list, 0, 1);
+    expect(reordered.map((t) => t.id)).toEqual(["b", "a"]);
+
+    // Out of bounds should return original array unchanged
+    expect(reorderTask(list, -1, 1)).toBe(list);
+    expect(reorderTask(list, 0, 99)).toBe(list);
+  });
+
+  it("formats task progress appropriately", () => {
+    expect(formatTaskProgress({ id: "1", title: "t", done: false, pomodoros: 3, estimatedPomodoros: 5 })).toBe("3/5");
+    expect(formatTaskProgress({ id: "2", title: "t", done: false, pomodoros: 3 })).toBe("3");
+    expect(formatTaskProgress({ id: "3", title: "t", done: false, pomodoros: 0 })).toBe("");
+  });
+});
+

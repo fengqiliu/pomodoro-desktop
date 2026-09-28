@@ -4,7 +4,9 @@ import { phaseMinutes, type Phase } from "../domain/timer";
 import { last7Days } from "../domain/stats";
 import { TopBar } from "./components/TopBar";
 import { TimerView } from "./components/TimerView";
+import { formatTaskProgress } from "../domain/tasks";
 import { TasksView } from "./components/TasksView";
+
 import { StatsView } from "./components/StatsView";
 import { SettingsModal } from "./components/SettingsModal";
 import type { ChartMetric, Tab } from "./uiTypes";
@@ -62,7 +64,9 @@ export default function App() {
     toggleTask,
     deleteTask,
     clearDoneTasks,
+    moveTask,
   } = useTaskList({ tasks, setTasks });
+
 
   // ---- countdown engine + end-of-phase business rules ----
   const { phase, secondsLeft, running, toggle, reset, switchTo, skip } = usePomodoroSession({
@@ -151,7 +155,13 @@ export default function App() {
           running={running}
           progress={progress}
           accent={accent}
-          activeTaskTitle={activeTask?.title ?? null}
+          activeTaskTitle={
+            activeTask
+              ? formatTaskProgress(activeTask)
+                ? `${activeTask.title} (${formatTaskProgress(activeTask)} 🍅)`
+                : activeTask.title
+              : null
+          }
           dailyProgress={dailyProgress}
           cycleFocusCount={cycleFocusCount}
           longEvery={settings.longEvery}
@@ -170,8 +180,10 @@ export default function App() {
           onToggleDone={toggleTask}
           onDelete={deleteTask}
           onClearDone={clearDoneTasks}
+          onMoveTask={moveTask}
         />
       ) : (
+
         <StatsView
           tr={tr}
           lang={lang}
