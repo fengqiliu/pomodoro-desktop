@@ -104,7 +104,8 @@ src/
 │   │   ├── countdown.ts         # 墙上时间倒计时数学
 │   │   └── timer.test.ts        # 9 例
 │   ├── stats/                   # 专注历史上下文
-│   │   ├── index.ts / focusHistory.ts / focusHistory.test.ts (4 例)
+│   │   ├── index.ts / focusHistory.ts / focusHistory.test.ts (11 例：7 天图表、60 天修剪、连续打卡 Streak、历史累计)
+
 │   ├── tasks/                   # 任务上下文
 │   │   ├── index.ts / task.ts / task.test.ts (6 例)
 │   └── settings/                # 设置上下文

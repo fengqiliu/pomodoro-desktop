@@ -176,11 +176,13 @@ export default function App() {
           tr={tr}
           lang={lang}
           week={week}
+          history={history}
           chartMetric={chartMetric}
           accent={accent}
           onChartMetricChange={setChartMetric}
         />
       )}
+
 
       {showSettings && (
         <SettingsModal

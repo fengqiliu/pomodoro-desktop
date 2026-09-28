@@ -1,20 +1,37 @@
 import { useMemo } from "react";
 import { weekdayLabel, type Lang } from "../i18n";
-import type { DayRecord } from "../../domain/stats";
+import {
+  calculateStreak,
+  calculateTotalStats,
+  type DayRecord,
+  type History,
+} from "../../domain/stats";
 import type { ChartMetric } from "../uiTypes";
 
 interface Props {
   tr: (key: string, params?: Record<string, string | number>) => string;
   lang: Lang;
   week: DayRecord[];
+  history: History;
   chartMetric: ChartMetric;
   accent: string;
   onChartMetricChange: (m: ChartMetric) => void;
 }
 
-export function StatsView({ tr, lang, week, chartMetric, accent, onChartMetricChange }: Props) {
+export function StatsView({
+  tr,
+  lang,
+  week,
+  history,
+  chartMetric,
+  accent,
+  onChartMetricChange,
+}: Props) {
   const weekPomos = useMemo(() => week.reduce((s, d) => s + d.pomodoros, 0), [week]);
   const weekMinutes = useMemo(() => week.reduce((s, d) => s + d.minutes, 0), [week]);
+  const streak = useMemo(() => calculateStreak(history), [history]);
+  const totalStats = useMemo(() => calculateTotalStats(history), [history]);
+
   const maxVal = useMemo(
     () => Math.max(1, ...week.map((d) => (chartMetric === "pomodoros" ? d.pomodoros : d.minutes))),
     [week, chartMetric]
@@ -26,6 +43,8 @@ export function StatsView({ tr, lang, week, chartMetric, accent, onChartMetricCh
   const barW = (chartW - barGap * (week.length + 1)) / week.length;
   const todayRecord = week[week.length - 1];
 
+  const totalHours = (totalStats.totalMinutes / 60).toFixed(1);
+
   return (
     <div className="stats-view">
       <div className="stats-summary">
@@ -33,13 +52,15 @@ export function StatsView({ tr, lang, week, chartMetric, accent, onChartMetricCh
           <div className="summary-num">{todayRecord.pomodoros}</div>
           <div className="summary-label">{tr("stats.card.today")}</div>
         </div>
+        <div className="summary-card" title={tr("stats.card.bestStreak", { days: streak.bestStreak })}>
+          <div className="summary-num" style={{ color: streak.currentStreak > 0 ? "var(--accent)" : undefined }}>
+            {streak.currentStreak}
+          </div>
+          <div className="summary-label">{tr("stats.card.streak")}</div>
+        </div>
         <div className="summary-card">
           <div className="summary-num">{weekPomos}</div>
           <div className="summary-label">{tr("stats.card.weekPomos")}</div>
-        </div>
-        <div className="summary-card">
-          <div className="summary-num">{weekMinutes}</div>
-          <div className="summary-label">{tr("stats.card.weekMins")}</div>
         </div>
       </div>
 
@@ -93,13 +114,21 @@ export function StatsView({ tr, lang, week, chartMetric, accent, onChartMetricCh
       </svg>
 
       <div className="stats-foot">
-        {weekPomos === 0
-          ? tr("stats.footer.empty")
-          : tr("stats.footer.avg", {
-              avg: (weekPomos / 7).toFixed(1),
-              mins: Math.round(weekMinutes / 7),
-            })}
+        <div>
+          {weekPomos === 0
+            ? tr("stats.footer.empty")
+            : tr("stats.footer.avg", {
+                avg: (weekPomos / 7).toFixed(1),
+                mins: Math.round(weekMinutes / 7),
+              })}
+        </div>
+        {totalStats.totalPomodoros > 0 && (
+          <div style={{ marginTop: 4, opacity: 0.85, fontSize: "11px" }}>
+            {tr("stats.card.totalPomos")}: {totalStats.totalPomodoros} · {tr("stats.card.totalFocus")}: {totalHours}h
+          </div>
+        )}
       </div>
     </div>
   );
 }
+

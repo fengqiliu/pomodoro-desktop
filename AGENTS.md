@@ -12,6 +12,7 @@ A single-window Tauri 2 desktop Pomodoro timer (380×580, non-resizable). React 
 npm install
 npm run dev          # Vite dev server only — port 1420 (strictPort; Tauri expects this). Works in a plain browser too (see src/infrastructure/platform/).
 npm run typecheck    # tsc --noEmit
+npm run check-arch   # Architecture guard: enforces DDD layering constraints
 npm test             # vitest run — domain/application unit tests (colocated *.test.ts)
 npm run build        # tsc -b && vite build  →  dist/
 npm run preview      # serve the built dist/
