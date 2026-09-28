@@ -23,8 +23,14 @@ export function defaultState(): PersistedState {
     focusMinutesToday: 0,
     date: todayKey(),
     cycleFocusCount: 0,
-    noise: { on: false, type: DEFAULT_SETTINGS.noiseType, volume: DEFAULT_SETTINGS.noiseVolume },
+    noise: {
+      on: false,
+      type: DEFAULT_SETTINGS.noiseType,
+      volume: DEFAULT_SETTINGS.noiseVolume,
+      autoWithFocus: false,
+    },
   };
+
 }
 
 // Merge a partial (possibly untrusted, e.g. imported) state over the defaults.

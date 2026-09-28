@@ -11,6 +11,7 @@ interface Props {
   onDelete: (id: string) => void;
   onClearDone: () => void;
   onMoveTask?: (fromIndex: number, toIndex: number) => void;
+  onRenameTask?: (id: string, newTitle: string) => void;
 }
 
 export function TasksView({
@@ -23,9 +24,12 @@ export function TasksView({
   onDelete,
   onClearDone,
   onMoveTask,
+  onRenameTask,
 }: Props) {
   const [newTask, setNewTask] = useState("");
   const [estimatedStr, setEstimatedStr] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
   const doneCount = tasks.filter((t) => t.done).length;
 
   const add = () => {
@@ -37,6 +41,24 @@ export function TasksView({
     setNewTask("");
     setEstimatedStr("");
   };
+
+  const startEditing = (task: Task) => {
+    setEditingId(task.id);
+    setEditingTitle(task.title);
+  };
+
+  const finishEditing = (id: string) => {
+    const trimmed = editingTitle.trim();
+    if (trimmed) {
+      onRenameTask?.(id, trimmed);
+    }
+    setEditingId(null);
+  };
+
+  const cancelEditing = () => {
+    setEditingId(null);
+  };
+
 
   return (
     <div className="tasks-view">
@@ -101,7 +123,28 @@ export function TasksView({
                   </svg>
                 )}
               </span>
-              <span className="task-title" title={t.title}>{t.title}</span>
+              {editingId === t.id ? (
+                <input
+                  className="task-edit-input"
+                  value={editingTitle}
+                  onChange={(e) => setEditingTitle(e.target.value)}
+                  onBlur={() => finishEditing(t.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") finishEditing(t.id);
+                    else if (e.key === "Escape") cancelEditing();
+                  }}
+                  autoFocus
+                />
+              ) : (
+                <span
+                  className="task-title"
+                  title={`${t.title} (${tr("task.editTitle")})`}
+                  onDoubleClick={() => !t.done && startEditing(t)}
+                >
+                  {t.title}
+                </span>
+              )}
+
               {progress && (
                 <span className="task-pomos" title={tr("task.pomoCount")}>
                   🍅 {progress}

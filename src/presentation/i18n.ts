@@ -72,7 +72,10 @@ const DICT: Dict = {
   "task.moveUp": ["上移", "Move up"],
   "task.moveDown": ["下移", "Move down"],
   "task.delete": ["删除", "Delete"],
+  "task.editTitle": ["双击编辑任务", "Double click to edit"],
+  "task.editPlaceholder": ["输入任务名称…", "Task title…"],
   "task.footer": ["共 {total} 个任务 · 已完成 {done} 个", "{total} tasks · {done} done"],
+
   "task.clearDone": ["清除已完成", "Clear done"],
 
 
@@ -121,7 +124,9 @@ const DICT: Dict = {
   "settings.noiseType.white": ["白噪音", "White"],
   "settings.noiseType.pink": ["粉噪音", "Pink"],
   "settings.volume": ["音量", "Volume"],
+  "settings.noiseAutoWithFocus": ["专注时自动播放（休息时暂停）", "Auto-play during focus only"],
   "settings.hotkey.startPause": ["开始 / 暂停", "Start / Pause"],
+
   "settings.hotkey.hint": [
     "桌面端生效。可用修饰键：CommandOrControl、Shift、Alt、Super，普通键如 P / Space。示例：",
     "Desktop only. Modifiers: CommandOrControl, Shift, Alt, Super; keys like P / Space. Example:",

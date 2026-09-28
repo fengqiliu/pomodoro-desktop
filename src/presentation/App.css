@@ -464,7 +464,25 @@ input {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  cursor: pointer;
 }
+
+.task.done .task-title {
+  cursor: default;
+}
+
+.task-edit-input {
+  flex: 1;
+  height: 26px;
+  padding: 0 6px;
+  font-size: 14px;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  outline: none;
+}
+
 
 .task-pomos {
   font-size: 11px;

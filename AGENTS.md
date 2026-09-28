@@ -32,7 +32,8 @@ Regenerate the app icon set (needs Pillow): `python3 gen_icons.py` → writes `s
 
 ### Frontend layering (DDD, `src/`)
 The frontend is split into layers; new features go into the matching layer instead of piling into `App.tsx`:
-- `src/domain/` — pure rules, no IO/React/Tauri: `timer/` (phase, pomodoro cycle, daily progress, countdown math + `timer.test.ts`), `tasks/` (task entity, progress formatting, estimates, safe reordering + `task.test.ts`), `stats/` (focus history: record, 7-day view, 60-day prune, streaks + `focusHistory.test.ts`), `settings/` (defaults, persisted-state merge & daily-reset rules, state composition + `persistedState.test.ts`).
+- `src/domain/` — pure rules, no IO/React/Tauri: `timer/` (phase, pomodoro cycle, daily progress, countdown math + `timer.test.ts`), `tasks/` (task entity, progress formatting, estimates, safe reordering, inline rename + `task.test.ts`), `stats/` (focus history: record, 7-day view, 60-day prune, streaks + `focusHistory.test.ts`), `settings/` (defaults, persisted-state merge & daily-reset rules, state composition + `persistedState.test.ts`).
+
 
 - `src/application/` — ports and use cases: `ports.ts` (`WindowPort` / `ShortcutPort` / `NotificationPort` / `NativeTimerPort` / `StateStore` / `HistoryStore`), `backupService.ts` (build/validate JSON backup + test), `completePhase.ts` (cross-domain phase completion coordinator use case + test).
 - `src/infrastructure/` — adapters implementing the ports: `platform/` (desktop detection + lazy Tauri imports → `windowAdapter` / `shortcutAdapter` / `notificationAdapter` / `nativeTimerAdapter`), `storage/` (localStorage stores with versioned keys, `safeStorage` fallback, `preferenceStore`), `audio/` (`noiseEngine.ts`, `chime.ts`).

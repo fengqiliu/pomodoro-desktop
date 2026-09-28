@@ -20,7 +20,9 @@ export interface NoisePref {
   on: boolean;
   type: NoiseType;
   volume: number;
+  autoWithFocus?: boolean;
 }
+
 
 export const DEFAULT_SETTINGS: Settings = {
   focus: 25,

@@ -54,7 +54,6 @@ export default function App() {
   const { toast, showToast } = useToast();
   const { theme, setTheme } = useTheme();
   const { pinned, setPinned } = usePinned();
-  useNoise(noise);
 
   const {
     activeTaskId,
@@ -65,8 +64,8 @@ export default function App() {
     deleteTask,
     clearDoneTasks,
     moveTask,
+    renameTask,
   } = useTaskList({ tasks, setTasks });
-
 
   // ---- countdown engine + end-of-phase business rules ----
   const { phase, secondsLeft, running, toggle, reset, switchTo, skip } = usePomodoroSession({
@@ -82,6 +81,9 @@ export default function App() {
     setHistory,
     setTasks,
   });
+
+  useNoise({ noise, running, phase });
+
 
   const { hotkeyError, setHotkeyError } = useHotkey({ hotkey: settings.hotkey, toggle });
   const {
@@ -181,8 +183,10 @@ export default function App() {
           onDelete={deleteTask}
           onClearDone={clearDoneTasks}
           onMoveTask={moveTask}
+          onRenameTask={renameTask}
         />
       ) : (
+
 
         <StatsView
           tr={tr}

@@ -180,6 +180,17 @@ export function SettingsModal({
               className="range"
             />
           </label>
+          <label className="field checkbox">
+            <span>{tr("settings.noiseAutoWithFocus")}</span>
+            <input
+              type="checkbox"
+              checked={noise.autoWithFocus ?? false}
+              onChange={(e) =>
+                onNoiseChange((n) => ({ ...n, autoWithFocus: e.target.checked }))
+              }
+            />
+          </label>
+
 
           <div className="field-divider">{tr("settings.section.hotkey")}</div>
           <label className="field">

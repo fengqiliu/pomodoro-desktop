@@ -44,7 +44,15 @@ export function removeTask(tasks: Task[], id: string): Task[] {
   return tasks.filter((t) => t.id !== id);
 }
 
+/** Renames a task. Disallows empty names. */
+export function renameTask(tasks: Task[], id: string, newTitle: string): Task[] {
+  const trimmed = newTitle.trim();
+  if (!trimmed) return tasks;
+  return tasks.map((t) => (t.id === id ? { ...t, title: trimmed } : t));
+}
+
 export function clearCompletedTasks(tasks: Task[]): Task[] {
+
   return tasks.filter((t) => !t.done);
 }
 

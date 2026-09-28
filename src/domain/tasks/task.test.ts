@@ -5,11 +5,13 @@ import {
   formatTaskProgress,
   recordPomodoro,
   removeTask,
+  renameTask,
   reorderTask,
   toggleTaskDone,
   updateTaskEstimate,
   type Task,
 } from "./index";
+
 
 
 let nextId = 0;
@@ -45,7 +47,22 @@ describe("removeTask", () => {
   });
 });
 
+describe("renameTask", () => {
+  it("renames the specified task when title is valid", () => {
+    const tasks = renameTask(fixture(), "a", "重命名任务");
+    expect(tasks[0].title).toBe("重命名任务");
+    expect(tasks[1].title).toBe("回邮件");
+  });
+
+  it("ignores empty or whitespace-only rename", () => {
+    const list = fixture();
+    expect(renameTask(list, "a", "")).toBe(list);
+    expect(renameTask(list, "a", "   ")).toBe(list);
+  });
+});
+
 describe("clearCompletedTasks", () => {
+
   it("keeps only unfinished tasks", () => {
     expect(clearCompletedTasks(fixture()).map((t) => t.id)).toEqual(["a"]);
   });

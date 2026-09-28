@@ -2,12 +2,14 @@ import { useCallback, useState, type Dispatch, type SetStateAction } from "react
 import {
   addTask as prependTask,
   clearCompletedTasks,
+  renameTask as updateTaskTitle,
   reorderTask,
   removeTask,
   toggleTaskDone,
   updateTaskEstimate,
   type Task,
 } from "../../domain/tasks";
+
 
 interface Options {
   tasks: Task[];
@@ -45,6 +47,10 @@ export function useTaskList({ tasks, setTasks }: Options) {
     setTasks((ts) => updateTaskEstimate(ts, id, estimated));
   }, [setTasks]);
 
+  const renameTask = useCallback((id: string, newTitle: string) => {
+    setTasks((ts) => updateTaskTitle(ts, id, newTitle));
+  }, [setTasks]);
+
   const activeTask = tasks.find((t) => t.id === activeTaskId) || null;
 
   return {
@@ -57,5 +63,7 @@ export function useTaskList({ tasks, setTasks }: Options) {
     clearDoneTasks,
     moveTask,
     updateEstimate,
+    renameTask,
   };
+
 }
