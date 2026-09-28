@@ -108,26 +108,28 @@ src/
 │   ├── tasks/                   # 任务上下文
 │   │   ├── index.ts / task.ts / task.test.ts (6 例)
 │   └── settings/                # 设置上下文
-│       ├── index.ts / settings.ts / persistedState.ts
+│       ├── index.ts / settings.ts / persistedState.ts / persistedState.test.ts
 ├── application/                 # 应用层：端口 + 用例（无具体 IO 实现）
-│   ├── ports.ts                 # 六个端口接口（纯类型）
-│   └── backupService.ts         # 备份构建/校验用例 + backupService.test.ts (4 例)
+│   ├── index.ts / ports.ts      # 端口接口（纯类型）
+│   ├── backupService.ts         # 备份构建/校验用例 + backupService.test.ts (4 例)
+│   └── completePhase.ts         # 阶段完成跨域协调用例 + completePhase.test.ts (11 例)
 ├── infrastructure/              # 基础设施层：端口的具体适配器
 │   ├── platform/                # Tauri/浏览器适配（懒加载动态 import）
 │   │   ├── index.ts / runtime.ts / windowAdapter.ts / shortcutAdapter.ts
 │   │   ├── notificationAdapter.ts / nativeTimerAdapter.ts
-│   ├── storage/                 # localStorage 适配
-│   │   ├── index.ts / keys.ts / stateStore.ts / historyStore.ts
+│   ├── storage/                 # localStorage 适配与安全降级
+│   │   ├── index.ts / keys.ts / safeStorage.ts / preferenceStore.ts / stateStore.ts / historyStore.ts / storage.test.ts (8 例)
 │   └── audio/                   # WebAudio 适配
 │       ├── chime.ts / noiseEngine.ts
 ├── presentation/                # 表现层：组装 + 渲染
 │   ├── App.tsx                  # 组装根：hook 组装、派生值、渲染
 │   ├── App.css / i18n.ts / uiTypes.ts
-│   ├── hooks/                      # usePomodoroEngine（倒计时机制，不含业务规则）
-│   │                               # + usePersistedState/usePomodoroSession/useSettingsDialog/…（状态与副作用）
+│   ├── hooks/                   # usePomodoroEngine（倒计时机制，不含业务规则）
+│   │                            # + useMidnightRollover（跨日唤醒与调度机制）
+│   │                            # + usePersistedState/usePomodoroSession/useSettingsDialog/…（状态与副作用）
 │   └── components/              # TopBar · TimerView · TasksView · StatsView · SettingsModal
 ├── shared/
-│   └── date.ts                  # todayKey() —— 跨上下文共享的纯日期工具
+│   └── date.ts                  # todayKey() / getMillisUntilNextMidnight() + date.test.ts (4 例)
 ├── main.tsx / index.css / vite-env.d.ts
 ```
 

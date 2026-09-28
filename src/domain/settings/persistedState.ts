@@ -52,3 +52,34 @@ export function mergeState(parsed: Partial<PersistedState> | null | undefined): 
   merged.focusMinutesToday = dailyProgress.focusMinutesToday;
   return merged;
 }
+
+export interface ComposeStateInput {
+  settings: Settings;
+  tasks: Task[];
+  dailyProgress: DailyProgress;
+  cycleFocusCount: number;
+  noise: NoisePref;
+}
+
+/**
+ * Combines runtime domain state slices into a cohesive PersistedState snapshot.
+ * Pure function.
+ */
+export function composePersistedState({
+  settings,
+  tasks,
+  dailyProgress,
+  cycleFocusCount,
+  noise,
+}: ComposeStateInput): PersistedState {
+  return {
+    settings,
+    tasks,
+    completedToday: dailyProgress.completedToday,
+    focusMinutesToday: dailyProgress.focusMinutesToday,
+    date: dailyProgress.date,
+    cycleFocusCount,
+    noise,
+  };
+}
+
