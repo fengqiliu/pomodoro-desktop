@@ -49,7 +49,7 @@
 2. **IPC 契约不变**：命令 `native_timer_start` / `native_timer_pause` / `native_timer_cancel`；事件 `native-timer-completed`；payload 均为 camelCase。
 3. **浏览器可跑**：`npm run dev` 在纯浏览器中仍可用（Tauri API 懒加载 + no-op/回退路径保持）。
 4. **依赖单向**：presentation → application / infrastructure → domain；domain、application 不得反向依赖。
-5. **工具链不变**：不新增运行时依赖；测试仍用 Vitest（4 套 23 例）与 `cargo test`。
+5. **工具链不变**：不新增运行时依赖；测试仍用 Vitest（当前 9 套 77 例）与 `cargo test`（5 例），并在 `npm test` 前置 DDD 架构守卫（见 §11.4）。
 
 ---
 
@@ -146,9 +146,9 @@ src/
 |------|------|---------|
 | `phase.ts` | `Phase` 值对象 | `type Phase = "focus" \| "short" \| "long"`；`phaseMinutes(phase, durations)` |
 | `pomodoroCycle.ts` | 长休周期规则 | `completeFocusCycle(count, longEvery) → { nextPhase, cycleFocusCount }`；`nextPhaseAfterCompletedBreak()`；`nextPhaseAfterSkip(phase)`；`focusesUntilLongBreak(count, longEvery)` |
-| `dailyProgress.ts` | 日历日统计 | `resetDailyProgressIfNeeded(progress, today)`；`addCompletedFocus(progress, minutes)`；`type DailyProgress` |
+| `dailyProgress.ts` | 日历日统计 | `resetDailyProgressIfNeeded(progress, today)`；`addCompletedFocus(progress, minutes)`；`isDailyGoalReached(progress, goal)`；`getDailyGoalPercent(progress, goal)`；`type DailyProgress` |
 | `countdown.ts` | 倒计时数学 | `remainingSeconds(endAt, now)`（由绝对结束时间戳推导，防 interval 抖动漂移） |
-| `timer.test.ts` | 9 例：周期推进、跳过、跨日重置、延迟回调剩余时间 | |
+| `timer.test.ts` | 11 例：周期推进、跳过、跨日重置、延迟回调剩余时间、目标达成与百分比换算 | |
 
 > 语义要点（原样保留）：`cycleFocusCount` **跨日存活**（节奏与日历统计解耦，仅在长休到期后归零）；`skip()` 不记录完成专注、**不推进**长休周期。
 
@@ -344,23 +344,29 @@ src-tauri/src/
 
 | 套件 | 位置 | 例数 | 覆盖内容 |
 |---|---|---|---|
-| timer | `src/domain/timer/timer.test.ts` | 9 | 阶段周期、长休推进、跳过、跨日重置、延迟回调剩余秒数 |
-| task | `src/domain/tasks/task.test.ts` | 6 | 增删切换、清已完成、activeId 为空、pomodoro 计数 |
-| focusHistory | `src/domain/stats/focusHistory.test.ts` | 4 | 7 天视图、缺日补齐、60 天裁剪、记录累计 |
+| timer | `src/domain/timer/timer.test.ts` | 11 | 阶段周期、长休推进、跳过、跨日重置、延迟回调剩余秒数、每日目标达成与百分比 |
+| task | `src/domain/tasks/task.test.ts` | 12 | 创建/添加（含预估）、完成切换、删除、清已完成、番茄计数、预估更新、安全重排、就地重命名、进度格式化 |
+| focusHistory | `src/domain/stats/focusHistory.test.ts` | 11 | 7 天视图、缺日补齐、60 天裁剪、记录累计、当前/最佳连击、历史累计 |
+| persistedState | `src/domain/settings/persistedState.test.ts` | 3 | 默认值合并、坏数据防御、跨日重置 |
 | backupService | `src/application/backupService.test.ts` | 4 | 构建往返、非法 JSON、错误 app 标识、形状校验 |
-| completePhase | `src/application/completePhase.test.ts` | 11 | 阶段完成编排、长休判定、跨日统计重置、任务累加、通知与声音意图 |
+| completePhase | `src/application/completePhase.test.ts` | 12 | 阶段完成编排、长休判定、跨日统计重置、任务累加、目标达成成就、通知与声音意图 |
+| storage | `src/infrastructure/storage/storage.test.ts` | 8 | 版本键读写、safeStorage 兜底、偏好键 |
+| date | `src/shared/date.test.ts` | 4 | `todayKey`、跨午夜毫秒 |
+| i18n | `src/presentation/i18n.test.ts` | 12 | 双语取值、`{param}` 插值、缺参占位、未知键回退、字典完整性 |
 | Rust engine | `src-tauri/src/timer/engine.rs` `#[cfg(test)]` | 5 | 墙钟暂停保持、代际独占完成、取消失效、定向取消不误杀、worker 到点完成 |
+
+前端合计 9 套 77 例；Rust 5 例；总计 82 例。
 
 ### 8.2 验证结果（本次实施实测）
 
 | 命令 | 结果 |
 |---|---|
 | `npm run typecheck` | ✅ 0 错误 |
-| `npm test`（vitest run） | ✅ 4 文件 23/23 通过（~0.8s） |
+| `npm test`（架构守卫 + vitest run） | ✅ 架构守卫 65 源文件 0 违规；9 套 77/77 通过（~0.4s） |
 | `npm run build`（tsc -b && vite build） | ✅ 产出 dist/ |
 | 过时引用 grep（旧模块名/旧 API） | ✅ 全仓库 0 命中（历史规格 `docs/superpowers/specs/` 除外，刻意保留原貌） |
 | `rustfmt --check`（全部 5 个 Rust 文件） | ✅ 解析通过（仅风格差异；本仓库未强制 rustfmt） |
-| `cargo test … native_timer --lib` | ⛔ **本机无法执行**：缺 MSVC `link.exe` 与 Windows SDK（见 §10） |
+| `cargo test … native_timer --lib` | ✅ macOS 运行环境实测 5/5 通过；原 Windows 环境的 MSVC 受限见 §10 L1，已被 macOS 验证取代 |
 
 ### 8.3 建议的回归手测（桌面端，待工具链就绪）
 
@@ -372,6 +378,11 @@ src-tauri/src/
 6. 设置导出/导入：正常备份往返；粘贴坏 JSON 被拒且原数据不受影响；
 7. 旧版 localStorage（v3 键）升级启动：设置/任务/历史完整可见；
 8. 纯浏览器 `npm run dev`：全部 UI 可用、计时本地完成、原生调用 no-op。
+9. 每日目标（默认 8）：第 8 个番茄到点弹出 🎉 Toast、计时页达成率 100% 且标 ✓；再完成不重复庆祝；目标设 0 无进度展示。
+10. 连击与累计：连续 N 天各 ≥1 番茄后当前/最佳连击为 N；今日未做但昨日有 → 连击从昨日延续；今日与昨日皆无 → 归零；统计页页脚出现累计数据。
+11. 白噪音「随专注自动播放」：开启后专注运行即播放、暂停/休息自动停；关闭后仅随顶栏开关。
+12. 任务：双击未完成标题行内重命名（Enter/失焦保存、Esc 取消、空白拒绝）；添加时填预估后显示 `🍅 x/y`；上移/下移排序后刷新（重启）顺序保持。
+13. 设置「每日目标」与「随专注自动播放」持久化：改后重启保留。
 
 ---
 
@@ -396,7 +407,7 @@ src-tauri/src/
 
 | # | 风险/限制 | 影响 | 缓解措施 |
 |---|---|---|---|
-| L1 | **本机缺 MSVC 工具链与 Windows SDK**，`cargo check/test` 无法执行（link.exe 缺失，在依赖构建脚本阶段即失败） | Rust 侧未经编译器验证 | 已做 `rustfmt --check` 语法解析（5 文件全过）+ 命令签名/serde/导入人工逐行比对；**待装 VS Build Tools 后执行 `cargo test --manifest-path src-tauri/Cargo.toml native_timer --lib`（5 例）与 `npm run tauri dev` 手测** |
+| L1 | **原计划环境缺 MSVC 工具链与 Windows SDK**，`cargo check/test` 无法执行（link.exe 缺失，在依赖构建脚本阶段即失败） | Rust 侧当时未经编译器验证 | 已做 `rustfmt --check` 语法解析（5 文件全过）+ 命令签名/serde/导入人工逐行比对；**后续已在 macOS 环境实测 `cargo test --manifest-path src-tauri/Cargo.toml native_timer --lib` 5/5 通过（见 §8.2）**；Windows 装 VS Build Tools 后仍建议跑 `npm run tauri dev` 手测 |
 | L2 | 桌面端行为仅靠静态验证与推演，未实机回归 | 原生计时/托盘/通知路径存在未知偏差可能 | §8.3 八项手测清单，工具链就绪后逐项执行 |
 | L3 | barrel `index.ts` 的 `export *` 可能掩盖同名冲突 | 编译期可发现（重复导出报错） | 当前各上下文命名不冲突；新增同名导出时改为显式命名导出 |
 | L4 | `App.tsx` 曾是最大单文件（组装根职责集中） | 可读性上限 | **已解决**：按 §11.1 拆为 `presentation/hooks/*`（usePersistedState/usePomodoroSession/useSettingsDialog/useHotkey/useBackup 等 13 个钩子），App 仅剩组装与 JSX（≈210 行）；业务规则不得回流 |
@@ -409,7 +420,7 @@ src-tauri/src/
 1. **`App.tsx` 继续瘦身**（**已完成**：跨日守卫 → `usePersistedState`、Toast → `useToast`、设置弹窗 → `useSettingsDialog`，连同热键/备份/主题等一并收敛为 `presentation/hooks/*`）；业务规则若变复杂，抽 `application/` 用例（如 `completePhaseUseCase`）而非写进组件。
 2. **统计上下文扩展**：新增周报/导出 CSV 时，规则进 `domain/stats`，仅视图进 `StatsView`。
 3. **Rust 侧告警/持久化**：若原生层需要记录日志或落盘，作为 `timer` 上下文的仓储端口（trait）注入，组合根装配实现——保持 `engine.rs` 纯逻辑可测。
-4. **依赖约束 CI**：用 `dependency-cruiser` 或简单 grep 规则把 §3.2 的 R1–R4 固化（domain/application 禁 React/Tauri/localStorage）。
+4. **依赖约束 CI**（**已完成**）：`scripts/check-architecture.mjs` 实现 §3.2 的 R1–R4（domain 禁 React/Tauri/外层、application 禁 React/Tauri/infrastructure/presentation、infrastructure 禁 presentation、presentation 禁直连 `@tauri-apps/*`），并接入 `npm test` 在 Vitest 之前执行。
 5. **多语言**：按 i18n 既有约定扩展 `Lang` 与 `DICT` 第三元组，不引第三方 i18n 库。
 
 ---
@@ -422,7 +433,7 @@ src-tauri/src/
 npm install            # 依赖（勿并发多个 npm install）
 npm run dev            # Vite :1420（浏览器/tauri 共用）
 npm run typecheck      # tsc --noEmit —— 唯一静态检查
-npm test               # vitest run —— 23 例领域/应用测试
+npm test               # scripts/check-architecture.mjs（DDD 架构守卫）+ vitest run —— 9 套 77 例
 npm run build          # tsc -b && vite build
 npm run tauri dev      # 完整桌面应用
 cargo test --manifest-path src-tauri/Cargo.toml native_timer --lib   # Rust 引擎 5 例（需 MSVC 工具链）

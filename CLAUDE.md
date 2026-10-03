@@ -11,7 +11,7 @@ A single-window Tauri 2 desktop Pomodoro timer (380×580, non-resizable). React 
 ```bash
 npm install
 npm run dev          # Vite dev server only — port 1420 (strictPort; Tauri expects this). Works in a plain browser too (see src/infrastructure/platform/).
-npm test             # Vitest unit tests for the domain/application layers (colocated *.test.ts)
+npm test             # DDD architecture guard (scripts/check-architecture.mjs) + Vitest — 9 suites / 77 cases
 npm run typecheck    # tsc --noEmit
 npm run build        # tsc -b && vite build  →  dist/
 npm run preview      # serve the built dist/
@@ -22,7 +22,7 @@ npx tauri build --bundles nsis  # rebuild only the NSIS .exe (faster when Rust i
 cargo test --manifest-path src-tauri/Cargo.toml native_timer --lib
 ```
 
-Vitest covers the colocated suites in `src/domain/**` and `src/application/` (`timer.test.ts`, `focusHistory.test.ts`, `task.test.ts`, `backupService.test.ts`); there is no linter configured. `npm run typecheck` remains the TypeScript static check.
+`npm test` runs `scripts/check-architecture.mjs` (DDD layering guard over `src/`) first, then Vitest: currently 9 colocated suites / 77 cases across `domain/timer`, `domain/tasks`, `domain/stats`, `domain/settings`, `application/backupService`, `application/completePhase`, `infrastructure/storage`, `shared/date`, and `presentation/i18n`. Rust engine cases live in `src-tauri/src/timer/engine.rs` (`cargo test --manifest-path src-tauri/Cargo.toml native_timer --lib`, 5 cases). There is no linter configured; `npm run typecheck` remains the TypeScript static check.
 
 Regenerate the app icon set (needs Pillow): `python3 gen_icons.py` → writes `src-tauri/icons/`.
 
