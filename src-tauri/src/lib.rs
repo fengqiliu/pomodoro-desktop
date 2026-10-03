@@ -4,8 +4,10 @@
 mod timer;
 mod tray;
 
+use std::sync::Arc;
+use timer::completion_log::{CompletionLog, CompletionLogHandle, FileCompletionLog, NullCompletionLog};
 use timer::engine::NativeTimer;
-use tauri::WindowEvent;
+use tauri::{Manager, WindowEvent};
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -20,6 +22,13 @@ pub fn run() {
         ])
         .setup(|app| {
             tray::build_tray(app)?;
+            // Inject the completion audit log at the composition root. If no app
+            // data directory can be resolved, fall back to a no-op log.
+            let completion_log: Arc<dyn CompletionLog> = match app.path().app_data_dir() {
+                Ok(dir) => Arc::new(FileCompletionLog::at_app_data_dir(&dir)),
+                Err(_) => Arc::new(NullCompletionLog),
+            };
+            let _ = app.manage(CompletionLogHandle::new(completion_log));
             Ok(())
         })
         .on_window_event(|window, event| {

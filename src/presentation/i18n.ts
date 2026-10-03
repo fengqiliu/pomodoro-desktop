@@ -98,6 +98,10 @@ const DICT: Dict = {
   "stats.chart.minutes": ["分钟数", "Minutes"],
   "stats.footer.empty": ["本周还没有专注记录，开始第一个番茄吧 🍅", "No focus this week yet — start your first pomodoro 🍅"],
   "stats.footer.avg": ["平均每天 {avg} 个番茄 · {mins} 分钟", "{avg} pomodoros / day · {mins} min"],
+  "stats.report.title": ["本周简报", "Weekly report"],
+  "stats.report.active": ["活跃 {n} 天", "{n} active day(s)"],
+  "stats.report.best": ["最佳 {date}（{n} 🍅）", "Best {date} ({n} 🍅)"],
+  "stats.report.export": ["导出 CSV（复制到剪贴板）", "Export CSV (copies to clipboard)"],
 
   // weekdays
   "day.0": ["周日", "Sun"],

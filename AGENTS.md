@@ -13,7 +13,7 @@ npm install
 npm run dev          # Vite dev server only — port 1420 (strictPort; Tauri expects this). Works in a plain browser too (see src/infrastructure/platform/).
 npm run typecheck    # tsc --noEmit
 npm run check-arch   # Architecture guard: enforces DDD layering constraints
-npm test             # vitest run — domain/application unit tests (colocated *.test.ts)
+npm test             # architecture guard (scripts/check-architecture.mjs, R1–R7) + Vitest unit tests (colocated *.test.ts)
 npm run build        # tsc -b && vite build  →  dist/
 npm run preview      # serve the built dist/
 
@@ -21,7 +21,7 @@ npm run tauri dev    # full app: launches Vite (beforeDevCommand) + native windo
 npm run tauri build  # bundled desktop app (runs npm run build first via beforeBuildCommand)
 npx tauri build --bundles nsis  # rebuild only the NSIS .exe (faster when Rust is cached)
 
-cargo test --manifest-path src-tauri/Cargo.toml native_timer --lib  # Rust engine tests
+cargo test --manifest-path src-tauri/Cargo.toml --lib  # Rust timer engine + completion-log tests
 ```
 
 There is no linter. `npm run typecheck` is the only static check; `npm test` runs the Vitest suites.
@@ -32,13 +32,13 @@ Regenerate the app icon set (needs Pillow): `python3 gen_icons.py` → writes `s
 
 ### Frontend layering (DDD, `src/`)
 The frontend is split into layers; new features go into the matching layer instead of piling into `App.tsx`:
-- `src/domain/` — pure rules, no IO/React/Tauri: `timer/` (phase, pomodoro cycle, daily progress & goal, countdown math + `timer.test.ts`), `tasks/` (task entity, progress formatting, estimates, safe reordering, inline rename + `task.test.ts`), `stats/` (focus history: record, 7-day view, 60-day prune, streaks + `focusHistory.test.ts`), `settings/` (defaults, persisted-state merge & daily-reset rules, state composition + `persistedState.test.ts`).
+- `src/domain/` — pure rules, no IO/React/Tauri: `timer/` (phase, pomodoro cycle, daily progress & goal, countdown math + `timer.test.ts`), `tasks/` (task entity, progress formatting, estimates, safe reordering, inline rename + `task.test.ts`), `stats/` (focus history: record, 7-day view, 60-day prune, streaks, weekly report & CSV export + `focusHistory.test.ts`/`weeklyReport.test.ts`), `settings/` (defaults, persisted-state merge & daily-reset rules, state composition + `persistedState.test.ts`).
 
 
 
 - `src/application/` — ports and use cases: `ports.ts` (`WindowPort` / `ShortcutPort` / `NotificationPort` / `NativeTimerPort` / `StateStore` / `HistoryStore`), `backupService.ts` (build/validate JSON backup + test), `completePhase.ts` (cross-domain phase completion coordinator use case + test).
 - `src/infrastructure/` — adapters implementing the ports: `platform/` (desktop detection + lazy Tauri imports → `windowAdapter` / `shortcutAdapter` / `notificationAdapter` / `nativeTimerAdapter`), `storage/` (localStorage stores with versioned keys, `safeStorage` fallback, `preferenceStore`), `audio/` (`noiseEngine.ts`, `chime.ts`).
-- `src/presentation/` — `App.tsx` (composition root: hook wiring + JSX only), `components/`, `hooks/` (`usePomodoroEngine.ts` countdown/native bridge/generation cancel; `usePomodoroSession.ts` end-of-phase business rules; `usePersistedState`/`useMidnightRollover`/`useTaskList`/`useSettingsDialog`/`useHotkey`/`useAppShortcuts`/`useBackup`/`useToast`/`useTheme`/`usePinned`/`useLanguage`/`useNoise`/`useDocumentTitle` state & side effects), `i18n.ts`, `uiTypes.ts`.
+- `src/presentation/` — `App.tsx` (composition root: hook wiring + JSX only), `components/`, `hooks/` (`usePomodoroEngine.ts` countdown/native bridge/generation cancel; `usePomodoroSession.ts` end-of-phase business rules; `usePersistedState`/`useMidnightRollover`/`useTaskList`/`useSettingsDialog`/`useHotkey`/`useAppShortcuts`/`useBackup`/`useWeeklyReport`/`useToast`/`useTheme`/`usePinned`/`useLanguage`/`useNoise`/`useDocumentTitle` state & side effects), `i18n.ts`, `uiTypes.ts`.
 - `src/shared/date.ts` — `todayKey()` and `getMillisUntilNextMidnight()` shared date helpers.
 
 Dependencies point inward: presentation → application/domain/infrastructure; domain and application must stay free of React/Tauri imports. Unit tests live next to the code they cover (`*.test.ts`).
@@ -72,8 +72,8 @@ Everything persists to versioned `localStorage` keys (defined in `src/infrastruc
 CSS custom properties in `App.css`: a `:root` (light) block and a `[data-theme="dark"]` override. The phase accent color (`--accent`, red/green/blue by phase) is set as an inline style on the root `.app` div each render, overriding the CSS default. `index.css` is just the 7-line browser reset.
 
 ### Native layer (`src-tauri/`) — two bounded contexts + assembly root
-- `src/lib.rs` — composition root only: registers plugins (`tauri-plugin-global-shortcut`, `tauri-plugin-notification`), manages `NativeTimer` state, registers the three `native_timer_*` commands, wires tray setup and close-to-tray.
-- `src/timer/` — timer context: `engine.rs` (wall-clock engine, generation-based cancellation, completion worker, Rust unit tests) and `commands.rs` (thin IPC adapters `native_timer_start` / `native_timer_pause` / `native_timer_cancel`).
+- `src/lib.rs` — composition root only: registers plugins (`tauri-plugin-global-shortcut`, `tauri-plugin-notification`), manages `NativeTimer` state, injects the `CompletionLogHandle` completion audit log (app data dir JSONL, falls back to null), registers the three `native_timer_*` commands, wires tray setup and close-to-tray.
+- `src/timer/` — timer context: `engine.rs` (wall-clock engine, generation-based cancellation, completion worker, Rust unit tests), `commands.rs` (thin IPC adapters `native_timer_start` / `native_timer_pause` / `native_timer_cancel` that also record a `CompletionEntry` on completion), `completion_log.rs` (`CompletionLog` trait port + `FileCompletionLog` JSONL writer + `NullCompletionLog`).
 - `src/tray/` — tray context: tray menu build (`build_tray`) and window show/hide toggle (`toggle_window`).
 
 Window config and bundle targets live in `tauri.conf.json`. Permissions (window always-on-top, notification, global-shortcut register/unregister/is-registered) are granted in `capabilities/default.json`. The global start/pause hotkey (default `CommandOrControl+Shift+P`) is registered from the presentation layer via `shortcutAdapter` and re-registers when `settings.hotkey` changes.

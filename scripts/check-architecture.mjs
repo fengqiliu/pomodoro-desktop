@@ -19,6 +19,15 @@
  *
  * 4. Presentation layer (src/presentation/):
  *    - MUST NOT import directly from "@tauri-apps/*" (must route via infrastructure/platform)
+ *
+ * 5. Domain & application stay pure: no browser IO globals
+ *    (localStorage / navigator / fetch / XMLHttpRequest / indexedDB / window / document) —
+ *    comments and string literals are ignored, so prose mentioning them is fine.
+ *
+ * 6. Only src/infrastructure/platform/ may import "@tauri-apps/*".
+ *
+ * 7. Unit tests are colocated: every file ending in `.test.ts` must live in
+ *    the same directory as at least one non-test source file (.ts or .tsx).
  */
 
 import fs from "fs";
@@ -60,6 +69,20 @@ function extractImports(content) {
     imports.push(match[1]);
   }
   return imports;
+}
+
+/**
+ * Strips comments and string literals so token scans (rule 5) do not flag
+ * prose that merely mentions browser APIs (e.g. a doc comment saying
+ * "no dependency on localStorage").
+ */
+function stripCommentsAndStrings(content) {
+  return content
+    .replace(/\/\*[\s\S]*?\*\//g, " ")
+    .replace(/(^|[^:])\/\/.*$/gm, "$1")
+    .replace(/`[^`]*`/g, " ")
+    .replace(/"(?:[^"\\]|\\.)*"/g, " ")
+    .replace(/'(?:[^'\\]|\\.)*'/g, " ");
 }
 
 let violationsCount = 0;
@@ -137,6 +160,16 @@ for (const file of allFiles) {
       }
     }
 
+    // Rule 6: Infrastructure outside platform/ must not import @tauri-apps/*.
+    if (
+      relPath.startsWith("infrastructure/") &&
+      !relPath.startsWith("infrastructure/platform/")
+    ) {
+      if (specifier.startsWith("@tauri-apps/")) {
+        reportViolation(file, specifier, "Only infrastructure/platform may import @tauri-apps/*.");
+      }
+    }
+
     // Rule 4: Presentation Layer
     if (relPath.startsWith("presentation/")) {
       if (specifier.startsWith("@tauri-apps/")) {
@@ -148,11 +181,38 @@ for (const file of allFiles) {
       }
     }
   }
+
+  // Rule 5: Domain/application stay pure — no browser IO globals.
+  if (relPath.startsWith("domain/") || relPath.startsWith("application/")) {
+    const stripped = stripCommentsAndStrings(content);
+    const ioToken = stripped.match(
+      /\b(localStorage|navigator|fetch|XMLHttpRequest|indexedDB|window|document)\b/
+    );
+    if (ioToken) {
+      reportViolation(file, ioToken[0], "Domain/application layers must not touch browser IO globals.");
+    }
+  }
+
+  // Rule 7: Unit tests are colocated with the code they cover — every *.test.ts
+  // must live in a directory that contains at least one non-test source file.
+  if (relPath.endsWith(".test.ts")) {
+    const dir = path.dirname(file);
+    const hasSource = fs
+      .readdirSync(dir)
+      .some(
+        (name) => (name.endsWith(".ts") || name.endsWith(".tsx")) && !name.endsWith(".test.ts")
+      );
+    if (!hasSource) {
+      reportViolation(file, relPath, "Test files must live next to the code they cover.");
+    }
+  }
 }
 
 if (violationsCount > 0) {
   console.error(`💥 Architecture check failed with ${violationsCount} violation(s).`);
   process.exit(1);
 } else {
-  console.log(`✅ Architecture check passed! All ${allFiles.length} source files adhere to DDD layer constraints.`);
+  console.log(
+    `✅ Architecture check passed! All ${allFiles.length} source files adhere to DDD layer constraints (R1–R7).`
+  );
 }

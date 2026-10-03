@@ -49,7 +49,7 @@
 2. **IPC 契约不变**：命令 `native_timer_start` / `native_timer_pause` / `native_timer_cancel`；事件 `native-timer-completed`；payload 均为 camelCase。
 3. **浏览器可跑**：`npm run dev` 在纯浏览器中仍可用（Tauri API 懒加载 + no-op/回退路径保持）。
 4. **依赖单向**：presentation → application / infrastructure → domain；domain、application 不得反向依赖。
-5. **工具链不变**：不新增运行时依赖；测试仍用 Vitest（当前 9 套 77 例）与 `cargo test`（5 例），并在 `npm test` 前置 DDD 架构守卫（见 §11.4）。
+5. **工具链不变**：不新增运行时依赖；测试仍用 Vitest（当前 10 套 84 例）与 `cargo test`（9 例），并在 `npm test` 前置 DDD 架构守卫（见 §11.4）。
 
 ---
 
@@ -347,6 +347,7 @@ src-tauri/src/
 | timer | `src/domain/timer/timer.test.ts` | 11 | 阶段周期、长休推进、跳过、跨日重置、延迟回调剩余秒数、每日目标达成与百分比 |
 | task | `src/domain/tasks/task.test.ts` | 12 | 创建/添加（含预估）、完成切换、删除、清已完成、番茄计数、预估更新、安全重排、就地重命名、进度格式化 |
 | focusHistory | `src/domain/stats/focusHistory.test.ts` | 11 | 7 天视图、缺日补齐、60 天裁剪、记录累计、当前/最佳连击、历史累计 |
+| weeklyReport | `src/domain/stats/weeklyReport.test.ts` | 7 | 周汇总（合计/活跃天/均值/最佳日）、CSV 明细与 total/average/best-day 汇总行、标签注入、字段转义、空周导出 |
 | persistedState | `src/domain/settings/persistedState.test.ts` | 3 | 默认值合并、坏数据防御、跨日重置 |
 | backupService | `src/application/backupService.test.ts` | 4 | 构建往返、非法 JSON、错误 app 标识、形状校验 |
 | completePhase | `src/application/completePhase.test.ts` | 12 | 阶段完成编排、长休判定、跨日统计重置、任务累加、目标达成成就、通知与声音意图 |
@@ -354,19 +355,20 @@ src-tauri/src/
 | date | `src/shared/date.test.ts` | 4 | `todayKey`、跨午夜毫秒 |
 | i18n | `src/presentation/i18n.test.ts` | 12 | 双语取值、`{param}` 插值、缺参占位、未知键回退、字典完整性 |
 | Rust engine | `src-tauri/src/timer/engine.rs` `#[cfg(test)]` | 5 | 墙钟暂停保持、代际独占完成、取消失效、定向取消不误杀、worker 到点完成 |
+| Rust completion_log | `src-tauri/src/timer/completion_log.rs` `#[cfg(test)]` | 4 | Null 空实现、JSONL 追加/自动建目录、app data dir 目标路径、Handle 默认空实现 |
 
-前端合计 9 套 77 例；Rust 5 例；总计 82 例。
+前端合计 10 套 84 例；Rust 9 例；总计 93 例。
 
 ### 8.2 验证结果（本次实施实测）
 
 | 命令 | 结果 |
 |---|---|
 | `npm run typecheck` | ✅ 0 错误 |
-| `npm test`（架构守卫 + vitest run） | ✅ 架构守卫 65 源文件 0 违规；9 套 77/77 通过（~0.4s） |
+| `npm test`（架构守卫 + vitest run） | ✅ 架构守卫 68 源文件 0 违规（规则 R1–R7）；10 套 84/84 通过（~0.4s） |
 | `npm run build`（tsc -b && vite build） | ✅ 产出 dist/ |
 | 过时引用 grep（旧模块名/旧 API） | ✅ 全仓库 0 命中（历史规格 `docs/superpowers/specs/` 除外，刻意保留原貌） |
-| `rustfmt --check`（全部 5 个 Rust 文件） | ✅ 解析通过（仅风格差异；本仓库未强制 rustfmt） |
-| `cargo test … native_timer --lib` | ✅ macOS 运行环境实测 5/5 通过；原 Windows 环境的 MSVC 受限见 §10 L1，已被 macOS 验证取代 |
+| `rustfmt --check`（全部 6 个 Rust 文件） | ✅ 解析通过（仅风格差异；本仓库未强制 rustfmt） |
+| `cargo test --manifest-path src-tauri/Cargo.toml --lib` | ✅ macOS 运行环境实测 9/9 通过（engine 5 + completion_log 4）。**更正**：旧命令的 `native_timer` 子串过滤器在 `timer::` 模块化后匹配 0 例，已统一改用 `--lib`；原 Windows 环境的 MSVC 受限见 §10 L1，已被 macOS 验证取代 |
 
 ### 8.3 建议的回归手测（桌面端，待工具链就绪）
 
@@ -418,9 +420,9 @@ src-tauri/src/
 ## 11. 后续演进方向（超出本次范围）
 
 1. **`App.tsx` 继续瘦身**（**已完成**：跨日守卫 → `usePersistedState`、Toast → `useToast`、设置弹窗 → `useSettingsDialog`，连同热键/备份/主题等一并收敛为 `presentation/hooks/*`）；业务规则若变复杂，抽 `application/` 用例（如 `completePhaseUseCase`）而非写进组件。
-2. **统计上下文扩展**：新增周报/导出 CSV 时，规则进 `domain/stats`，仅视图进 `StatsView`。
-3. **Rust 侧告警/持久化**：若原生层需要记录日志或落盘，作为 `timer` 上下文的仓储端口（trait）注入，组合根装配实现——保持 `engine.rs` 纯逻辑可测。
-4. **依赖约束 CI**（**已完成**）：`scripts/check-architecture.mjs` 实现 §3.2 的 R1–R4（domain 禁 React/Tauri/外层、application 禁 React/Tauri/infrastructure/presentation、infrastructure 禁 presentation、presentation 禁直连 `@tauri-apps/*`），并接入 `npm test` 在 Vitest 之前执行。
+2. **统计上下文扩展**（**已完成**）：新增专项迭代「周报与 CSV 导出」——规则进 `domain/stats/weeklyReport.ts`（`summarizeWeek` / `buildWeeklyReportCsv` 纯函数 + 7 例测试），视图仅在 `StatsView`（本周简报 + 导出按钮），剪贴板导出收敛在 `presentation/hooks/useWeeklyReport.ts`。
+3. **Rust 侧告警/持久化**（**已完成**）：新增专项迭代「完成审计日志」——`timer/completion_log.rs` 定义 `CompletionLog` 仓储端口（`FileCompletionLog` JSONL 落盘 / `NullCompletionLog` 空实现，4 例测试），组合根在 `lib.rs` setup 中解析 app data dir 并注入 `CompletionLogHandle`，`commands.rs` 完成回调里记录；`engine.rs` 未改动、保持纯逻辑可测。
+4. **依赖约束 CI**（**已完成**）：`scripts/check-architecture.mjs` 实现 §3.2 的 R1–R4（domain 禁 React/Tauri/外层、application 禁 React/Tauri/infrastructure/presentation、infrastructure 禁 presentation、presentation 禁直连 `@tauri-apps/*`），并接入 `npm test` 在 Vitest 之前执行。**已细化**：① 新增 R5——domain/application 禁浏览器 IO 全局（`localStorage/navigator/fetch/XMLHttpRequest/indexedDB/window/document`，先剥离注释与字符串再扫描）；② 新增 R6——仅 `infrastructure/platform` 可 import `@tauri-apps/*`；③ 新增 R7——测试文件必须与源码同目录；④ 新增 `.github/workflows/ci.yml`，推送/PR 在 GitHub Actions 上自动执行前端全量校验（check-arch / test / typecheck / build）与 `cargo test --lib`。
 5. **多语言**：按 i18n 既有约定扩展 `Lang` 与 `DICT` 第三元组，不引第三方 i18n 库。
 
 ---
@@ -433,15 +435,15 @@ src-tauri/src/
 npm install            # 依赖（勿并发多个 npm install）
 npm run dev            # Vite :1420（浏览器/tauri 共用）
 npm run typecheck      # tsc --noEmit —— 唯一静态检查
-npm test               # scripts/check-architecture.mjs（DDD 架构守卫）+ vitest run —— 9 套 77 例
+npm test               # scripts/check-architecture.mjs（DDD 架构守卫 R1–R7）+ vitest run —— 10 套 84 例
 npm run build          # tsc -b && vite build
 npm run tauri dev      # 完整桌面应用
-cargo test --manifest-path src-tauri/Cargo.toml native_timer --lib   # Rust 引擎 5 例（需 MSVC 工具链）
+cargo test --manifest-path src-tauri/Cargo.toml --lib   # Rust 9 例（engine 5 + completion_log 4；旧 native_timer 过滤器已失效）
 ```
 
 ### 12.2 本次实施产生的变更概览（git）
 
-- 新增：`src/{domain,application,infrastructure,shared}/**`、`src-tauri/src/{timer,tray}/**`
+- 新增：`src/{domain,application,infrastructure,shared}/**`、`src-tauri/src/{timer,tray}/**`；后续专项：`domain/stats/weeklyReport.ts`(+测试)、`presentation/hooks/useWeeklyReport.ts`、`timer/completion_log.rs`、`scripts/check-architecture.mjs`（R5–R7）、`.github/workflows/ci.yml`
 - 移动（保历史）：`App.tsx/components/hooks/i18n → presentation/`、`chime/noise → infrastructure/audio`、`native_timer.rs → timer/engine.rs`
 - 删除：`src/{timer,stats,dataBackup,persistence,platform,types}*` 等旧扁平模块
 - 重写：`src-tauri/src/lib.rs`（组合根）

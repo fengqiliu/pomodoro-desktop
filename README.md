@@ -12,7 +12,7 @@ v2.0 重点：前端由单文件重构为「引擎 hook + 组件」模块化架�
 - **可配置时长** —— 专注 25 分钟、短休 5 分钟、长休 15 分钟，每完成 4 个番茄进入长休（均可调）
 - **任务清单** —— 添加（可填预估番茄数）/ 完成 / 删除 / 双击重命名 / 上下移排序，选一个为「当前专注任务」，自动累计每个任务吃掉的番茄数并显示 `🍅 x/y` 进度
 - **每日目标** —— 设定每日番茄目标（默认 8 个，1–30 可调），计时页实时展示今日 `x/目标` 进度，达成瞬间弹出 🎉 庆祝
-- **7 天统计** —— 柱状图按「番茄数 / 专注分钟」切换；展示今日 / 本周汇总、当前与历史最佳连续天数、历史累计番茄与专注时长
+- **7 天统计与周报** —— 柱状图按「番茄数 / 专注分钟」切换；展示今日 / 本周汇总、当前与历史最佳连续天数、历史累计番茄与专注时长；「本周简报」展示本周活跃天数与最佳日，可一键导出 CSV（复制到剪贴板，含合计/平均/最佳汇总行）
 - **白噪音** —— 内置白 / 棕 / 粉噪音生成器（WebAudio 实时合成，无音频文件），可调音量；可开启「随专注自动播放」
 - **完成提示音** —— 阶段结束时播放清脆的钟声
 - **深色 / 浅色主题** —— 默认跟随系统，可手动切换
@@ -64,7 +64,7 @@ npm run dev           # 仅 Vite，端口 1420，可在普通浏览器打开
 ```bash
 npm install           # 安装依赖
 npm run dev           # 仅前端开发（浏览器，:1420）
-npm test              # Vitest 回归测试（领域/应用纯函数）
+npm test              # DDD 架构守卫（R1–R7）+ Vitest 回归测试（10 套 84 例）
 npm run typecheck     # tsc --noEmit —— TypeScript 静态检查（无 lint）
 npm run build         # tsc -b && vite build → dist/
 npm run preview       # 预览构建产物
@@ -72,7 +72,7 @@ npm run preview       # 预览构建产物
 npm run tauri dev     # 桌面应用开发模式
 npm run tauri build   # 打包桌面应用（先自动执行 npm run build）
 npx tauri build --bundles nsis   # 只重打 NSIS 安装包（Rust 已缓存时更快）
-cargo test --manifest-path src-tauri/Cargo.toml native_timer --lib  # 原生计时测试
+cargo test --manifest-path src-tauri/Cargo.toml --lib  # Rust 测试（引擎 5 例 + 完成审计日志 4 例）
 
 python3 gen_icons.py  # 重新生成应用图标（需 Pillow），输出到 src-tauri/icons/
 ```
@@ -82,7 +82,7 @@ python3 gen_icons.py  # 重新生成应用图标（需 Pillow），输出到 src
 ```
 pomodoro-desktop/
 ├── src/                    # 前端（DDD 分层）
-│   ├── domain/             # 纯领域规则：timer/ tasks/ stats/ settings/（含 *.test.ts）
+│   ├── domain/             # 纯领域规则：timer/ tasks/ stats/（周报/CSV 规则） settings/（含 *.test.ts）
 │   ├── application/        # 端口 ports.ts + 用例 backupService（含测试）
 │   ├── infrastructure/     # 适配器：platform/（惰性加载 Tauri API） storage/ audio/
 │   ├── presentation/       # App.tsx 组装 + components/ + hooks/（状态/副作用/计时引擎）+ i18n.ts
@@ -91,7 +91,7 @@ pomodoro-desktop/
 │   └── index.css           # 浏览器重置（7 行）
 ├── src-tauri/              # Rust/Tauri 外壳（限界上下文 + 组合根）
 │   ├── src/lib.rs          # 组合根：插件、命令注册、托盘装配、关闭到托盘
-│   ├── src/timer/          # 计时上下文：engine.rs（引擎+单测） commands.rs（IPC 适配器）
+│   ├── src/timer/          # 计时上下文：engine.rs（引擎+单测） commands.rs（IPC 适配器） completion_log.rs（审计日志）
 │   ├── src/tray/           # 托盘上下文：托盘菜单与窗口显隐
 │   ├── src/main.rs         # Windows 下隐藏控制台窗口
 │   ├── tauri.conf.json     # 窗口与打包配置（含 NSIS 中文化）
@@ -103,6 +103,7 @@ pomodoro-desktop/
 │   ├── 概要设计说明.md     # HLD：总体架构、模块设计、关键机制、接口与测试设计
 │   ├── DDD重构方案.md      # DDD 分层目标与依赖规则、模块映射（旧→新）、迁移与验证
 │   └── NSIS-中文化.md      # NSIS 安装包中文化配置说明
+├── .github/workflows/ci.yml  # CI：前端全量校验 + cargo test（推送/PR 触发）
 ├── AGENTS.md               # AI 协作指引（Codex）：架构约定与常用命令
 ├── CLAUDE.md               # AI 协作指引（Claude）：架构约定与常用命令
 ├── gen_icons.py            # 图标生成脚本（Pillow 绘制扁平番茄时钟）
@@ -120,9 +121,9 @@ pomodoro-desktop/
 - **番茄循环**：今日统计与长休息循环分别记录。`cycleFocusCount` 在每次完成专注后推进、触发长休息后归零，并会跨日期延续，因此“每 N 个番茄长休息”不受每日统计重置影响。
 - **历史自动裁剪**：`domain/stats` 在启动、记录和导入时把历史裁剪到近 60 天，防止 localStorage 无界增长（图表只用近 7 天）。
 - **数据备份**：设置面板可导出/导入 JSON 备份（经剪贴板往返，桌面与浏览器通用）。导入时 `application/backupService.parseBackup` 校验载荷、按默认值合并状态并裁剪历史，坏数据不会写入存储。
-- **测试**：计时规则位于 `src/domain/timer/`，通过 Vitest 覆盖长休息周期、跳过阶段、跨日重置和延迟回调的剩余时间计算；`focusHistory.test.ts`、`task.test.ts` 与 `backupService.test.ts` 覆盖历史裁剪、任务规则与备份往返；`src/presentation/i18n.test.ts` 覆盖双语取值、`{param}` 插值与字典完整性。前端共 9 个测试文件 77 例，Rust 原生计时 5 例；`npm test` 会先执行 DDD 分层架构守卫。
+- **测试**：计时规则位于 `src/domain/timer/`，通过 Vitest 覆盖长休息周期、跳过阶段、跨日重置和延迟回调的剩余时间计算；`focusHistory.test.ts` 与 `weeklyReport.test.ts` 覆盖历史裁剪、连击累计、周报汇总与 CSV 转义；`task.test.ts`、`backupService.test.ts` 与 `i18n.test.ts` 覆盖任务规则、备份往返与双语字典。前端共 10 个测试文件 84 例，Rust 9 例（引擎 5 + 完成审计日志 4）；`npm test` 会先执行 DDD 分层架构守卫（R1–R7，68 源文件）；推送/PR 时 GitHub Actions（`.github/workflows/ci.yml`）全量校验前端与 cargo test。
 - **双计时适配器**：桌面端通过 `native_timer_start` / `pause` / `cancel` 命令让 Rust 按墙上时间判断完成；启动时会把完成通知的标题与正文交给原生 worker，worker 先发送系统通知、再发送完成事件，因此托盘中不依赖 WebView 的 JS interval 或通知回调。浏览器模式仍使用相同的结束时间戳算法本地完成。React 只负责界面刷新、阶段规则、统计和自动衔接。
-- **原生层**：`src-tauri/src/lib.rs` 作为组合根，只负责装配——注册全局快捷键与通知插件、三个 `native_timer_*` 命令、托盘 setup 与关闭到托盘；业务逻辑在 `timer/`（`engine.rs` 引擎 + `commands.rs` IPC 适配器）与 `tray/`（托盘菜单与窗口显隐）两个限界上下文。全局开始/暂停快捷键由 App 注册，编辑时仅保存草稿，点击「完成」后才尝试应用。
+- **原生层**：`src-tauri/src/lib.rs` 作为组合根，只负责装配——注册全局快捷键与通知插件、三个 `native_timer_*` 命令、注入完成审计日志、托盘 setup 与关闭到托盘；业务逻辑在 `timer/`（`engine.rs` 引擎 + `commands.rs` IPC 适配器 + `completion_log.rs` 审计日志端口）与 `tray/`（托盘菜单与窗口显隐）两个限界上下文。全局开始/暂停快捷键由 App 注册，编辑时仅保存草稿，点击「完成」后才尝试应用。每次计时完成，`commands.rs` 会向 `<app_data_dir>/completion-log.jsonl` 追加一行 JSON（`completedAtMs`/`durationMs`/`generation`/`notificationSent`），best-effort 供诊断审计。
 - **主题**：CSS 变量在 `App.css` 的 `:root`（浅色）与 `[data-theme="dark"]`（深色）定义；阶段强调色 `--accent`（红/绿/蓝）在每次渲染时以行内样式覆盖。
 
 ## 配置

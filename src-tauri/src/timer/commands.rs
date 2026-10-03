@@ -1,3 +1,4 @@
+use super::completion_log::{now_epoch_ms, CompletionEntry, CompletionLog, CompletionLogHandle};
 use super::engine::{NativeTimer, TimerSnapshot, COMPLETED_EVENT};
 use serde::{Deserialize, Serialize};
 use tauri::{Emitter, State};
@@ -26,11 +27,13 @@ struct TimerCompletedEvent {
 pub fn native_timer_start(
     app: tauri::AppHandle,
     timer: State<'_, NativeTimer>,
+    log: State<'_, CompletionLogHandle>,
     duration_ms: u64,
     notification: Option<CompletionNotification>,
 ) -> TimerSnapshot {
     let (snapshot, ticket) = timer.start(duration_ms);
     let timer = timer.inner().clone();
+    let log = log.inner().clone();
     timer.spawn_completion_worker(ticket, move |snapshot| {
         let notification_sent = if let Some(notification) = notification {
             app
@@ -43,6 +46,14 @@ pub fn native_timer_start(
         } else {
             false
         };
+        // Audit the completion before notifying the frontend — best-effort,
+        // the injected `CompletionLog` never fails this command.
+        log.record(&CompletionEntry {
+            completed_at_ms: now_epoch_ms(),
+            duration_ms,
+            generation: snapshot.generation,
+            notification_sent,
+        });
         let _ = app.emit(
             COMPLETED_EVENT,
             TimerCompletedEvent {

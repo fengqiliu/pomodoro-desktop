@@ -23,6 +23,7 @@ import { useSettingsDialog } from "./hooks/useSettingsDialog";
 import { useAppShortcuts } from "./hooks/useAppShortcuts";
 import { useDocumentTitle } from "./hooks/useDocumentTitle";
 import { useBackup } from "./hooks/useBackup";
+import { useWeeklyReport } from "./hooks/useWeeklyReport";
 
 const PHASE_COLOR: Record<Phase, string> = {
   focus: "#ff5b5b",
@@ -125,6 +126,7 @@ export default function App() {
   const progress = 1 - secondsLeft / (phaseMinutes(phase, settings) * 60);
   const accent = PHASE_COLOR[phase];
   const week = useMemo(() => last7Days(history), [history, dailyProgress.date]);
+  const { exportCsv } = useWeeklyReport({ lang, week, showToast });
 
   return (
     <div className="app" style={{ ["--accent" as string]: accent }}>
@@ -200,6 +202,7 @@ export default function App() {
           chartMetric={chartMetric}
           accent={accent}
           onChartMetricChange={setChartMetric}
+          onExportCsv={() => void exportCsv()}
         />
 
       )}

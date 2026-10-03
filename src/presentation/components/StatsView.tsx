@@ -3,6 +3,7 @@ import { weekdayLabel, type Lang } from "../i18n";
 import {
   calculateStreak,
   calculateTotalStats,
+  summarizeWeek,
   type DayRecord,
   type History,
 } from "../../domain/stats";
@@ -17,6 +18,7 @@ interface Props {
   chartMetric: ChartMetric;
   accent: string;
   onChartMetricChange: (m: ChartMetric) => void;
+  onExportCsv: () => void;
 }
 
 export function StatsView({
@@ -28,12 +30,14 @@ export function StatsView({
   chartMetric,
   accent,
   onChartMetricChange,
+  onExportCsv,
 }: Props) {
 
   const weekPomos = useMemo(() => week.reduce((s, d) => s + d.pomodoros, 0), [week]);
   const weekMinutes = useMemo(() => week.reduce((s, d) => s + d.minutes, 0), [week]);
   const streak = useMemo(() => calculateStreak(history), [history]);
   const totalStats = useMemo(() => calculateTotalStats(history), [history]);
+  const weekSummary = useMemo(() => summarizeWeek(week), [week]);
 
   const maxVal = useMemo(
     () => Math.max(1, ...week.map((d) => (chartMetric === "pomodoros" ? d.pomodoros : d.minutes))),
@@ -129,6 +133,21 @@ export function StatsView({
           );
         })}
       </svg>
+
+      <div className="stats-report">
+        <div className="report-summary">
+          <span className="report-label">{tr("stats.report.title")}</span>
+          <span className="report-item">{tr("stats.report.active", { n: weekSummary.activeDays })}</span>
+          <span className="report-item">
+            {weekSummary.bestDay
+              ? tr("stats.report.best", { date: weekSummary.bestDay, n: weekSummary.bestPomodoros })
+              : "—"}
+          </span>
+        </div>
+        <button className="report-export" onClick={onExportCsv}>
+          {tr("stats.report.export")}
+        </button>
+      </div>
 
       <div className="stats-foot">
         <div>
