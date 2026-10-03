@@ -119,7 +119,7 @@ pomodoro-desktop/
 - **番茄循环**：今日统计与长休息循环分别记录。`cycleFocusCount` 在每次完成专注后推进、触发长休息后归零，并会跨日期延续，因此“每 N 个番茄长休息”不受每日统计重置影响。
 - **历史自动裁剪**：`domain/stats` 在启动、记录和导入时把历史裁剪到近 60 天，防止 localStorage 无界增长（图表只用近 7 天）。
 - **数据备份**：设置面板可导出/导入 JSON 备份（经剪贴板往返，桌面与浏览器通用）。导入时 `application/backupService.parseBackup` 校验载荷、按默认值合并状态并裁剪历史，坏数据不会写入存储。
-- **测试**：计时规则位于 `src/domain/timer/`，通过 Vitest 覆盖长休息周期、跳过阶段、跨日重置和延迟回调的剩余时间计算；`focusHistory.test.ts`、`task.test.ts` 与 `backupService.test.ts` 覆盖历史裁剪、任务规则与备份往返。
+- **测试**：计时规则位于 `src/domain/timer/`，通过 Vitest 覆盖长休息周期、跳过阶段、跨日重置和延迟回调的剩余时间计算；`focusHistory.test.ts`、`task.test.ts` 与 `backupService.test.ts` 覆盖历史裁剪、任务规则与备份往返；`src/presentation/i18n.test.ts` 覆盖双语取值、`{param}` 插值与字典完整性。前端共 9 个测试文件 77 例，Rust 原生计时 5 例；`npm test` 会先执行 DDD 分层架构守卫。
 - **双计时适配器**：桌面端通过 `native_timer_start` / `pause` / `cancel` 命令让 Rust 按墙上时间判断完成；启动时会把完成通知的标题与正文交给原生 worker，worker 先发送系统通知、再发送完成事件，因此托盘中不依赖 WebView 的 JS interval 或通知回调。浏览器模式仍使用相同的结束时间戳算法本地完成。React 只负责界面刷新、阶段规则、统计和自动衔接。
 - **原生层**：`src-tauri/src/lib.rs` 作为组合根，只负责装配——注册全局快捷键与通知插件、三个 `native_timer_*` 命令、托盘 setup 与关闭到托盘；业务逻辑在 `timer/`（`engine.rs` 引擎 + `commands.rs` IPC 适配器）与 `tray/`（托盘菜单与窗口显隐）两个限界上下文。全局开始/暂停快捷键由 App 注册，编辑时仅保存草稿，点击「完成」后才尝试应用。
 - **主题**：CSS 变量在 `App.css` 的 `:root`（浅色）与 `[data-theme="dark"]`（深色）定义；阶段强调色 `--accent`（红/绿/蓝）在每次渲染时以行内样式覆盖。
