@@ -1005,6 +1005,35 @@ input {
   padding: 0 0 6px;
 }
 
+/* Keyboard accessibility: components below set `outline: none` for mouse-focus
+   aesthetics, so restore a visible ring for keyboard users only. */
+:where(button, [role="tab"], input, select, textarea, a):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: var(--radius-sm);
+}
+
+/* Tab panel wrapper: the three views were previously direct flex children of
+   `.app` (flex column). Reproduce that context so their `flex: 1` still works. */
+.tab-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+/* Respect the OS "reduce motion" setting: keep end-states, drop the movement.
+   The ring's 0.95s dashoffset tween is the one users notice most. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
 /* dark-mode tweak: keep switch knob legible, soften shadows */
 [data-theme="dark"] .ctrl-main {
   box-shadow: 0 6px 22px -8px var(--accent);

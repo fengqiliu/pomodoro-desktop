@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type KeyboardEvent } from "react";
 import "./App.css";
 import { phaseMinutes, type Phase } from "../domain/timer";
 import { last7Days } from "../domain/stats";
@@ -24,6 +24,12 @@ import { useAppShortcuts } from "./hooks/useAppShortcuts";
 import { useDocumentTitle } from "./hooks/useDocumentTitle";
 import { useBackup } from "./hooks/useBackup";
 import { useWeeklyReport } from "./hooks/useWeeklyReport";
+
+const TABS: { id: Tab; key: string }[] = [
+  { id: "timer", key: "tab.timer" },
+  { id: "tasks", key: "tab.tasks" },
+  { id: "stats", key: "tab.stats" },
+];
 
 const PHASE_COLOR: Record<Phase, string> = {
   focus: "#ff5b5b",
@@ -128,6 +134,25 @@ export default function App() {
   const week = useMemo(() => last7Days(history), [history, dailyProgress.date]);
   const { exportCsv } = useWeeklyReport({ lang, week, showToast });
 
+  // Roving-tabindex arrow navigation for the tablist (WAI-ARIA pattern):
+  // ←/→ cycle, Home/End jump to the ends. Only the selected tab is tabbable,
+  // so Tab moves out of the tablist instead of walking all three buttons.
+  const onTabListKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    const offset =
+      e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+    let index = TABS.findIndex((t) => t.id === tab);
+    if (e.key === "Home") index = 0;
+    else if (e.key === "End") index = TABS.length - 1;
+    else if (offset === 0) return;
+    else {
+      index = (index + offset + TABS.length) % TABS.length;
+    }
+    e.preventDefault();
+    const next = TABS[index];
+    setTab(next.id);
+    document.getElementById(`tab-${next.id}`)?.focus();
+  };
+
   return (
     <div className="app" style={{ ["--accent" as string]: accent }}>
       <TopBar
@@ -141,18 +166,29 @@ export default function App() {
         onOpenSettings={openSettings}
       />
 
-      <div className="tabs">
-        <button className={tab === "timer" ? "tab active" : "tab"} onClick={() => setTab("timer")}>
-          {tr("tab.timer")}
-        </button>
-        <button className={tab === "tasks" ? "tab active" : "tab"} onClick={() => setTab("tasks")}>
-          {tr("tab.tasks")}
-        </button>
-        <button className={tab === "stats" ? "tab active" : "tab"} onClick={() => setTab("stats")}>
-          {tr("tab.stats")}
-        </button>
+      <div className="tabs" role="tablist" onKeyDown={onTabListKeyDown}>
+        {TABS.map(({ id, key }) => (
+          <button
+            key={id}
+            id={`tab-${id}`}
+            role="tab"
+            aria-selected={tab === id}
+            aria-controls={`tabpanel-${id}`}
+            tabIndex={tab === id ? 0 : -1}
+            className={tab === id ? "tab active" : "tab"}
+            onClick={() => setTab(id)}
+          >
+            {tr(key)}
+          </button>
+        ))}
       </div>
 
+      <div
+        className="tab-panel"
+        role="tabpanel"
+        id={`tabpanel-${tab}`}
+        aria-labelledby={`tab-${tab}`}
+      >
       {tab === "timer" ? (
         <TimerView
           tr={tr}
@@ -206,7 +242,7 @@ export default function App() {
         />
 
       )}
-
+      </div>
 
       {showSettings && (
         <SettingsModal

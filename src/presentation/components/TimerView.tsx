@@ -55,12 +55,13 @@ export function TimerView({
 
   return (
     <div className="timer-view">
-      <div className="phase-pills">
+      <div className="phase-pills" role="group" aria-label={tr("a11y.phasePicker")}>
         {(["focus", "short", "long"] as Phase[]).map((p) => (
           <button
             key={p}
             className={phase === p ? "phase-pill active" : "phase-pill"}
             onClick={() => onSwitchPhase(p)}
+            aria-pressed={phase === p}
           >
             {tr(PHASE_KEY[p])}
           </button>
@@ -81,7 +82,7 @@ export function TimerView({
             transform="rotate(-90 150 150)"
           />
         </svg>
-        <div className="ring-center">
+        <div className="ring-center" role="timer" aria-label={tr("a11y.countdown")}>
           <div className="time">{fmt(secondsLeft)}</div>
           <div className="phase-label">{tr(PHASE_KEY[phase])}</div>
         </div>
@@ -106,7 +107,12 @@ export function TimerView({
             />
           </svg>
         </button>
-        <button className="ctrl ctrl-main" onClick={onToggle}>
+        <button
+          className="ctrl ctrl-main"
+          onClick={onToggle}
+          aria-label={running ? tr("control.pause") : tr("control.start")}
+          title={running ? tr("control.pause") : tr("control.start")}
+        >
           {running ? (
             <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
               <rect x="6" y="5" width="4" height="14" rx="1" />
