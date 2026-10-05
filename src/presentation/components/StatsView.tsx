@@ -8,6 +8,7 @@ import {
   type History,
 } from "../../domain/stats";
 import type { ChartMetric } from "../uiTypes";
+import { MonthSummaryCard, TrendChart } from "./TrendPanel";
 
 interface Props {
   tr: (key: string, params?: Record<string, string | number>) => string;
@@ -134,6 +135,8 @@ export function StatsView({
         })}
       </svg>
 
+      <TrendChart tr={tr} history={history} metric={chartMetric} accent={accent} />
+
       <div className="stats-report">
         <div className="report-summary">
           <span className="report-label">{tr("stats.report.title")}</span>
@@ -148,6 +151,8 @@ export function StatsView({
           {tr("stats.report.export")}
         </button>
       </div>
+
+      <MonthSummaryCard tr={tr} history={history} />
 
       <div className="stats-foot">
         <div>

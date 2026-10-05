@@ -1013,6 +1013,94 @@ input {
   border-radius: var(--radius-sm);
 }
 
+/* ---------- 30-day trend + monthly summary ---------- */
+.trend,
+.month-summary {
+  flex-shrink: 0;
+}
+
+.trend-delta {
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+.trend-arrow {
+  font-size: 10px;
+}
+.trend-arrow.up { color: var(--accent); }
+.trend-arrow.down { color: #d94141; }
+.trend-arrow.flat { color: var(--text-faint); }
+
+.trend-delta-sub {
+  font-size: 10px;
+  color: var(--text-faint);
+}
+
+.trend-svg {
+  display: block;
+  margin: 0 auto;
+}
+
+.trend-bar {
+  opacity: 0.55;
+  transition: opacity 0.15s;
+}
+.trend-bar.recent {
+  opacity: 1;
+}
+
+.trend-line {
+  stroke-width: 1.6;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  opacity: 0.9;
+}
+
+.month-key {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.month-grid {
+  display: flex;
+  gap: 8px;
+}
+
+.month-cell {
+  flex: 1;
+  text-align: center;
+  padding: 7px 4px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-soft);
+}
+
+.month-val {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+
+.month-label {
+  font-size: 10px;
+  color: var(--text-faint);
+  margin-top: 2px;
+}
+
+.month-delta {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--text-faint);
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+.month-delta .up { color: var(--accent); font-weight: 600; }
+.month-delta .down { color: #d94141; font-weight: 600; }
+
 /* Tab panel wrapper: the three views were previously direct flex children of
    `.app` (flex column). Reproduce that context so their `flex: 1` still works. */
 .tab-panel {
