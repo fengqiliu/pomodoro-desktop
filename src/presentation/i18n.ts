@@ -106,6 +106,7 @@ const DICT: Dict = {
   "stats.report.active": ["活跃 {n} 天", "{n} active day(s)"],
   "stats.report.best": ["最佳 {date}（{n} 🍅）", "Best {date} ({n} 🍅)"],
   "stats.report.export": ["导出 CSV（复制到剪贴板）", "Export CSV (copies to clipboard)"],
+  "stats.more.title": ["趋势与月度", "Trends & monthly"],
   "stats.trend.title": ["近 30 天趋势", "Last 30 days"],
   "stats.trend.window": ["近7 天", "Recent 7d"],
   "stats.trend.baseline": ["前7 天", "Prior 7d"],

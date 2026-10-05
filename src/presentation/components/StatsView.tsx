@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { weekdayLabel, type Lang } from "../i18n";
 import {
   calculateStreak,
@@ -33,6 +33,11 @@ export function StatsView({
   onChartMetricChange,
   onExportCsv,
 }: Props) {
+
+  // The 30-day trend + monthly summary add ~175px, which overflows the fixed
+  // 380x580 window. They live behind a collapsed disclosure so the default view
+  // stays exactly as it was; the container also scrolls as a safety net.
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const weekPomos = useMemo(() => week.reduce((s, d) => s + d.pomodoros, 0), [week]);
   const weekMinutes = useMemo(() => week.reduce((s, d) => s + d.minutes, 0), [week]);
@@ -135,7 +140,23 @@ export function StatsView({
         })}
       </svg>
 
-      <TrendChart tr={tr} history={history} metric={chartMetric} accent={accent} />
+      <div className="stats-more">
+        <button
+          className="more-toggle"
+          onClick={() => setMoreOpen((v) => !v)}
+          aria-expanded={moreOpen}
+        >
+          <span className="more-label">{tr("stats.more.title")}</span>
+          <span className={`more-caret ${moreOpen ? "open" : ""}`}>▾</span>
+        </button>
+
+        {moreOpen && (
+          <div className="more-body">
+            <TrendChart tr={tr} history={history} metric={chartMetric} accent={accent} />
+            <MonthSummaryCard tr={tr} history={history} />
+          </div>
+        )}
+      </div>
 
       <div className="stats-report">
         <div className="report-summary">
@@ -151,8 +172,6 @@ export function StatsView({
           {tr("stats.report.export")}
         </button>
       </div>
-
-      <MonthSummaryCard tr={tr} history={history} />
 
       <div className="stats-foot">
         <div>
