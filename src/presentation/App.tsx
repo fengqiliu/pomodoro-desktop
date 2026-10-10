@@ -71,6 +71,7 @@ export default function App() {
     deleteTask,
     clearDoneTasks,
     moveTask,
+    updateCategory,
     renameTask,
   } = useTaskList({ tasks, setTasks });
 
@@ -225,6 +226,7 @@ export default function App() {
           onClearDone={clearDoneTasks}
           onMoveTask={moveTask}
           onRenameTask={renameTask}
+          onUpdateCategory={updateCategory}
         />
       ) : (
 

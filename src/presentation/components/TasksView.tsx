@@ -1,18 +1,34 @@
 import { useState } from "react";
-import { formatTaskProgress, type Task } from "../../domain/tasks";
+import {
+  filterTasks,
+  formatTaskProgress,
+  type Task,
+  type TaskCategory,
+  type TaskStatusFilter,
+} from "../../domain/tasks";
+import { TASK_CATEGORY_KEY } from "../i18n";
 
 interface Props {
   tr: (key: string, params?: Record<string, string | number>) => string;
   tasks: Task[];
   activeTaskId: string | null;
   onSetActiveTask: (id: string | null) => void;
-  onAdd: (title: string, estimatedPomodoros?: number) => void;
+  onAdd: (title: string, estimatedPomodoros?: number, category?: TaskCategory) => void;
   onToggleDone: (id: string) => void;
   onDelete: (id: string) => void;
   onClearDone: () => void;
   onMoveTask?: (fromIndex: number, toIndex: number) => void;
   onRenameTask?: (id: string, newTitle: string) => void;
+  onUpdateCategory?: (id: string, category?: TaskCategory) => void;
 }
+
+const NEXT_CATEGORY: Record<string, TaskCategory | undefined> = {
+  "": "work",
+  work: "study",
+  study: "life",
+  life: "other",
+  other: undefined,
+};
 
 export function TasksView({
   tr,
@@ -25,19 +41,26 @@ export function TasksView({
   onClearDone,
   onMoveTask,
   onRenameTask,
+  onUpdateCategory,
 }: Props) {
   const [newTask, setNewTask] = useState("");
   const [estimatedStr, setEstimatedStr] = useState("");
+  const [newCategory, setNewCategory] = useState<TaskCategory | "">("");
+  const [statusFilter, setStatusFilter] = useState<TaskStatusFilter>("all");
+  const [categoryFilter, setCategoryFilter] = useState<TaskCategory | "all">("all");
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
+
   const doneCount = tasks.filter((t) => t.done).length;
+  const activeCount = tasks.length - doneCount;
 
   const add = () => {
     const title = newTask.trim();
     if (!title) return;
     const estNum = parseInt(estimatedStr, 10);
     const estimated = !Number.isNaN(estNum) && estNum > 0 ? estNum : undefined;
-    onAdd(title, estimated);
+    const category = newCategory !== "" ? newCategory : undefined;
+    onAdd(title, estimated, category);
     setNewTask("");
     setEstimatedStr("");
   };
@@ -59,6 +82,16 @@ export function TasksView({
     setEditingId(null);
   };
 
+  const cycleCategory = (id: string, current?: TaskCategory) => {
+    const next = NEXT_CATEGORY[current ?? ""];
+    onUpdateCategory?.(id, next);
+  };
+
+  const isFiltered = statusFilter !== "all" || categoryFilter !== "all";
+  const displayedTasks = filterTasks(tasks, {
+    status: statusFilter,
+    category: categoryFilter,
+  });
 
   return (
     <div className="tasks-view">
@@ -71,6 +104,19 @@ export function TasksView({
           onKeyDown={(e) => e.key === "Enter" && add()}
           autoFocus
         />
+        <select
+          className="task-cat-select"
+          value={newCategory}
+          onChange={(e) => setNewCategory(e.target.value as TaskCategory | "")}
+          title={tr("task.category.all")}
+          aria-label={tr("task.category.all")}
+        >
+          <option value="">{tr("task.category.none")}</option>
+          <option value="work">{tr("task.category.work")}</option>
+          <option value="study">{tr("task.category.study")}</option>
+          <option value="life">{tr("task.category.life")}</option>
+          <option value="other">{tr("task.category.other")}</option>
+        </select>
         <input
           className="task-est-input"
           type="number"
@@ -87,6 +133,44 @@ export function TasksView({
         </button>
       </div>
 
+      <div className="task-filter-bar">
+        <div className="task-status-pills" role="group" aria-label="Task status filters">
+          <button
+            className={statusFilter === "all" ? "status-pill active" : "status-pill"}
+            onClick={() => setStatusFilter("all")}
+          >
+            {tr("task.filter.all")}
+            <span className="count-badge">{tasks.length}</span>
+          </button>
+          <button
+            className={statusFilter === "active" ? "status-pill active" : "status-pill"}
+            onClick={() => setStatusFilter("active")}
+          >
+            {tr("task.filter.active")}
+            <span className="count-badge">{activeCount}</span>
+          </button>
+          <button
+            className={statusFilter === "done" ? "status-pill active" : "status-pill"}
+            onClick={() => setStatusFilter("done")}
+          >
+            {tr("task.filter.done")}
+            <span className="count-badge">{doneCount}</span>
+          </button>
+        </div>
+        <select
+          className="task-cat-filter-select"
+          value={categoryFilter}
+          onChange={(e) => setCategoryFilter(e.target.value as TaskCategory | "all")}
+          aria-label={tr("task.category.all")}
+        >
+          <option value="all">{tr("task.category.all")}</option>
+          <option value="work">{tr("task.category.work")}</option>
+          <option value="study">{tr("task.category.study")}</option>
+          <option value="life">{tr("task.category.life")}</option>
+          <option value="other">{tr("task.category.other")}</option>
+        </select>
+      </div>
+
       <div className="task-list">
         {tasks.length === 0 && (
           <div className="empty">
@@ -94,7 +178,13 @@ export function TasksView({
             <div>{tr("task.empty.title")}</div>
           </div>
         )}
-        {tasks.map((t, idx) => {
+        {tasks.length > 0 && displayedTasks.length === 0 && (
+          <div className="empty">
+            <div className="empty-ico">🔍</div>
+            <div>{tr("task.emptyFilter")}</div>
+          </div>
+        )}
+        {displayedTasks.map((t, idx) => {
           const progress = formatTaskProgress(t);
           return (
             <div key={t.id} className={t.done ? "task done" : "task"}>
@@ -123,6 +213,27 @@ export function TasksView({
                   </svg>
                 )}
               </span>
+
+              {t.category ? (
+                <button
+                  type="button"
+                  className={`task-cat-badge ${t.category}`}
+                  onClick={() => cycleCategory(t.id, t.category)}
+                  title={tr("task.categoryTag", { category: tr(TASK_CATEGORY_KEY[t.category]) })}
+                >
+                  {tr(TASK_CATEGORY_KEY[t.category])}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  className="task-cat-badge empty"
+                  onClick={() => cycleCategory(t.id, undefined)}
+                  title={tr("task.category.none")}
+                >
+                  ·
+                </button>
+              )}
+
               {editingId === t.id ? (
                 <input
                   className="task-edit-input"
@@ -151,7 +262,7 @@ export function TasksView({
                 </span>
               )}
               <div className="task-actions">
-                {onMoveTask && (
+                {onMoveTask && !isFiltered && (
                   <>
                     <button
                       className="task-reorder-btn"
@@ -164,7 +275,7 @@ export function TasksView({
                     </button>
                     <button
                       className="task-reorder-btn"
-                      disabled={idx === tasks.length - 1}
+                      disabled={idx === displayedTasks.length - 1}
                       onClick={() => onMoveTask(idx, idx + 1)}
                       title={tr("task.moveDown")}
                       aria-label={tr("task.moveDown")}

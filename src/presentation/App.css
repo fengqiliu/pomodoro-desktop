@@ -361,8 +361,26 @@ input {
   border-color: var(--accent);
 }
 
+.task-cat-select {
+  width: 72px;
+  height: 40px;
+  padding: 0 4px;
+  font-size: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text);
+  outline: none;
+  cursor: pointer;
+  transition: border 0.15s;
+}
+
+.task-cat-select:focus {
+  border-color: var(--accent);
+}
+
 .task-est-input {
-  width: 54px;
+  width: 46px;
   height: 40px;
   padding: 0 4px;
   font-size: 13px;
@@ -382,7 +400,7 @@ input {
 
 .add-btn {
   height: 40px;
-  padding: 0 16px;
+  padding: 0 14px;
   font-size: 13px;
   font-weight: 600;
   background: var(--text);
@@ -393,6 +411,126 @@ input {
 
 .add-btn:hover {
   opacity: 0.85;
+}
+
+/* ---------- task filters ---------- */
+.task-filter-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.task-status-pills {
+  display: inline-flex;
+  gap: 3px;
+  background: var(--bg-elev);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+.status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 7px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 5px;
+  color: var(--text-dim);
+  background: transparent;
+  transition: all 0.12s ease;
+  cursor: pointer;
+}
+
+.status-pill:hover {
+  color: var(--text);
+}
+
+.status-pill.active {
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.count-badge {
+  font-size: 10px;
+  opacity: 0.75;
+  font-variant-numeric: tabular-nums;
+}
+
+.task-cat-filter-select {
+  height: 28px;
+  padding: 0 6px;
+  font-size: 11px;
+  border-radius: 6px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  outline: none;
+  cursor: pointer;
+}
+
+.task-cat-filter-select:focus {
+  border-color: var(--accent);
+  color: var(--text);
+}
+
+/* ---------- task item badges ---------- */
+.task-cat-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 18px;
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.1s ease, filter 0.15s ease;
+  flex-shrink: 0;
+}
+
+.task-cat-badge:hover {
+  filter: brightness(1.1);
+  transform: scale(1.04);
+}
+
+.task-cat-badge.work {
+  background: rgba(59, 130, 246, 0.14);
+  color: #3b82f6;
+}
+
+.task-cat-badge.study {
+  background: rgba(168, 85, 247, 0.14);
+  color: #a855f7;
+}
+
+.task-cat-badge.life {
+  background: rgba(16, 185, 129, 0.14);
+  color: #10b981;
+}
+
+.task-cat-badge.other {
+  background: rgba(107, 114, 128, 0.14);
+  color: #6b7280;
+}
+
+.task-cat-badge.empty {
+  background: transparent;
+  color: var(--text-faint);
+  padding: 0 3px;
+  font-size: 13px;
+  opacity: 0.35;
+}
+
+.task:hover .task-cat-badge.empty {
+  opacity: 0.9;
 }
 
 .task-list {

@@ -6,8 +6,10 @@ import {
   reorderTask,
   removeTask,
   toggleTaskDone,
+  updateTaskCategory,
   updateTaskEstimate,
   type Task,
+  type TaskCategory,
 } from "../../domain/tasks";
 
 
@@ -21,8 +23,8 @@ interface Options {
 export function useTaskList({ tasks, setTasks }: Options) {
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
 
-  const addTask = useCallback((title: string, estimatedPomodoros?: number) => {
-    setTasks((ts) => prependTask(ts, title, () => crypto.randomUUID(), estimatedPomodoros));
+  const addTask = useCallback((title: string, estimatedPomodoros?: number, category?: TaskCategory) => {
+    setTasks((ts) => prependTask(ts, title, () => crypto.randomUUID(), estimatedPomodoros, category));
   }, [setTasks]);
 
   const toggleTask = useCallback(
@@ -47,6 +49,10 @@ export function useTaskList({ tasks, setTasks }: Options) {
     setTasks((ts) => updateTaskEstimate(ts, id, estimated));
   }, [setTasks]);
 
+  const updateCategory = useCallback((id: string, category?: TaskCategory) => {
+    setTasks((ts) => updateTaskCategory(ts, id, category));
+  }, [setTasks]);
+
   const renameTask = useCallback((id: string, newTitle: string) => {
     setTasks((ts) => updateTaskTitle(ts, id, newTitle));
   }, [setTasks]);
@@ -63,7 +69,7 @@ export function useTaskList({ tasks, setTasks }: Options) {
     clearDoneTasks,
     moveTask,
     updateEstimate,
+    updateCategory,
     renameTask,
   };
-
 }

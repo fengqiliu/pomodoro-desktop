@@ -3,12 +3,14 @@ import {
   LANGS,
   NOISE_KEY,
   PHASE_KEY,
+  TASK_CATEGORY_KEY,
   translate,
   weekdayLabel,
   type Lang,
 } from "./i18n";
 import type { NoiseType } from "../domain/settings";
 import type { Phase } from "../domain/timer";
+import type { TaskCategory } from "../domain/tasks";
 
 // A key that exists in the dictionary resolves to prose; a key that does not
 // resolves to itself. That asymmetry is the contract everything else builds on.
@@ -89,6 +91,14 @@ describe("dictionary integrity", () => {
     for (const type of ["white", "brown", "pink"] as NoiseType[]) {
       for (const lang of ALL_LANGS) {
         expect(resolves(NOISE_KEY[type], lang)).toBe(true);
+      }
+    }
+  });
+
+  it("maps every task category to an existing entry in both languages", () => {
+    for (const cat of ["work", "study", "life", "other"] as TaskCategory[]) {
+      for (const lang of ALL_LANGS) {
+        expect(resolves(TASK_CATEGORY_KEY[cat], lang)).toBe(true);
       }
     }
   });

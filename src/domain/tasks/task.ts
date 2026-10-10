@@ -2,18 +2,27 @@
 // the current task list and return a new one; identity generation is injected
 // so the domain never touches IO or globals.
 
+export type TaskCategory = "work" | "study" | "life" | "other";
+
+export const TASK_CATEGORIES: TaskCategory[] = ["work", "study", "life", "other"];
+
+export type TaskStatusFilter = "all" | "active" | "done";
+
 export interface Task {
   id: string;
   title: string;
   done: boolean;
   pomodoros: number;
   estimatedPomodoros?: number;
+  category?: TaskCategory;
+  completedAt?: string; // ISO 8601 string
 }
 
 export function createTask(
   title: string,
   generateId: () => string,
-  estimatedPomodoros?: number
+  estimatedPomodoros?: number,
+  category?: TaskCategory
 ): Task {
   return {
     id: generateId(),
@@ -23,6 +32,7 @@ export function createTask(
     ...(estimatedPomodoros && estimatedPomodoros > 0
       ? { estimatedPomodoros: Math.floor(estimatedPomodoros) }
       : {}),
+    ...(category ? { category } : {}),
   };
 }
 
@@ -31,13 +41,22 @@ export function addTask(
   tasks: Task[],
   title: string,
   generateId: () => string,
-  estimatedPomodoros?: number
+  estimatedPomodoros?: number,
+  category?: TaskCategory
 ): Task[] {
-  return [createTask(title, generateId, estimatedPomodoros), ...tasks];
+  return [createTask(title, generateId, estimatedPomodoros, category), ...tasks];
 }
 
-export function toggleTaskDone(tasks: Task[], id: string): Task[] {
-  return tasks.map((t) => (t.id === id ? { ...t, done: !t.done } : t));
+export function toggleTaskDone(tasks: Task[], id: string, now = new Date()): Task[] {
+  return tasks.map((t) => {
+    if (t.id !== id) return t;
+    const nextDone = !t.done;
+    return {
+      ...t,
+      done: nextDone,
+      completedAt: nextDone ? now.toISOString() : undefined,
+    };
+  });
 }
 
 export function removeTask(tasks: Task[], id: string): Task[] {
@@ -97,4 +116,55 @@ export function formatTaskProgress(task: Task): string {
   }
   return task.pomodoros > 0 ? `${task.pomodoros}` : "";
 }
+
+/** Updates category for a given task. */
+export function updateTaskCategory(
+  tasks: Task[],
+  id: string,
+  category?: TaskCategory
+): Task[] {
+  return tasks.map((t) => (t.id === id ? { ...t, category } : t));
+}
+
+export interface TaskFilterOptions {
+  status?: TaskStatusFilter;
+  category?: TaskCategory | "all";
+}
+
+/** Pure filter function for tasks by status and category. */
+export function filterTasks(tasks: Task[], filter: TaskFilterOptions): Task[] {
+  return tasks.filter((t) => {
+    if (filter.status === "active" && t.done) return false;
+    if (filter.status === "done" && !t.done) return false;
+    if (filter.category && filter.category !== "all" && t.category !== filter.category) {
+      return false;
+    }
+    return true;
+  });
+}
+
+export interface CategoryStat {
+  count: number;
+  pomodoros: number;
+}
+
+/** Aggregates tasks count and pomodoros grouped by category. */
+export function calculateCategoryStats(
+  tasks: Task[]
+): Record<TaskCategory, CategoryStat> {
+  const stats: Record<TaskCategory, CategoryStat> = {
+    work: { count: 0, pomodoros: 0 },
+    study: { count: 0, pomodoros: 0 },
+    life: { count: 0, pomodoros: 0 },
+    other: { count: 0, pomodoros: 0 },
+  };
+  for (const t of tasks) {
+    if (t.category && stats[t.category]) {
+      stats[t.category].count++;
+      stats[t.category].pomodoros += t.pomodoros;
+    }
+  }
+  return stats;
+}
+
 

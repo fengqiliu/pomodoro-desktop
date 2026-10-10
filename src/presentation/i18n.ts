@@ -8,6 +8,7 @@ export type Tr = (key: string, params?: Record<string, string | number>) => stri
 
 import type { NoiseType } from "../domain/settings";
 import type { Phase } from "../domain/timer";
+import type { TaskCategory } from "../domain/tasks";
 
 export const PHASE_KEY: Record<Phase, string> = {
   focus: "phase.focus",
@@ -19,6 +20,13 @@ export const NOISE_KEY: Record<NoiseType, string> = {
   white: "noise.white",
   brown: "noise.brown",
   pink: "noise.pink",
+};
+
+export const TASK_CATEGORY_KEY: Record<TaskCategory, string> = {
+  work: "task.category.work",
+  study: "task.category.study",
+  life: "task.category.life",
+  other: "task.category.other",
 };
 
 export const LANGS: { code: Lang; label: string }[] = [
@@ -84,6 +92,17 @@ const DICT: Dict = {
   "task.footer": ["共 {total} 个任务 · 已完成 {done} 个", "{total} tasks · {done} done"],
 
   "task.clearDone": ["清除已完成", "Clear done"],
+  "task.category.all": ["全部分类", "All Tags"],
+  "task.category.none": ["无标签", "No Tag"],
+  "task.category.work": ["工作", "Work"],
+  "task.category.study": ["学习", "Study"],
+  "task.category.life": ["生活", "Life"],
+  "task.category.other": ["其它", "Other"],
+  "task.filter.all": ["全部", "All"],
+  "task.filter.active": ["进行中", "Active"],
+  "task.filter.done": ["已归档", "Archived"],
+  "task.emptyFilter": ["没有匹配的任务", "No matching tasks"],
+  "task.categoryTag": ["标签: {category}", "Tag: {category}"],
 
 
   // stats view
