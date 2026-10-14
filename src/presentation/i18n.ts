@@ -17,8 +17,10 @@ export const PHASE_KEY: Record<Phase, string> = {
 };
 
 export const NOISE_KEY: Record<NoiseType, string> = {
-  white: "noise.white",
   brown: "noise.brown",
+  rain: "noise.rain",
+  waves: "noise.waves",
+  white: "noise.white",
   pink: "noise.pink",
 };
 
@@ -166,8 +168,10 @@ const DICT: Dict = {
   "settings.autoStartFocus": ["休息后自动开始专注", "Auto-start focus"],
   "settings.noiseType": ["噪音类型", "Noise type"],
   "settings.noiseType.brown": ["棕噪音（低频，最柔和）", "Brown (low, softest)"],
-  "settings.noiseType.white": ["白噪音", "White"],
-  "settings.noiseType.pink": ["粉噪音", "Pink"],
+  "settings.noiseType.rain": ["雨声（淅沥细雨）", "Rain (gentle shower)"],
+  "settings.noiseType.waves": ["海浪（潮起潮落）", "Ocean waves (ebb & flow)"],
+  "settings.noiseType.pink": ["粉噪音（温暖平缓）", "Pink (warm, gentle)"],
+  "settings.noiseType.white": ["白噪音（全频均衡）", "White (balanced)"],
   "settings.volume": ["音量", "Volume"],
   "settings.noiseAutoWithFocus": ["专注时自动播放（休息时暂停）", "Auto-play during focus only"],
   "settings.hotkey.startPause": ["开始 / 暂停", "Start / Pause"],
@@ -210,6 +214,8 @@ const DICT: Dict = {
   "noise.white": ["白噪音", "White"],
   "noise.brown": ["棕噪音", "Brown"],
   "noise.pink": ["粉噪音", "Pink"],
+  "noise.rain": ["雨声", "Rain"],
+  "noise.waves": ["海浪", "Waves"],
 };
 
 const INDEX: Record<Lang, 0 | 1> = { zh: 0, en: 1 };

@@ -180,8 +180,10 @@ export function SettingsModal({
               onChange={(e) => onNoiseChange((n) => ({ ...n, type: e.target.value as NoiseType }))}
             >
               <option value="brown">{tr("settings.noiseType.brown")}</option>
-              <option value="white">{tr("settings.noiseType.white")}</option>
+              <option value="rain">{tr("settings.noiseType.rain")}</option>
+              <option value="waves">{tr("settings.noiseType.waves")}</option>
               <option value="pink">{tr("settings.noiseType.pink")}</option>
+              <option value="white">{tr("settings.noiseType.white")}</option>
             </select>
           </label>
           <label className="field">

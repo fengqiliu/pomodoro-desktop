@@ -8,7 +8,7 @@ import {
   weekdayLabel,
   type Lang,
 } from "./i18n";
-import type { NoiseType } from "../domain/settings";
+import { NOISE_TYPES } from "../domain/settings";
 import type { Phase } from "../domain/timer";
 import type { TaskCategory } from "../domain/tasks";
 
@@ -88,7 +88,7 @@ describe("dictionary integrity", () => {
   });
 
   it("maps every noise type to an existing entry in both languages", () => {
-    for (const type of ["white", "brown", "pink"] as NoiseType[]) {
+    for (const type of NOISE_TYPES) {
       for (const lang of ALL_LANGS) {
         expect(resolves(NOISE_KEY[type], lang)).toBe(true);
       }

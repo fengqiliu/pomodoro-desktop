@@ -1,6 +1,8 @@
 // Settings value objects of the settings context.
 
-export type NoiseType = "white" | "brown" | "pink";
+export type NoiseType = "white" | "brown" | "pink" | "rain" | "waves";
+
+export const NOISE_TYPES: NoiseType[] = ["brown", "rain", "waves", "pink", "white"];
 
 export interface Settings {
   focus: number; // minutes
