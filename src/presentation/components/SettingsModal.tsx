@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { LANGS, type Lang } from "../i18n";
 import type { NoisePref, NoiseType, Settings } from "../../domain/settings";
+import { playChime } from "../../infrastructure/audio/chime";
 
 interface Props {
   tr: (key: string, params?: Record<string, string | number>) => string;
@@ -138,13 +139,25 @@ export function SettingsModal({
             />
           </label>
           <label className="field switch-field">
-
             <span>{tr("settings.sound")}</span>
-            <Switch
-              on={settings.sound}
-              onToggle={() => onSettingsChange((s) => ({ ...s, sound: !s.sound }))}
-              label={tr("settings.sound")}
-            />
+            <div className="switch-with-action">
+              <button
+                type="button"
+                className="btn-test-chime"
+                onClick={(e) => {
+                  e.preventDefault();
+                  playChime("focus");
+                }}
+                title={tr("settings.testSound")}
+              >
+                {tr("settings.testSound")}
+              </button>
+              <Switch
+                on={settings.sound}
+                onToggle={() => onSettingsChange((s) => ({ ...s, sound: !s.sound }))}
+                label={tr("settings.sound")}
+              />
+            </div>
           </label>
           <label className="field switch-field">
             <span>{tr("settings.notifications")}</span>

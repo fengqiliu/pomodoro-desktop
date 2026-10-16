@@ -236,6 +236,7 @@ export default function App() {
           lang={lang}
           week={week}
           history={history}
+          tasks={tasks}
           dailyGoal={settings.dailyGoal}
           chartMetric={chartMetric}
           accent={accent}

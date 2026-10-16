@@ -105,6 +105,9 @@ const DICT: Dict = {
   "task.filter.done": ["已归档", "Archived"],
   "task.emptyFilter": ["没有匹配的任务", "No matching tasks"],
   "task.categoryTag": ["标签: {category}", "Tag: {category}"],
+  "task.search": ["搜索任务", "Search tasks"],
+  "task.searchPlaceholder": ["搜索任务…", "Search tasks…"],
+  "task.searchClear": ["清除搜索", "Clear search"],
 
 
   // stats view
@@ -140,6 +143,9 @@ const DICT: Dict = {
   "stats.month.minutes": ["专注", "Focus"],
   "stats.month.active": ["活跃", "Active"],
   "stats.month.vsPrev": ["较上月", "vs last month"],
+  "stats.category.title": ["任务分类分布", "Focus by category"],
+  "stats.category.empty": ["暂无分类专注数据", "No categorized pomodoro data yet"],
+  "stats.category.count": ["{n} 个任务", "{n} task(s)"],
 
   // weekdays
   "day.0": ["周日", "Sun"],
@@ -162,6 +168,7 @@ const DICT: Dict = {
   "settings.longEvery": ["每几个番茄后长休息", "Long break every N pomodoros"],
   "settings.dailyGoal": ["每日目标（番茄数）", "Daily goal (pomodoros)"],
   "settings.sound": ["完成提示音", "Completion sound"],
+  "settings.testSound": ["试听", "Test"],
 
   "settings.notifications": ["完成时通知", "Notifications"],
   "settings.autoStartBreaks": ["专注后自动进入休息", "Auto-start breaks"],

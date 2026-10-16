@@ -129,14 +129,19 @@ export function updateTaskCategory(
 export interface TaskFilterOptions {
   status?: TaskStatusFilter;
   category?: TaskCategory | "all";
+  keyword?: string;
 }
 
-/** Pure filter function for tasks by status and category. */
+/** Pure filter function for tasks by status, category, and keyword search. */
 export function filterTasks(tasks: Task[], filter: TaskFilterOptions): Task[] {
+  const kw = filter.keyword?.trim().toLowerCase();
   return tasks.filter((t) => {
     if (filter.status === "active" && t.done) return false;
     if (filter.status === "done" && !t.done) return false;
     if (filter.category && filter.category !== "all" && t.category !== filter.category) {
+      return false;
+    }
+    if (kw && !t.title.toLowerCase().includes(kw)) {
       return false;
     }
     return true;
@@ -165,6 +170,43 @@ export function calculateCategoryStats(
     }
   }
   return stats;
+}
+
+export interface CategoryDistributionItem {
+  category: TaskCategory;
+  count: number;
+  pomodoros: number;
+  percent: number; // 0..100
+}
+
+export interface CategoryDistribution {
+  totalTasks: number;
+  totalPomodoros: number;
+  items: CategoryDistributionItem[];
+}
+
+/** Computes full category distribution with counts, pomodoros, and rounded percentages. */
+export function calculateCategoryDistribution(tasks: Task[]): CategoryDistribution {
+  const stats = calculateCategoryStats(tasks);
+  const totalTasks = tasks.length;
+  const totalPomodoros = Object.values(stats).reduce((sum, s) => sum + s.pomodoros, 0);
+
+  const items: CategoryDistributionItem[] = TASK_CATEGORIES.map((cat) => {
+    const s = stats[cat];
+    const percent = totalPomodoros > 0 ? Math.round((s.pomodoros / totalPomodoros) * 100) : 0;
+    return {
+      category: cat,
+      count: s.count,
+      pomodoros: s.pomodoros,
+      percent,
+    };
+  });
+
+  return {
+    totalTasks,
+    totalPomodoros,
+    items,
+  };
 }
 
 

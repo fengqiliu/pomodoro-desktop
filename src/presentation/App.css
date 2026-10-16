@@ -12,6 +12,10 @@
   --radius: 14px;
   --radius-sm: 10px;
   --accent: #ff5b5b;
+  --cat-work: #3b82f6;
+  --cat-study: #a855f7;
+  --cat-life: #10b981;
+  --cat-other: #6b7280;
   --font: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
     "Helvetica Neue", "Microsoft YaHei", sans-serif;
 }
@@ -479,6 +483,82 @@ input {
   color: var(--text);
 }
 
+.task-filter-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.task-search-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.task-search-toggle:hover {
+  color: var(--text);
+  border-color: var(--text-dim);
+}
+
+.task-search-toggle.active {
+  background: var(--bg);
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.task-search-row {
+  display: flex;
+  align-items: center;
+  position: relative;
+  margin-bottom: 10px;
+}
+
+.task-search-input {
+  width: 100%;
+  height: 30px;
+  padding: 0 28px 0 10px;
+  font-size: 12px;
+  border-radius: 6px;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  color: var(--text);
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+.task-search-input:focus {
+  border-color: var(--accent);
+}
+
+.task-search-clear {
+  position: absolute;
+  right: 6px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: transparent;
+  border: none;
+  color: var(--text-dim);
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: color 0.12s ease;
+}
+
+.task-search-clear:hover {
+  color: var(--text);
+}
+
 /* ---------- task item badges ---------- */
 .task-cat-badge {
   display: inline-flex;
@@ -847,6 +927,29 @@ input {
 
 .switch-field span {
   font-size: 13px;
+}
+
+.switch-with-action {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-test-chime {
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 500;
+  border-radius: 6px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-test-chime:hover {
+  color: var(--accent);
+  border-color: var(--accent);
 }
 
 .switch {
@@ -1279,6 +1382,72 @@ input {
 }
 .month-delta .up { color: var(--accent); font-weight: 600; }
 .month-delta .down { color: #d94141; font-weight: 600; }
+
+/* ---------- category breakdown card ---------- */
+.category-breakdown {
+  margin-top: 14px;
+  flex-shrink: 0;
+}
+
+.category-total-badge {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.category-bar-wrap {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg-soft);
+  margin: 6px 0 10px 0;
+  gap: 1px;
+}
+
+.category-bar-seg {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.category-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+}
+
+.category-legend-item {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  gap: 6px;
+}
+
+.category-legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.category-legend-name {
+  color: var(--text-dim);
+}
+
+.category-legend-stats {
+  margin-left: auto;
+  color: var(--text);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+}
+
+.category-empty {
+  font-size: 11px;
+  color: var(--text-faint);
+  text-align: center;
+  padding: 12px 0 6px 0;
+}
 
 /* Tab panel wrapper: the three views were previously direct flex children of
    `.app` (flex column). Reproduce that context so their `flex: 1` still works. */

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   addTask,
+  calculateCategoryDistribution,
   calculateCategoryStats,
   clearCompletedTasks,
   filterTasks,
@@ -172,12 +173,61 @@ describe("filterTasks & calculateCategoryStats", () => {
     expect(doneLife.map((t) => t.id)).toEqual(["4"]);
   });
 
+  it("filters by keyword search (case-insensitive, whitespace trimmed)", () => {
+    expect(filterTasks(sampleTasks, { keyword: "代码" }).map((t) => t.id)).toEqual(["1"]);
+    expect(filterTasks(sampleTasks, { keyword: "  打卡  " }).map((t) => t.id)).toEqual(["2"]);
+    expect(filterTasks(sampleTasks, { keyword: "不存在的任务" })).toEqual([]);
+    expect(filterTasks(sampleTasks, { keyword: "" })).toHaveLength(5);
+  });
+
+  it("combines keyword search with status and category", () => {
+    const res = filterTasks(sampleTasks, {
+      status: "active",
+      category: "life",
+      keyword: "买菜",
+    });
+    expect(res.map((t) => t.id)).toEqual(["3"]);
+
+    const noMatch = filterTasks(sampleTasks, {
+      status: "done",
+      category: "life",
+      keyword: "买菜",
+    });
+    expect(noMatch).toEqual([]);
+  });
+
   it("calculates category stats correctly", () => {
     const stats = calculateCategoryStats(sampleTasks);
     expect(stats.work).toEqual({ count: 1, pomodoros: 2 });
     expect(stats.study).toEqual({ count: 1, pomodoros: 3 });
     expect(stats.life).toEqual({ count: 2, pomodoros: 3 });
     expect(stats.other).toEqual({ count: 0, pomodoros: 0 });
+  });
+
+  it("calculates category distribution with percentages", () => {
+    const dist = calculateCategoryDistribution(sampleTasks);
+    expect(dist.totalTasks).toBe(5);
+    // 2 (work) + 3 (study) + 3 (life) = 8 pomodoros
+    expect(dist.totalPomodoros).toBe(8);
+
+    const workItem = dist.items.find((i) => i.category === "work");
+    expect(workItem).toEqual({ category: "work", count: 1, pomodoros: 2, percent: 25 });
+
+    const studyItem = dist.items.find((i) => i.category === "study");
+    expect(studyItem).toEqual({ category: "study", count: 1, pomodoros: 3, percent: 38 });
+
+    const lifeItem = dist.items.find((i) => i.category === "life");
+    expect(lifeItem).toEqual({ category: "life", count: 2, pomodoros: 3, percent: 38 });
+
+    const otherItem = dist.items.find((i) => i.category === "other");
+    expect(otherItem).toEqual({ category: "other", count: 0, pomodoros: 0, percent: 0 });
+  });
+
+  it("handles empty tasks in category distribution", () => {
+    const dist = calculateCategoryDistribution([]);
+    expect(dist.totalTasks).toBe(0);
+    expect(dist.totalPomodoros).toBe(0);
+    expect(dist.items.every((i) => i.percent === 0 && i.pomodoros === 0 && i.count === 0)).toBe(true);
   });
 });
 

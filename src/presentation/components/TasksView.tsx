@@ -48,6 +48,8 @@ export function TasksView({
   const [newCategory, setNewCategory] = useState<TaskCategory | "">("");
   const [statusFilter, setStatusFilter] = useState<TaskStatusFilter>("all");
   const [categoryFilter, setCategoryFilter] = useState<TaskCategory | "all">("all");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearch, setShowSearch] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
 
@@ -87,10 +89,11 @@ export function TasksView({
     onUpdateCategory?.(id, next);
   };
 
-  const isFiltered = statusFilter !== "all" || categoryFilter !== "all";
+  const isFiltered = statusFilter !== "all" || categoryFilter !== "all" || searchQuery.trim() !== "";
   const displayedTasks = filterTasks(tasks, {
     status: statusFilter,
     category: categoryFilter,
+    keyword: searchQuery,
   });
 
   return (
@@ -157,19 +160,59 @@ export function TasksView({
             <span className="count-badge">{doneCount}</span>
           </button>
         </div>
-        <select
-          className="task-cat-filter-select"
-          value={categoryFilter}
-          onChange={(e) => setCategoryFilter(e.target.value as TaskCategory | "all")}
-          aria-label={tr("task.category.all")}
-        >
-          <option value="all">{tr("task.category.all")}</option>
-          <option value="work">{tr("task.category.work")}</option>
-          <option value="study">{tr("task.category.study")}</option>
-          <option value="life">{tr("task.category.life")}</option>
-          <option value="other">{tr("task.category.other")}</option>
-        </select>
+        <div className="task-filter-actions">
+          <select
+            className="task-cat-filter-select"
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value as TaskCategory | "all")}
+            aria-label={tr("task.category.all")}
+          >
+            <option value="all">{tr("task.category.all")}</option>
+            <option value="work">{tr("task.category.work")}</option>
+            <option value="study">{tr("task.category.study")}</option>
+            <option value="life">{tr("task.category.life")}</option>
+            <option value="other">{tr("task.category.other")}</option>
+          </select>
+          <button
+            type="button"
+            className={showSearch || searchQuery ? "task-search-toggle active" : "task-search-toggle"}
+            onClick={() => {
+              if (showSearch && searchQuery) setSearchQuery("");
+              setShowSearch((v) => !v);
+            }}
+            title={tr("task.search")}
+            aria-label={tr("task.search")}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </button>
+        </div>
       </div>
+
+      {(showSearch || searchQuery) && (
+        <div className="task-search-row">
+          <input
+            className="task-search-input"
+            placeholder={tr("task.searchPlaceholder")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            autoFocus
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              className="task-search-clear"
+              onClick={() => setSearchQuery("")}
+              title={tr("task.searchClear")}
+              aria-label={tr("task.searchClear")}
+            >
+              ✕
+            </button>
+          )}
+        </div>
+      )}
 
       <div className="task-list">
         {tasks.length === 0 && (

@@ -7,14 +7,17 @@ import {
   type DayRecord,
   type History,
 } from "../../domain/stats";
+import type { Task } from "../../domain/tasks";
 import type { ChartMetric } from "../uiTypes";
 import { MonthSummaryCard, TrendChart } from "./TrendPanel";
+import { CategoryBreakdownCard } from "./CategoryBreakdown";
 
 interface Props {
   tr: (key: string, params?: Record<string, string | number>) => string;
   lang: Lang;
   week: DayRecord[];
   history: History;
+  tasks?: Task[];
   dailyGoal?: number;
   chartMetric: ChartMetric;
   accent: string;
@@ -27,6 +30,7 @@ export function StatsView({
   lang,
   week,
   history,
+  tasks = [],
   dailyGoal,
   chartMetric,
   accent,
@@ -154,6 +158,7 @@ export function StatsView({
           <div className="more-body">
             <TrendChart tr={tr} history={history} metric={chartMetric} accent={accent} />
             <MonthSummaryCard tr={tr} history={history} />
+            <CategoryBreakdownCard tr={tr} tasks={tasks} />
           </div>
         )}
       </div>
