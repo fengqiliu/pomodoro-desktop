@@ -38,3 +38,8 @@ export async function loadNativeTimer() {
   }
   return { core: coreApi!, event: eventApi! };
 }
+
+export async function loadCore() {
+  if (!coreApi) coreApi = await import("@tauri-apps/api/core");
+  return coreApi;
+}

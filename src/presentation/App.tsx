@@ -22,6 +22,7 @@ import { useHotkey } from "./hooks/useHotkey";
 import { useSettingsDialog } from "./hooks/useSettingsDialog";
 import { useAppShortcuts } from "./hooks/useAppShortcuts";
 import { useDocumentTitle } from "./hooks/useDocumentTitle";
+import { useTrayTooltip } from "./hooks/useTrayTooltip";
 import { useBackup } from "./hooks/useBackup";
 import { useWeeklyReport } from "./hooks/useWeeklyReport";
 
@@ -115,6 +116,7 @@ export default function App() {
 
   useAppShortcuts({ showSettings, toggle, reset, skip });
   useDocumentTitle({ running, secondsLeft, phase, tr });
+  useTrayTooltip({ running, secondsLeft, phase, tr });
   const { exportData, importData } = useBackup({
     settings,
     tasks,

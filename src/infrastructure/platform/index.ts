@@ -1,5 +1,6 @@
 export { isDesktop } from "./runtime";
 export { windowAdapter } from "./windowAdapter";
+export { trayAdapter } from "./trayAdapter";
 export { shortcutAdapter } from "./shortcutAdapter";
 export { notificationAdapter } from "./notificationAdapter";
 export { nativeTimerAdapter } from "./nativeTimerAdapter";

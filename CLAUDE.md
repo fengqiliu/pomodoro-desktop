@@ -11,7 +11,7 @@ A single-window Tauri 2 desktop Pomodoro timer (380×580, non-resizable). React 
 ```bash
 npm install
 npm run dev          # Vite dev server only — port 1420 (strictPort; Tauri expects this). Works in a plain browser too (see src/infrastructure/platform/).
-npm test             # DDD architecture guard (scripts/check-architecture.mjs, R1–R7) + Vitest — 13 suites / 129 cases
+npm test             # DDD architecture guard (scripts/check-architecture.mjs, R1–R7) + Vitest — 13 suites / 130 cases
 npm run typecheck    # tsc --noEmit
 npm run build        # tsc -b && vite build  →  dist/
 npm run preview      # serve the built dist/
@@ -22,7 +22,7 @@ npx tauri build --bundles nsis  # rebuild only the NSIS .exe (faster when Rust i
 cargo test --manifest-path src-tauri/Cargo.toml --lib
 ```
 
-`npm test` runs `scripts/check-architecture.mjs` (DDD layering guard over `src/`, rules R1–R7: layer imports, domain/application purity vs browser IO globals, `@tauri-apps/*` confined to `infrastructure/platform`, colocated tests) first, then Vitest: currently 13 colocated suites / 129 cases across `domain/timer`, `domain/tasks`, `domain/stats` (focus history + trend + weekly report/CSV), `domain/settings`, `application/backupService`, `application/completePhase`, `infrastructure/storage`, `infrastructure/audio`, `shared/date`, `presentation/i18n`, and `presentation/hooks` (shortcut resolution). Rust cases live in `src-tauri/src/timer/engine.rs` and `completion_log.rs` (`cargo test --manifest-path src-tauri/Cargo.toml --lib`, 9 cases). `npm run check-arch` runs just the guard. Push/PR CI (`.github/workflows/ci.yml`) runs the guard, tests, typecheck, build and `cargo test --lib`. There is no linter configured; `npm run typecheck` remains the TypeScript static check.
+`npm test` runs `scripts/check-architecture.mjs` (DDD layering guard over `src/`, rules R1–R7: layer imports, domain/application purity vs browser IO globals, `@tauri-apps/*` confined to `infrastructure/platform`, colocated tests) first, then Vitest: currently 13 colocated suites / 130 cases across `domain/timer`, `domain/tasks`, `domain/stats` (focus history + trend + weekly report/CSV), `domain/settings`, `application/backupService`, `application/completePhase`, `infrastructure/storage`, `infrastructure/audio`, `shared/date`, `presentation/i18n`, and `presentation/hooks` (shortcut resolution). Rust cases live in `src-tauri/src/timer/engine.rs` and `completion_log.rs` (`cargo test --manifest-path src-tauri/Cargo.toml --lib`, 9 cases). `npm run check-arch` runs just the guard. Push/PR CI (`.github/workflows/ci.yml`) runs the guard, tests, typecheck, build and `cargo test --lib`. There is no linter configured; `npm run typecheck` remains the TypeScript static check.
 
 Regenerate the app icon set (needs Pillow): `python3 gen_icons.py` → writes `src-tauri/icons/`.
 

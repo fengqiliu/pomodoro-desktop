@@ -1,6 +1,7 @@
 import { PHASE_KEY } from "../i18n";
 import {
   focusesUntilLongBreak,
+  formatClock,
   getDailyGoalPercent,
   isDailyGoalReached,
   type DailyProgress,
@@ -25,12 +26,6 @@ interface Props {
   onSwitchPhase: (p: Phase) => void;
 }
 
-
-function fmt(sec: number): string {
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
-}
 
 export function TimerView({
   tr,
@@ -83,7 +78,7 @@ export function TimerView({
           />
         </svg>
         <div className="ring-center" role="timer" aria-label={tr("a11y.countdown")}>
-          <div className="time">{fmt(secondsLeft)}</div>
+          <div className="time">{formatClock(secondsLeft)}</div>
           <div className="phase-label">{tr(PHASE_KEY[phase])}</div>
         </div>
       </div>

@@ -18,7 +18,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             timer::commands::native_timer_start,
             timer::commands::native_timer_pause,
-            timer::commands::native_timer_cancel
+            timer::commands::native_timer_cancel,
+            tray::set_tray_tooltip
         ])
         .setup(|app| {
             tray::build_tray(app)?;

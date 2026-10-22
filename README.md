@@ -19,7 +19,7 @@ v2.0 重点：前端由单文件重构为「引擎 hook + 组件」模块化架�
 - **深色 / 浅色主题** —— 默认跟随系统，可手动切换
 - **窗口置顶** —— 一键钉在最前（Tauri 窗口能力）
 - **全局快捷键** —— 开始 / 暂停，默认 `CommandOrControl+Shift+P`，可在设置中修改
-- **系统托盘与通知** —— 关闭窗口后继续驻留托盘；可显示/隐藏、退出，并在阶段结束时发送原生通知
+- **系统托盘与通知** —— 关闭窗口后继续驻留托盘；托盘悬停提示实时显示剩余时间与阶段；可显示/隐藏、退出，并在阶段结束时发送原生通知
 - **本地持久化** —— 全部状态保存在 localStorage，跨重启保留；每日自动重置今日计数
 - **数据备份** —— 设置中一键导出/导入（剪贴板 JSON 往返，浏览器与桌面端通用）
 - **应用内快捷键** —— `Space` 开始/暂停、`R` 重置、`S` 跳过；窗口标题实时显示倒计时
@@ -65,7 +65,7 @@ npm run dev           # 仅 Vite，端口 1420，可在普通浏览器打开
 ```bash
 npm install           # 安装依赖
 npm run dev           # 仅前端开发（浏览器，:1420）
-npm test              # DDD 架构守卫（R1–R7）+ Vitest 回归测试（13 套 129 例）
+npm test              # DDD 架构守卫（R1–R7）+ Vitest 回归测试（13 套 130 例）
 npm run typecheck     # tsc --noEmit —— TypeScript 静态检查（无 lint）
 npm run build         # tsc -b && vite build → dist/
 npm run preview       # 预览构建产物
@@ -122,7 +122,7 @@ pomodoro-desktop/
 - **番茄循环**：今日统计与长休息循环分别记录。`cycleFocusCount` 在每次完成专注后推进、触发长休息后归零，并会跨日期延续，因此“每 N 个番茄长休息”不受每日统计重置影响。
 - **历史自动裁剪**：`domain/stats` 在启动、记录和导入时把历史裁剪到近 60 天，防止 localStorage 无界增长（图表只用近 7 天）。
 - **数据备份**：设置面板可导出/导入 JSON 备份（经剪贴板往返，桌面与浏览器通用）。导入时 `application/backupService.parseBackup` 校验载荷、按默认值合并状态并裁剪历史，坏数据不会写入存储。
-- **测试**：计时规则位于 `src/domain/timer/`，通过 Vitest 覆盖长休息周期、跳过阶段、跨日重置和延迟回调的剩余时间计算；`focusHistory.test.ts` 与 `weeklyReport.test.ts` 覆盖历史裁剪、连击累计、周报汇总与 CSV 转义；`task.test.ts`、`backupService.test.ts`、`i18n.test.ts` 与 `noiseEngine.test.ts` 分别覆盖任务规则（含分类筛选、搜索、预估编辑与分布计算）、备份往返、双语字典（含五种噪音 / 四种分类标签）、噪音缓冲区合成与缓存。前端共 13 个测试文件 129 例，Rust 9 例（引擎 5 + 完成审计日志 4）；`npm test` 会先执行 DDD 分层架构守卫（R1–R7，73 源文件）；推送/PR 时 GitHub Actions（`.github/workflows/ci.yml`）全量校验前端与 cargo test。
+- **测试**：计时规则位于 `src/domain/timer/`，通过 Vitest 覆盖长休息周期、跳过阶段、跨日重置和延迟回调的剩余时间计算；`focusHistory.test.ts` 与 `weeklyReport.test.ts` 覆盖历史裁剪、连击累计、周报汇总与 CSV 转义；`task.test.ts`、`backupService.test.ts`、`i18n.test.ts` 与 `noiseEngine.test.ts` 分别覆盖任务规则（含分类筛选、搜索、预估编辑与分布计算）、备份往返、双语字典（含五种噪音 / 四种分类标签）、噪音缓冲区合成与缓存。前端共 13 个测试文件 130 例，Rust 9 例（引擎 5 + 完成审计日志 4）；`npm test` 会先执行 DDD 分层架构守卫（R1–R7，73 源文件）；推送/PR 时 GitHub Actions（`.github/workflows/ci.yml`）全量校验前端与 cargo test。
 - **双计时适配器**：桌面端通过 `native_timer_start` / `pause` / `cancel` 命令让 Rust 按墙上时间判断完成；启动时会把完成通知的标题与正文交给原生 worker，worker 先发送系统通知、再发送完成事件，因此托盘中不依赖 WebView 的 JS interval 或通知回调。浏览器模式仍使用相同的结束时间戳算法本地完成。React 只负责界面刷新、阶段规则、统计和自动衔接。
 - **原生层**：`src-tauri/src/lib.rs` 作为组合根，只负责装配——注册全局快捷键与通知插件、三个 `native_timer_*` 命令、注入完成审计日志、托盘 setup 与关闭到托盘；业务逻辑在 `timer/`（`engine.rs` 引擎 + `commands.rs` IPC 适配器 + `completion_log.rs` 审计日志端口）与 `tray/`（托盘菜单与窗口显隐）两个限界上下文。全局开始/暂停快捷键由 App 注册，编辑时仅保存草稿，点击「完成」后才尝试应用。每次计时完成，`commands.rs` 会向 `<app_data_dir>/completion-log.jsonl` 追加一行 JSON（`completedAtMs`/`durationMs`/`generation`/`notificationSent`），best-effort 供诊断审计。
 - **主题**：CSS 变量在 `App.css` 的 `:root`（浅色）与 `[data-theme="dark"]`（深色）定义；阶段强调色 `--accent`（红/绿/蓝）在每次渲染时以行内样式覆盖。

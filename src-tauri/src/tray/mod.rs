@@ -56,3 +56,10 @@ pub fn build_tray(app: &App) -> Result<(), Box<dyn std::error::Error>> {
         .build(app)?;
     Ok(())
 }
+
+#[tauri::command]
+pub fn set_tray_tooltip(app: AppHandle, text: String) {
+    if let Some(tray) = app.tray_by_id("main") {
+        let _ = tray.set_tooltip(Some(text));
+    }
+}

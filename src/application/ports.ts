@@ -11,6 +11,11 @@ export interface WindowPort {
   isAlwaysOnTop(): Promise<boolean>;
 }
 
+export interface TrayPort {
+  /** Hover text of the system tray icon; no-op outside the desktop shell. */
+  setTooltip(text: string): Promise<void>;
+}
+
 export interface ShortcutPort {
   /** Returns false when the combination cannot be registered. */
   register(keys: string, handler: () => void): Promise<boolean>;

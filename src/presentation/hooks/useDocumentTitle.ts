@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import type { Phase } from "../../domain/timer";
+import { formatClock, type Phase } from "../../domain/timer";
 import { PHASE_KEY, type Tr } from "../i18n";
 
 interface Options {
@@ -13,7 +13,7 @@ interface Options {
 export function useDocumentTitle({ running, secondsLeft, phase, tr }: Options) {
   useEffect(() => {
     document.title = running
-      ? `${String(Math.floor(secondsLeft / 60)).padStart(2, "0")}:${String(secondsLeft % 60).padStart(2, "0")} · ${tr(PHASE_KEY[phase])}`
+      ? `${formatClock(secondsLeft)} · ${tr(PHASE_KEY[phase])}`
       : tr("app.name");
   }, [running, secondsLeft, phase, tr]);
 }

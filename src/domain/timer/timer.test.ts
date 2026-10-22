@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   addCompletedFocus,
   completeFocusCycle,
+  formatClock,
   getDailyGoalPercent,
   isDailyGoalReached,
   nextPhaseAfterSkip,
@@ -129,5 +130,14 @@ describe("remainingSeconds", () => {
 
   it("reaches zero exactly at the deadline", () => {
     expect(remainingSeconds(150_000, 150_000)).toBe(0);
+  });
+});
+
+describe("formatClock", () => {
+  it("formats seconds as zero-padded mm:ss", () => {
+    expect(formatClock(0)).toBe("00:00");
+    expect(formatClock(9)).toBe("00:09");
+    expect(formatClock(25 * 60)).toBe("25:00");
+    expect(formatClock(59 * 60 + 59)).toBe("59:59");
   });
 });
