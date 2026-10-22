@@ -72,6 +72,7 @@ export default function App() {
     clearDoneTasks,
     moveTask,
     updateCategory,
+    updateEstimate,
     renameTask,
   } = useTaskList({ tasks, setTasks });
 
@@ -227,6 +228,7 @@ export default function App() {
           onMoveTask={moveTask}
           onRenameTask={renameTask}
           onUpdateCategory={updateCategory}
+          onUpdateEstimate={updateEstimate}
         />
       ) : (
 

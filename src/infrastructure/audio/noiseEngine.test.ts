@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { makeBuffer, NoiseEngine } from "./noiseEngine";
+import { getBuffer, makeBuffer, NoiseEngine } from "./noiseEngine";
 import { NOISE_TYPES } from "../../domain/settings";
 
 class MockAudioBuffer {
@@ -67,6 +67,33 @@ describe("makeBuffer", () => {
     expect(whiteBuf.length).toBe(44100 * 2);
     expect(brownBuf.length).toBe(44100 * 2);
     expect(pinkBuf.length).toBe(44100 * 2);
+  });
+});
+
+describe("getBuffer", () => {
+  it("reuses a synthesized buffer per context and type", () => {
+    const base = createMockAudioContext();
+    let creations = 0;
+    const ctx = {
+      ...base,
+      createBuffer(channels: number, length: number, rate: number) {
+        creations += 1;
+        return base.createBuffer(channels, length, rate);
+      },
+    } as unknown as AudioContext;
+
+    const first = getBuffer(ctx, "rain");
+    expect(getBuffer(ctx, "rain")).toBe(first);
+    expect(creations).toBe(1);
+
+    getBuffer(ctx, "waves");
+    expect(creations).toBe(2);
+  });
+
+  it("keeps caches separate across audio contexts", () => {
+    const a = createMockAudioContext();
+    const b = createMockAudioContext();
+    expect(getBuffer(a, "white")).not.toBe(getBuffer(b, "white"));
   });
 });
 

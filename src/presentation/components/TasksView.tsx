@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { memo, useRef, useState } from "react";
 import {
   filterTasks,
   formatTaskProgress,
@@ -20,6 +20,7 @@ interface Props {
   onMoveTask?: (fromIndex: number, toIndex: number) => void;
   onRenameTask?: (id: string, newTitle: string) => void;
   onUpdateCategory?: (id: string, category?: TaskCategory) => void;
+  onUpdateEstimate?: (id: string, estimated?: number) => void;
 }
 
 const NEXT_CATEGORY: Record<string, TaskCategory | undefined> = {
@@ -30,7 +31,7 @@ const NEXT_CATEGORY: Record<string, TaskCategory | undefined> = {
   other: undefined,
 };
 
-export function TasksView({
+export const TasksView = memo(function TasksView({
   tr,
   tasks,
   activeTaskId,
@@ -42,6 +43,7 @@ export function TasksView({
   onMoveTask,
   onRenameTask,
   onUpdateCategory,
+  onUpdateEstimate,
 }: Props) {
   const [newTask, setNewTask] = useState("");
   const [estimatedStr, setEstimatedStr] = useState("");
@@ -52,6 +54,10 @@ export function TasksView({
   const [showSearch, setShowSearch] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
+  const [editingEstimate, setEditingEstimate] = useState("");
+  // Suppresses the blur-save that follows an explicit Enter/Escape, and the
+  // focus move from the title input to the estimate input (same edit row).
+  const ignoreBlurRef = useRef(false);
 
   const doneCount = tasks.filter((t) => t.done).length;
   const activeCount = tasks.length - doneCount;
@@ -70,18 +76,41 @@ export function TasksView({
   const startEditing = (task: Task) => {
     setEditingId(task.id);
     setEditingTitle(task.title);
+    setEditingEstimate(
+      task.estimatedPomodoros ? String(task.estimatedPomodoros) : ""
+    );
+    ignoreBlurRef.current = false;
   };
 
   const finishEditing = (id: string) => {
+    ignoreBlurRef.current = true;
     const trimmed = editingTitle.trim();
     if (trimmed) {
       onRenameTask?.(id, trimmed);
+    }
+    const estNum = parseInt(editingEstimate, 10);
+    const nextEstimate = !Number.isNaN(estNum) && estNum > 0 ? estNum : undefined;
+    const task = tasks.find((t) => t.id === id);
+    if (task && task.estimatedPomodoros !== nextEstimate) {
+      onUpdateEstimate?.(id, nextEstimate);
     }
     setEditingId(null);
   };
 
   const cancelEditing = () => {
+    ignoreBlurRef.current = true;
     setEditingId(null);
+  };
+
+  // Only leave edit mode when focus moves outside the whole edit row, so
+  // tabbing/clicks between the title and estimate inputs keep it open.
+  const handleEditBlur = (id: string, row: HTMLElement, next: EventTarget | null) => {
+    if (row.contains(next as Node | null)) return;
+    if (ignoreBlurRef.current) {
+      ignoreBlurRef.current = false;
+      return;
+    }
+    finishEditing(id);
   };
 
   const cycleCategory = (id: string, current?: TaskCategory) => {
@@ -278,17 +307,37 @@ export function TasksView({
               )}
 
               {editingId === t.id ? (
-                <input
-                  className="task-edit-input"
-                  value={editingTitle}
-                  onChange={(e) => setEditingTitle(e.target.value)}
-                  onBlur={() => finishEditing(t.id)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") finishEditing(t.id);
-                    else if (e.key === "Escape") cancelEditing();
-                  }}
-                  autoFocus
-                />
+                <div
+                  className="task-edit-row"
+                  onBlur={(e) => handleEditBlur(t.id, e.currentTarget, e.relatedTarget)}
+                >
+                  <input
+                    className="task-edit-input"
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") finishEditing(t.id);
+                      else if (e.key === "Escape") cancelEditing();
+                    }}
+                    autoFocus
+                  />
+                  <input
+                    className="task-edit-est"
+                    type="number"
+                    min="1"
+                    max="99"
+                    inputMode="numeric"
+                    placeholder={tr("task.estPlaceholder")}
+                    title={tr("task.estimated")}
+                    aria-label={tr("task.estimated")}
+                    value={editingEstimate}
+                    onChange={(e) => setEditingEstimate(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") finishEditing(t.id);
+                      else if (e.key === "Escape") cancelEditing();
+                    }}
+                  />
+                </div>
               ) : (
                 <span
                   className="task-title"
@@ -299,13 +348,13 @@ export function TasksView({
                 </span>
               )}
 
-              {progress && (
+              {editingId !== t.id && progress && (
                 <span className="task-pomos" title={tr("task.pomoCount")}>
                   🍅 {progress}
                 </span>
               )}
               <div className="task-actions">
-                {onMoveTask && !isFiltered && (
+                {onMoveTask && !isFiltered && editingId !== t.id && (
                   <>
                     <button
                       className="task-reorder-btn"
@@ -350,5 +399,5 @@ export function TasksView({
       </div>
     </div>
   );
-}
+});
 

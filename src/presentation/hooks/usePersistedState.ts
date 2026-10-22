@@ -7,6 +7,7 @@ import { pruneHistory, type History } from "../../domain/stats";
 import {
   composePersistedState,
   type NoisePref,
+  type PersistedState,
   type Settings,
 } from "../../domain/settings";
 import { useMidnightRollover } from "./useMidnightRollover";
@@ -14,7 +15,14 @@ import { useMidnightRollover } from "./useMidnightRollover";
 // All persisted domain state plus its side effects: the localStorage save,
 // startup history prune, and automatic midnight/foreground day boundary reset.
 export function usePersistedState() {
-  const initial = useRef(stateStore.load()).current;
+  // `useRef(stateStore.load())` would re-evaluate its argument on every render,
+  // and App re-renders once per countdown tick. Load the snapshot only once.
+  const initialRef = useRef<PersistedState | null>(null);
+  let initial = initialRef.current;
+  if (initial === null) {
+    initial = stateStore.load();
+    initialRef.current = initial;
+  }
 
   // ---- persisted domain state ----
   const [settings, setSettings] = useState<Settings>(initial.settings);

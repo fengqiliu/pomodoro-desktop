@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import { weekdayLabel, type Lang } from "../i18n";
 import {
   calculateStreak,
@@ -25,7 +25,7 @@ interface Props {
   onExportCsv: () => void;
 }
 
-export function StatsView({
+export const StatsView = memo(function StatsView({
   tr,
   lang,
   week,
@@ -195,5 +195,5 @@ export function StatsView({
       </div>
     </div>
   );
-}
+});
 

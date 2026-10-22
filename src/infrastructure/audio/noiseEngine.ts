@@ -98,6 +98,26 @@ export function makeBuffer(ctx: AudioContext, type: NoiseType): AudioBuffer {
   return buf;
 }
 
+// Synthesizing a buffer is expensive (the rain/waves variants are 4s long and
+// add per-drop impulses), and switching types would otherwise redo that work on
+// the main thread every time. Cache per AudioContext so repeated start/type
+// changes reuse the same buffer; the WeakMap lets a discarded context be GC'd.
+const bufferCache = new WeakMap<AudioContext, Map<NoiseType, AudioBuffer>>();
+
+export function getBuffer(ctx: AudioContext, type: NoiseType): AudioBuffer {
+  let byType = bufferCache.get(ctx);
+  if (!byType) {
+    byType = new Map();
+    bufferCache.set(ctx, byType);
+  }
+  const cached = byType.get(type);
+  if (cached) return cached;
+
+  const buffer = makeBuffer(ctx, type);
+  byType.set(type, buffer);
+  return buffer;
+}
+
 export class NoiseEngine {
   private ctx: AudioContext | null = null;
   private src: AudioBufferSourceNode | null = null;
@@ -121,7 +141,7 @@ export class NoiseEngine {
       // Seamlessly cross-fade to new buffer without interruption
       const oldSrc = this.src;
       const newSrc = this.ctx.createBufferSource();
-      newSrc.buffer = makeBuffer(this.ctx, this.type);
+      newSrc.buffer = getBuffer(this.ctx, this.type);
       newSrc.loop = true;
       newSrc.connect(this.gain);
       newSrc.start();
@@ -163,7 +183,7 @@ export class NoiseEngine {
     this.gain.gain.linearRampToValueAtTime(this.volume, now + FADE_SEC);
 
     this.src = this.ctx.createBufferSource();
-    this.src.buffer = makeBuffer(this.ctx, this.type);
+    this.src.buffer = getBuffer(this.ctx, this.type);
     this.src.loop = true;
     this.src.connect(this.gain);
     this.gain.connect(this.ctx.destination);

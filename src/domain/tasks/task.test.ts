@@ -98,6 +98,19 @@ describe("task estimates & reordering", () => {
     expect(formatTaskProgress(updated[0])).toBe("2/5");
   });
 
+  it("clears the estimate for zero, negative or invalid input", () => {
+    const withEstimate = updateTaskEstimate(fixture(), "a", 4);
+    for (const value of [0, -3, Number.NaN]) {
+      expect(updateTaskEstimate(withEstimate, "a", value)[0].estimatedPomodoros).toBeUndefined();
+    }
+  });
+
+  it("floors fractional estimates and leaves unknown ids untouched", () => {
+    expect(updateTaskEstimate(fixture(), "a", 3.9)[0].estimatedPomodoros).toBe(3);
+    const original = fixture();
+    expect(updateTaskEstimate(original, "missing", 2)).toEqual(original);
+  });
+
   it("reorders tasks safely", () => {
     const list = fixture(); // ["a", "b"]
     const reordered = reorderTask(list, 0, 1);

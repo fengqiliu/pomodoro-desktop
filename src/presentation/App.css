@@ -723,6 +723,39 @@ input {
   outline: none;
 }
 
+/* Edit mode holds both the title and the target pomodoro count in one row. */
+.task-edit-row {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.task-edit-est {
+  width: 44px;
+  height: 26px;
+  padding: 0 4px;
+  flex-shrink: 0;
+  font-size: 13px;
+  text-align: center;
+  border-radius: var(--radius-sm);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--text);
+  outline: none;
+}
+
+.task-edit-est:focus {
+  border-color: var(--accent);
+}
+
+.task-edit-est::-webkit-outer-spin-button,
+.task-edit-est::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
 
 .task-pomos {
   font-size: 11px;

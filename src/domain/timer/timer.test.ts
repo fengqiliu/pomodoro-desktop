@@ -121,4 +121,13 @@ describe("remainingSeconds", () => {
   it("does not return a negative countdown", () => {
     expect(remainingSeconds(60_000, 150_000)).toBe(0);
   });
+
+  it("keeps the final partial second visible instead of completing early", () => {
+    expect(remainingSeconds(150_000, 149_600)).toBe(1);
+    expect(remainingSeconds(150_000, 149_999)).toBe(1);
+  });
+
+  it("reaches zero exactly at the deadline", () => {
+    expect(remainingSeconds(150_000, 150_000)).toBe(0);
+  });
 });
