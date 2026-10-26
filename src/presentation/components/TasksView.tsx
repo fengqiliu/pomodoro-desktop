@@ -1,6 +1,6 @@
 import { memo, useRef, useState } from "react";
 import {
-  filterTasks,
+  filterTaskEntries,
   formatTaskProgress,
   type Task,
   type TaskCategory,
@@ -118,8 +118,7 @@ export const TasksView = memo(function TasksView({
     onUpdateCategory?.(id, next);
   };
 
-  const isFiltered = statusFilter !== "all" || categoryFilter !== "all" || searchQuery.trim() !== "";
-  const displayedTasks = filterTasks(tasks, {
+  const displayedTasks = filterTaskEntries(tasks, {
     status: statusFilter,
     category: categoryFilter,
     keyword: searchQuery,
@@ -256,7 +255,7 @@ export const TasksView = memo(function TasksView({
             <div>{tr("task.emptyFilter")}</div>
           </div>
         )}
-        {displayedTasks.map((t, idx) => {
+        {displayedTasks.map(({ task: t, index: idx }, visibleIndex) => {
           const progress = formatTaskProgress(t);
           return (
             <div key={t.id} className={t.done ? "task done" : "task"}>
@@ -354,12 +353,12 @@ export const TasksView = memo(function TasksView({
                 </span>
               )}
               <div className="task-actions">
-                {onMoveTask && !isFiltered && editingId !== t.id && (
+                {onMoveTask && editingId !== t.id && (
                   <>
                     <button
                       className="task-reorder-btn"
-                      disabled={idx === 0}
-                      onClick={() => onMoveTask(idx, idx - 1)}
+                      disabled={visibleIndex === 0}
+                      onClick={() => onMoveTask(idx, displayedTasks[visibleIndex - 1].index)}
                       title={tr("task.moveUp")}
                       aria-label={tr("task.moveUp")}
                     >
@@ -367,8 +366,8 @@ export const TasksView = memo(function TasksView({
                     </button>
                     <button
                       className="task-reorder-btn"
-                      disabled={idx === displayedTasks.length - 1}
-                      onClick={() => onMoveTask(idx, idx + 1)}
+                      disabled={visibleIndex === displayedTasks.length - 1}
+                      onClick={() => onMoveTask(idx, displayedTasks[visibleIndex + 1].index)}
                       title={tr("task.moveDown")}
                       aria-label={tr("task.moveDown")}
                     >

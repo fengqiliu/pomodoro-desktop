@@ -4,6 +4,7 @@ import {
   calculateCategoryDistribution,
   calculateCategoryStats,
   clearCompletedTasks,
+  filterTaskEntries,
   filterTasks,
   formatTaskProgress,
   recordPomodoro,
@@ -154,6 +155,21 @@ describe("task categories & completion timestamp", () => {
     const undoneList = toggleTaskDone(doneList, "a");
     expect(undoneList[0].done).toBe(false);
     expect(undoneList[0].completedAt).toBeUndefined();
+  });
+});
+
+describe("filterTaskEntries", () => {
+  it("keeps source indices so filtered views can reorder across hidden tasks", () => {
+    const tasks: Task[] = [
+      { id: "a", title: "写周报", done: false, pomodoros: 0 },
+      { id: "b", title: "已完成", done: true, pomodoros: 0 },
+      { id: "c", title: "Review API", done: false, pomodoros: 0 },
+    ];
+    const visible = filterTaskEntries(tasks, { status: "active" });
+    expect(visible.map(({ index }) => index)).toEqual([0, 2]);
+    const moved = reorderTask(tasks, visible[1].index, visible[0].index);
+    expect(moved.map((t) => t.id)).toEqual(["c", "a", "b"]);
+    expect(filterTasks(moved, { status: "active" }).map((t) => t.id)).toEqual(["c", "a"]);
   });
 });
 

@@ -132,10 +132,21 @@ export interface TaskFilterOptions {
   keyword?: string;
 }
 
+export interface TaskEntry {
+  task: Task;
+  /** position in the unfiltered list, so filtered views can reorder safely */
+  index: number;
+}
+
 /** Pure filter function for tasks by status, category, and keyword search. */
 export function filterTasks(tasks: Task[], filter: TaskFilterOptions): Task[] {
+  return filterTaskEntries(tasks, filter).map(({ task }) => task);
+}
+
+/** Same as filterTasks, but keeps each task's source index. */
+export function filterTaskEntries(tasks: Task[], filter: TaskFilterOptions): TaskEntry[] {
   const kw = filter.keyword?.trim().toLowerCase();
-  return tasks.filter((t) => {
+  return tasks.map((task, index) => ({ task, index })).filter(({ task: t }) => {
     if (filter.status === "active" && t.done) return false;
     if (filter.status === "done" && !t.done) return false;
     if (filter.category && filter.category !== "all" && t.category !== filter.category) {
