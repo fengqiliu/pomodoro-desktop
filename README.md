@@ -65,7 +65,7 @@ npm run dev           # 仅 Vite，端口 1420，可在普通浏览器打开
 ```bash
 npm install           # 安装依赖
 npm run dev           # 仅前端开发（浏览器，:1420）
-npm test              # DDD 架构守卫（R1–R7）+ Vitest 回归测试（13 套 130 例）
+npm test              # DDD 架构守卫（R1–R7）+ Vitest 回归测试（13 套 134 例）
 npm run typecheck     # tsc --noEmit —— TypeScript 静态检查（无 lint）
 npm run build         # tsc -b && vite build → dist/
 npm run preview       # 预览构建产物
