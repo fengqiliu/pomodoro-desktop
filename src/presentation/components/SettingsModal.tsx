@@ -24,7 +24,13 @@ interface Props {
 
 function Switch({ on, onToggle, label }: { on: boolean; onToggle: () => void; label: string }) {
   return (
-    <button className={on ? "switch on" : "switch"} onClick={onToggle} aria-label={label}>
+    <button
+      className={on ? "switch on" : "switch"}
+      onClick={onToggle}
+      role="switch"
+      aria-checked={on}
+      aria-label={label}
+    >
       <span className="switch-knob" />
     </button>
   );

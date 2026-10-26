@@ -31,9 +31,10 @@ export function TaskFilterBar({
   return (
     <>
       <div className="task-filter-bar">
-        <div className="task-status-pills" role="group" aria-label="Task status filters">
+        <div className="task-status-pills" role="group" aria-label={tr("task.filter.label")}>
           <button
             className={statusFilter === "all" ? "status-pill active" : "status-pill"}
+            aria-pressed={statusFilter === "all"}
             onClick={() => onStatusFilterChange("all")}
           >
             {tr("task.filter.all")}
@@ -41,6 +42,7 @@ export function TaskFilterBar({
           </button>
           <button
             className={statusFilter === "active" ? "status-pill active" : "status-pill"}
+            aria-pressed={statusFilter === "active"}
             onClick={() => onStatusFilterChange("active")}
           >
             {tr("task.filter.active")}
@@ -48,6 +50,7 @@ export function TaskFilterBar({
           </button>
           <button
             className={statusFilter === "done" ? "status-pill active" : "status-pill"}
+            aria-pressed={statusFilter === "done"}
             onClick={() => onStatusFilterChange("done")}
           >
             {tr("task.filter.done")}
@@ -78,6 +81,7 @@ export function TaskFilterBar({
             }}
             title={tr("task.search")}
             aria-label={tr("task.search")}
+            aria-expanded={showSearch || searchQuery !== ""}
           >
             <svg
               width="13"

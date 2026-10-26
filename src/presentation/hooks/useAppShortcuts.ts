@@ -15,10 +15,13 @@ interface Options {
  *
  * - Modifier combos are never shortcuts (Cmd+R, Ctrl+S, …).
  * - Typing in a field is never a shortcut.
- * - Space is the native activation key for buttons/links — a focused control
+ * - Space is the native activation key for buttons/links/checkboxes — a focused control
  *   must keep it, otherwise keyboard users toggle the timer instead of the
  *   button they focused.
  */
+/** ARIA roles whose widgets toggle/activate on Space, like native buttons. */
+const SPACE_ACTIVATED_ROLES = new Set(["button", "checkbox", "switch"]);
+
 export function resolveShortcut(
   e: {
     key: string;
@@ -46,7 +49,7 @@ export function resolveShortcut(
       !!target &&
       (target.tagName === "BUTTON" ||
         target.tagName === "A" ||
-        target.getAttribute("role") === "button");
+        SPACE_ACTIVATED_ROLES.has(target.getAttribute("role") ?? ""));
     return onActivatable ? null : "toggle";
   }
   if (e.key === "r" || e.key === "R") return "reset";

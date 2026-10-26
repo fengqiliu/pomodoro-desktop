@@ -92,13 +92,23 @@ export function TaskItem({
         className={isActive ? "task-radio active" : "task-radio"}
         onClick={onSetActive}
         title={tr("task.activeHint")}
+        aria-label={tr("task.activeHint")}
+        aria-pressed={isActive}
       >
         {isActive && <span className="task-radio-dot" />}
       </button>
       <span
         className="task-check"
         onClick={onToggleDone}
-        role="button"
+        onKeyDown={(e) => {
+          if (e.key === " " || e.key === "Enter") {
+            e.preventDefault();
+            onToggleDone();
+          }
+        }}
+        role="checkbox"
+        aria-checked={t.done}
+        tabIndex={0}
         aria-label={tr("task.done.aria")}
       >
         {t.done && (

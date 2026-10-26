@@ -55,6 +55,9 @@ describe("resolveShortcut", () => {
     expect(resolveShortcut(key({ code: "Space" }), el("BUTTON"))).toBeNull();
     expect(resolveShortcut(key({ code: "Space" }), el("A"))).toBeNull();
     expect(resolveShortcut(key({ code: "Space" }), el("DIV", { role: "button" }))).toBeNull();
+    // The task "done" box is a focusable <span role="checkbox"> toggled by Space.
+    expect(resolveShortcut(key({ code: "Space" }), el("SPAN", { role: "checkbox" }))).toBeNull();
+    expect(resolveShortcut(key({ code: "Space" }), el("SPAN", { role: "switch" }))).toBeNull();
     // R/S are unaffected — they never collide with native activation.
     expect(resolveShortcut(key({ key: "r" }), el("BUTTON"))).toBe("reset");
   });

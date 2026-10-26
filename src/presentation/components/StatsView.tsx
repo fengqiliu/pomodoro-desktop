@@ -105,12 +105,14 @@ export const StatsView = memo(function StatsView({
         <div className="chart-toggle">
           <button
             className={chartMetric === "pomodoros" ? "seg active" : "seg"}
+            aria-pressed={chartMetric === "pomodoros"}
             onClick={() => onChartMetricChange("pomodoros")}
           >
             {tr("stats.chart.pomos")}
           </button>
           <button
             className={chartMetric === "minutes" ? "seg active" : "seg"}
+            aria-pressed={chartMetric === "minutes"}
             onClick={() => onChartMetricChange("minutes")}
           >
             {tr("stats.chart.minutes")}

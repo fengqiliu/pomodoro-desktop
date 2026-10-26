@@ -111,6 +111,7 @@ const DICT: Dict = {
   "task.emptyFilter": ["没有匹配的任务", "No matching tasks"],
   "task.categoryTag": ["标签: {category}", "Tag: {category}"],
   "task.search": ["搜索任务", "Search tasks"],
+  "task.filter.label": ["任务状态筛选", "Task status filters"],
   "task.searchPlaceholder": ["搜索任务…", "Search tasks…"],
   "task.searchClear": ["清除搜索", "Clear search"],
 

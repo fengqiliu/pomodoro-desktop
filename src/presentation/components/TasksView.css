@@ -358,6 +358,11 @@
   transition: all 0.15s;
 }
 
+/* a11y.css loads last and would round this 19px box to --radius-sm on focus. */
+.task-check:focus-visible {
+  border-radius: 6px;
+}
+
 .task.done .task-check {
   background: var(--accent);
   border-color: var(--accent);

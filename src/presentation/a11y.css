@@ -1,6 +1,6 @@
 /* Keyboard accessibility: components below set `outline: none` for mouse-focus
    aesthetics, so restore a visible ring for keyboard users only. */
-:where(button, [role="tab"], input, select, textarea, a):focus-visible {
+:where(button, [role="tab"], [role="checkbox"], input, select, textarea, a):focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
   border-radius: var(--radius-sm);
