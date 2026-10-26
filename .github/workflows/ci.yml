@@ -17,6 +17,8 @@ jobs:
           cache: npm
       - name: Install frontend dependencies
         run: npm ci
+      - name: Prettier format check
+        run: npm run format:check
       - name: DDD architecture guard
         run: npm run check-arch
       - name: Vitest suites (npm test re-runs the guard; kept separate for clear failures)
