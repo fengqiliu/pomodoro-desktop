@@ -7,6 +7,8 @@ import {
   filterTaskEntries,
   filterTasks,
   formatTaskProgress,
+  nextTaskCategory,
+  parseEstimate,
   recordPomodoro,
   removeTask,
   renameTask,
@@ -267,5 +269,26 @@ describe("filterTasks & calculateCategoryStats", () => {
     expect(dist.items.every((i) => i.percent === 0 && i.pomodoros === 0 && i.count === 0)).toBe(
       true
     );
+  });
+});
+
+describe("nextTaskCategory", () => {
+  it("cycles none → work → study → life → other → none", () => {
+    expect(nextTaskCategory(undefined)).toBe("work");
+    expect(nextTaskCategory("work")).toBe("study");
+    expect(nextTaskCategory("study")).toBe("life");
+    expect(nextTaskCategory("life")).toBe("other");
+    expect(nextTaskCategory("other")).toBeUndefined();
+  });
+});
+
+describe("parseEstimate", () => {
+  it("accepts positive integers and truncates decimals", () => {
+    expect(parseEstimate("3")).toBe(3);
+    expect(parseEstimate("2.7")).toBe(2);
+  });
+
+  it("returns undefined for empty, zero, negative and non-numeric input", () => {
+    for (const s of ["", "0", "-2", "abc"]) expect(parseEstimate(s)).toBeUndefined();
   });
 });

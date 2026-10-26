@@ -112,6 +112,18 @@ export function formatTaskProgress(task: Task): string {
   return task.pomodoros > 0 ? `${task.pomodoros}` : "";
 }
 
+/** Category badge click cycle: none → work → study → life → other → none. */
+export function nextTaskCategory(current?: TaskCategory): TaskCategory | undefined {
+  if (!current) return TASK_CATEGORIES[0];
+  return TASK_CATEGORIES[TASK_CATEGORIES.indexOf(current) + 1];
+}
+
+/** Parses a pomodoro estimate input; anything that is not a positive integer means "none". */
+export function parseEstimate(input: string): number | undefined {
+  const n = parseInt(input, 10);
+  return Number.isNaN(n) || n <= 0 ? undefined : n;
+}
+
 /** Updates category for a given task. */
 export function updateTaskCategory(tasks: Task[], id: string, category?: TaskCategory): Task[] {
   return tasks.map((t) => (t.id === id ? { ...t, category } : t));
