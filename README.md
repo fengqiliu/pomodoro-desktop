@@ -11,7 +11,7 @@ v2.0 重点：前端由单文件重构为「引擎 hook + 组件」模块化架�
 - **三阶段计时** —— 专注 / 短休息 / 长休息，环形进度条随阶段变色
 - **可配置时长** —— 专注 25 分钟、短休 5 分钟、长休 15 分钟，每完成 4 个番茄进入长休（均可调）
 - **任务清单** —— 添加（可填预估番茄数）/ 完成 / 删除 / 双击编辑标题与目标番茄数 / 上下移排序，选一个为「当前专注任务」，自动累计每个任务吃掉的番茄数并显示 `🍅 x/y` 进度
-- **任务分类、归档与搜索** —— 创建任务时可选分类标签（工作 / 学习 / 生活 / 其它），任务行内点击徽章可循环切换；状态栏可按「全部 / 进行中 / 已归档」筛选；支持关键字即时搜索与一键清除；已归档任务保留完成时间戳（`completedAt`）供溯源
+- **任务分类、归档与搜索** —— 创建任务时可选分类标签（工作 / 学习 / 生活 / 其它），任务行内点击徽章可循环切换；状态栏可按「全部 / 进行中 / 已归档」筛选；支持关键字即时搜索与一键清除；筛选或搜索状态下仍可上下移动排序（自动跳过被隐藏的任务）；已归档任务保留完成时间戳（`completedAt`）供溯源
 - **每日目标** —— 设定每日番茄目标（默认 8 个，1–30 可调），计时页实时展示今日 `x/目标` 进度，达成瞬间弹出 🎉 庆祝
 - **统计分析与周报** —— 柱状图按「番茄数 / 专注分钟」切换；展示今日 / 本周汇总、当前与历史最佳连续天数、历史累计番茄与专注时长；「本周简报」支持一键导出 CSV；展开「趋势与月度」可查看 30 天滑动均线趋势图、月度汇总及**任务分类专注分布（多色分段占比条与统计）**
 - **白噪音** —— 内置白 / 棕 / 粉 / 雨声 / 海浪共五种噪音（WebAudio 算法合成，无音频文件）；雨声采用 Poisson 雨滴撞击脉冲叠加，海浪采用 4s 潮汐包络动态调制；启动/停止均有 350ms 线性淡入淡出，切换类型无缝衔接；可调音量，可开启「随专注自动播放」
@@ -23,6 +23,7 @@ v2.0 重点：前端由单文件重构为「引擎 hook + 组件」模块化架�
 - **本地持久化** —— 全部状态保存在 localStorage，跨重启保留；每日自动重置今日计数
 - **数据备份** —— 设置中一键导出/导入（剪贴板 JSON 往返，浏览器与桌面端通用）
 - **应用内快捷键** —— `Space` 开始/暂停、`R` 重置、`S` 跳过；窗口标题实时显示倒计时
+- **键盘与读屏友好** —— 按钮、输入框与任务完成框均可用 Tab 到达并显示焦点环（编辑任务标题目前仍需双击）；任务完成框支持 Space / Enter 切换（不会误触发计时）；切换类控件提供 `aria-pressed` / `aria-checked` / `aria-expanded` 选中状态；尊重系统「减少动态效果」设置
 - **中文安装包** —— Windows NSIS 安装器已本地化为简体中文（含语言选择框），详见 `docs/NSIS-中文化.md`
 
 ## 技术栈
@@ -35,6 +36,8 @@ v2.0 重点：前端由单文件重构为「引擎 hook + 组件」模块化架�
 | 原生插件 | `tauri-plugin-global-shortcut`、`tauri-plugin-notification` |
 | 音频 | WebAudio API（噪音合成 + 钟声） |
 | 国际化 | 手写字典（无第三方库） |
+| 测试 | Vitest + 自研 DDD 架构守卫（`scripts/check-architecture.mjs`） |
+| 代码格式 | Prettier 3（`.prettierrc.json`，CI 校验） |
 
 ## 前置要求
 
@@ -67,6 +70,7 @@ npm install           # 安装依赖
 npm run dev           # 仅前端开发（浏览器，:1420）
 npm test              # DDD 架构守卫（R1–R7）+ Vitest 回归测试（13 套 137 例）
 npm run typecheck     # tsc --noEmit —— TypeScript 静态检查（无 lint）
+npm run format        # Prettier 全量格式化（format:check 仅检查，CI 使用）
 npm run build         # tsc -b && vite build → dist/
 npm run preview       # 预览构建产物
 
@@ -78,6 +82,8 @@ cargo test --manifest-path src-tauri/Cargo.toml --lib  # Rust 测试（引擎 5 
 python3 gen_icons.py  # 重新生成应用图标（需 Pillow），输出到 src-tauri/icons/
 ```
 
+> Prettier 只从**当前工作目录**读取 `.prettierignore`（排除 `docs/`、`*.md`、`src-tauri/`、`dist/`、`package-lock.json`），请在仓库根目录运行；编辑器或钩子按单文件格式化时，也应先切到仓库根目录。
+
 ## 项目结构
 
 ```
@@ -86,9 +92,12 @@ pomodoro-desktop/
 │   ├── domain/             # 纯领域规则：timer/ tasks/ stats/（周报/CSV 规则） settings/（含 *.test.ts）
 │   ├── application/        # 端口 ports.ts + 用例 backupService（含测试）
 │   ├── infrastructure/     # 适配器：platform/（惰性加载 Tauri API） storage/ audio/
-│   ├── presentation/       # App.tsx 组装 + components/ + hooks/（状态/副作用/计时引擎）+ i18n.ts
+│   ├── presentation/       # App.tsx 组装 + hooks/（状态/副作用/计时引擎）+ i18n.ts
+│   │   ├── components/     # 各组件及同名 CSS（TasksView = TaskAddForm + TaskFilterBar + TaskItem）
+│   │   ├── App.css         # 主题变量、全局元素与跨组件共享样式
+│   │   └── a11y.css        # 焦点环与 reduced-motion，最后加载
 │   ├── shared/date.ts      # todayKey() 共享日期工具
-│   ├── main.tsx            # React 入口
+│   ├── main.tsx            # React 入口（在 App 之后导入 a11y.css）
 │   └── index.css           # 浏览器重置（7 行）
 ├── src-tauri/              # Rust/Tauri 外壳（限界上下文 + 组合根）
 │   ├── src/lib.rs          # 组合根：插件、命令注册、托盘装配、关闭到托盘
@@ -103,8 +112,11 @@ pomodoro-desktop/
 │   ├── 需求规格说明书.md   # SRS：功能/非功能需求（含验收标准）、数据与界面需求
 │   ├── 概要设计说明.md     # HLD：总体架构、模块设计、关键机制、接口与测试设计
 │   ├── DDD重构方案.md      # DDD 分层目标与依赖规则、模块映射（旧→新）、迁移与验证
-│   └── NSIS-中文化.md      # NSIS 安装包中文化配置说明
-├── .github/workflows/ci.yml  # CI：前端全量校验 + cargo test（推送/PR 触发）
+│   ├── NSIS-中文化.md      # NSIS 安装包中文化配置说明
+│   └── superpowers/        # 迭代设计文档（specs/）与实施计划（plans/）
+├── .github/workflows/ci.yml  # CI：格式检查 + 前端全量校验 + cargo test（推送/PR 触发）
+├── .prettierrc.json / .prettierignore  # 格式规范与排除范围
+├── .git-blame-ignore-revs  # git blame 跳过一次性全量格式化提交
 ├── AGENTS.md               # AI 协作指引（Codex）：架构约定与常用命令
 ├── CLAUDE.md               # AI 协作指引（Claude）：架构约定与常用命令
 ├── gen_icons.py            # 图标生成脚本（Pillow 绘制扁平番茄时钟）
@@ -122,10 +134,10 @@ pomodoro-desktop/
 - **番茄循环**：今日统计与长休息循环分别记录。`cycleFocusCount` 在每次完成专注后推进、触发长休息后归零，并会跨日期延续，因此“每 N 个番茄长休息”不受每日统计重置影响。
 - **历史自动裁剪**：`domain/stats` 在启动、记录和导入时把历史裁剪到近 60 天，防止 localStorage 无界增长（图表只用近 7 天）。
 - **数据备份**：设置面板可导出/导入 JSON 备份（经剪贴板往返，桌面与浏览器通用）。导入时 `application/backupService.parseBackup` 校验载荷、按默认值合并状态并裁剪历史，坏数据不会写入存储。
-- **测试**：计时规则位于 `src/domain/timer/`，通过 Vitest 覆盖长休息周期、跳过阶段、跨日重置和延迟回调的剩余时间计算；`focusHistory.test.ts` 与 `weeklyReport.test.ts` 覆盖历史裁剪、连击累计、周报汇总与 CSV 转义；`task.test.ts`、`backupService.test.ts`、`i18n.test.ts` 与 `noiseEngine.test.ts` 分别覆盖任务规则（含分类筛选、搜索、预估编辑与分布计算）、备份往返、双语字典（含五种噪音 / 四种分类标签）、噪音缓冲区合成与缓存。前端共 13 个测试文件 137 例，Rust 9 例（引擎 5 + 完成审计日志 4）；`npm test` 会先执行 DDD 分层架构守卫（R1–R7，78 源文件）；推送/PR 时 GitHub Actions（`.github/workflows/ci.yml`）全量校验前端与 cargo test。
+- **测试**：计时规则位于 `src/domain/timer/`，通过 Vitest 覆盖长休息周期、跳过阶段、跨日重置和延迟回调的剩余时间计算；`focusHistory.test.ts` 与 `weeklyReport.test.ts` 覆盖历史裁剪、连击累计、周报汇总与 CSV 转义；`task.test.ts`、`backupService.test.ts`、`i18n.test.ts` 与 `noiseEngine.test.ts` 分别覆盖任务规则（含分类筛选、搜索、预估编辑与分布计算）、备份往返、双语字典（含五种噪音 / 四种分类标签）、噪音缓冲区合成与缓存；`useAppShortcuts.test.ts` 覆盖快捷键解析（输入框内与聚焦控件上不抢占 Space）。前端共 13 个测试文件 137 例，Rust 9 例（引擎 5 + 完成审计日志 4）；`npm test` 会先执行 DDD 分层架构守卫（R1–R7，78 源文件）；推送/PR 时 GitHub Actions（`.github/workflows/ci.yml`）依次执行 Prettier 格式检查、架构守卫、测试、类型检查、构建与 cargo test。
 - **双计时适配器**：桌面端通过 `native_timer_start` / `pause` / `cancel` 命令让 Rust 按墙上时间判断完成；启动时会把完成通知的标题与正文交给原生 worker，worker 先发送系统通知、再发送完成事件，因此托盘中不依赖 WebView 的 JS interval 或通知回调。浏览器模式仍使用相同的结束时间戳算法本地完成。React 只负责界面刷新、阶段规则、统计和自动衔接。
 - **原生层**：`src-tauri/src/lib.rs` 作为组合根，只负责装配——注册全局快捷键与通知插件、三个 `native_timer_*` 命令、注入完成审计日志、托盘 setup 与关闭到托盘；业务逻辑在 `timer/`（`engine.rs` 引擎 + `commands.rs` IPC 适配器 + `completion_log.rs` 审计日志端口）与 `tray/`（托盘菜单与窗口显隐）两个限界上下文。全局开始/暂停快捷键由 App 注册，编辑时仅保存草稿，点击「完成」后才尝试应用。每次计时完成，`commands.rs` 会向 `<app_data_dir>/completion-log.jsonl` 追加一行 JSON（`completedAtMs`/`durationMs`/`generation`/`notificationSent`），best-effort 供诊断审计。
-- **主题**：CSS 变量在 `App.css` 的 `:root`（浅色）与 `[data-theme="dark"]`（深色）定义；阶段强调色 `--accent`（红/绿/蓝）在每次渲染时以行内样式覆盖。
+- **主题与样式组织**：CSS 变量在 `App.css` 的 `:root`（浅色）与 `[data-theme="dark"]`（深色）定义；阶段强调色 `--accent`（红/绿/蓝）在每次渲染时以行内样式覆盖。样式按归属拆分：只被一个组件使用的类写在该组件同名 CSS 中，跨组件共享的留在 `App.css`；`a11y.css` 在 `main.tsx` 中紧随 App 导入，保证焦点环在同优先级规则中最后生效。类名仍是全局的，新增类时注意不要与其他组件重名。
 
 ## 配置
 
