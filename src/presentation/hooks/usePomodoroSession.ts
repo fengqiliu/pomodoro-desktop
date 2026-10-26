@@ -46,7 +46,6 @@ export function usePomodoroSession({
   setHistory,
   setTasks,
 }: Options) {
-
   // Latest-value refs for callbacks that must read state outside render
   // (completion path, native notification builder).
   const settingsRef = useRef(settings);
@@ -71,10 +70,7 @@ export function usePomodoroSession({
   // outside render (notification builder reads it before a countdown starts).
   const enginePhaseRef = useRef<Phase>("focus");
 
-  const getPhaseSeconds = useCallback(
-    (p: Phase) => phaseMinutes(p, settingsRef.current) * 60,
-    []
-  );
+  const getPhaseSeconds = useCallback((p: Phase) => phaseMinutes(p, settingsRef.current) * 60, []);
 
   const buildCompletionNotification = useCallback((): NativeTimerNotification | undefined => {
     const descriptor = buildPhaseNotificationDescriptor(
@@ -121,7 +117,6 @@ export function usePomodoroSession({
       }
 
       if (result.notification && !nativeNotificationSent) {
-
         const translateNow = trRef.current;
         const title = translateNow(result.notification.titleKey);
         const body = translateNow(result.notification.bodyKey, {

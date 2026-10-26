@@ -26,7 +26,6 @@ export interface NoisePref {
   autoWithFocus?: boolean;
 }
 
-
 export const DEFAULT_SETTINGS: Settings = {
   focus: 25,
   short: 5,
@@ -41,4 +40,3 @@ export const DEFAULT_SETTINGS: Settings = {
   noiseType: "brown",
   noiseVolume: 0.3,
 };
-

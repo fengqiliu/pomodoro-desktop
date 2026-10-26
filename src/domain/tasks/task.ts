@@ -71,7 +71,6 @@ export function renameTask(tasks: Task[], id: string, newTitle: string): Task[] 
 }
 
 export function clearCompletedTasks(tasks: Task[]): Task[] {
-
   return tasks.filter((t) => !t.done);
 }
 
@@ -82,11 +81,7 @@ export function recordPomodoro(tasks: Task[], id: string | null): Task[] {
 }
 
 /** Updates estimated pomodoros for a given task. */
-export function updateTaskEstimate(
-  tasks: Task[],
-  id: string,
-  estimatedPomodoros?: number
-): Task[] {
+export function updateTaskEstimate(tasks: Task[], id: string, estimatedPomodoros?: number): Task[] {
   const sanitized =
     estimatedPomodoros && estimatedPomodoros > 0 ? Math.floor(estimatedPomodoros) : undefined;
   return tasks.map((t) => (t.id === id ? { ...t, estimatedPomodoros: sanitized } : t));
@@ -118,11 +113,7 @@ export function formatTaskProgress(task: Task): string {
 }
 
 /** Updates category for a given task. */
-export function updateTaskCategory(
-  tasks: Task[],
-  id: string,
-  category?: TaskCategory
-): Task[] {
+export function updateTaskCategory(tasks: Task[], id: string, category?: TaskCategory): Task[] {
   return tasks.map((t) => (t.id === id ? { ...t, category } : t));
 }
 
@@ -146,17 +137,19 @@ export function filterTasks(tasks: Task[], filter: TaskFilterOptions): Task[] {
 /** Same as filterTasks, but keeps each task's source index. */
 export function filterTaskEntries(tasks: Task[], filter: TaskFilterOptions): TaskEntry[] {
   const kw = filter.keyword?.trim().toLowerCase();
-  return tasks.map((task, index) => ({ task, index })).filter(({ task: t }) => {
-    if (filter.status === "active" && t.done) return false;
-    if (filter.status === "done" && !t.done) return false;
-    if (filter.category && filter.category !== "all" && t.category !== filter.category) {
-      return false;
-    }
-    if (kw && !t.title.toLowerCase().includes(kw)) {
-      return false;
-    }
-    return true;
-  });
+  return tasks
+    .map((task, index) => ({ task, index }))
+    .filter(({ task: t }) => {
+      if (filter.status === "active" && t.done) return false;
+      if (filter.status === "done" && !t.done) return false;
+      if (filter.category && filter.category !== "all" && t.category !== filter.category) {
+        return false;
+      }
+      if (kw && !t.title.toLowerCase().includes(kw)) {
+        return false;
+      }
+      return true;
+    });
 }
 
 export interface CategoryStat {
@@ -165,9 +158,7 @@ export interface CategoryStat {
 }
 
 /** Aggregates tasks count and pomodoros grouped by category. */
-export function calculateCategoryStats(
-  tasks: Task[]
-): Record<TaskCategory, CategoryStat> {
+export function calculateCategoryStats(tasks: Task[]): Record<TaskCategory, CategoryStat> {
   const stats: Record<TaskCategory, CategoryStat> = {
     work: { count: 0, pomodoros: 0 },
     study: { count: 0, pomodoros: 0 },
@@ -219,5 +210,3 @@ export function calculateCategoryDistribution(tasks: Task[]): CategoryDistributi
     items,
   };
 }
-
-

@@ -8,7 +8,6 @@ import {
   type History,
 } from "./index";
 
-
 const NOW = new Date(2026, 8, 11); // 2026-9-11, a Friday
 
 function key(daysAgo: number): string {
@@ -144,4 +143,3 @@ describe("calculateTotalStats", () => {
     });
   });
 });
-

@@ -17,8 +17,6 @@ import {
   type Task,
 } from "./index";
 
-
-
 let nextId = 0;
 const generateId = () => `t${++nextId}`;
 
@@ -33,7 +31,12 @@ describe("addTask", () => {
   it("prepends a fresh task using the injected id generator", () => {
     const tasks = addTask(fixture(), "新任务", generateId);
     expect(tasks).toHaveLength(3);
-    expect(tasks[0]).toEqual({ id: expect.any(String), title: "新任务", done: false, pomodoros: 0 });
+    expect(tasks[0]).toEqual({
+      id: expect.any(String),
+      title: "新任务",
+      done: false,
+      pomodoros: 0,
+    });
     expect(tasks[1].id).toBe("a");
   });
 });
@@ -67,7 +70,6 @@ describe("renameTask", () => {
 });
 
 describe("clearCompletedTasks", () => {
-
   it("keeps only unfinished tasks", () => {
     expect(clearCompletedTasks(fixture()).map((t) => t.id)).toEqual(["a"]);
   });
@@ -123,7 +125,9 @@ describe("task estimates & reordering", () => {
   });
 
   it("formats task progress appropriately", () => {
-    expect(formatTaskProgress({ id: "1", title: "t", done: false, pomodoros: 3, estimatedPomodoros: 5 })).toBe("3/5");
+    expect(
+      formatTaskProgress({ id: "1", title: "t", done: false, pomodoros: 3, estimatedPomodoros: 5 })
+    ).toBe("3/5");
     expect(formatTaskProgress({ id: "2", title: "t", done: false, pomodoros: 3 })).toBe("3");
     expect(formatTaskProgress({ id: "3", title: "t", done: false, pomodoros: 0 })).toBe("");
   });
@@ -184,7 +188,11 @@ describe("filterTasks & calculateCategoryStats", () => {
 
   it("filters by status (active vs done vs all)", () => {
     expect(filterTasks(sampleTasks, { status: "all" })).toHaveLength(5);
-    expect(filterTasks(sampleTasks, { status: "active" }).map((t) => t.id)).toEqual(["1", "3", "5"]);
+    expect(filterTasks(sampleTasks, { status: "active" }).map((t) => t.id)).toEqual([
+      "1",
+      "3",
+      "5",
+    ]);
     expect(filterTasks(sampleTasks, { status: "done" }).map((t) => t.id)).toEqual(["2", "4"]);
   });
 
@@ -256,8 +264,8 @@ describe("filterTasks & calculateCategoryStats", () => {
     const dist = calculateCategoryDistribution([]);
     expect(dist.totalTasks).toBe(0);
     expect(dist.totalPomodoros).toBe(0);
-    expect(dist.items.every((i) => i.percent === 0 && i.pomodoros === 0 && i.count === 0)).toBe(true);
+    expect(dist.items.every((i) => i.percent === 0 && i.pomodoros === 0 && i.count === 0)).toBe(
+      true
+    );
   });
 });
-
-

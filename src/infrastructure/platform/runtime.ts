@@ -19,8 +19,7 @@ export async function loadWin() {
 }
 
 export async function loadShortcut() {
-  if (!shortcutApi)
-    shortcutApi = await import("@tauri-apps/plugin-global-shortcut");
+  if (!shortcutApi) shortcutApi = await import("@tauri-apps/plugin-global-shortcut");
   return shortcutApi;
 }
 

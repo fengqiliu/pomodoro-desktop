@@ -2,14 +2,22 @@ import { describe, expect, it } from "vitest";
 import { resolveShortcut } from "./useAppShortcuts";
 
 /** Minimal stand-ins for KeyboardEvent / EventTarget (no DOM needed). */
-function key(over: Partial<{ key: string; code: string; metaKey: boolean; ctrlKey: boolean; altKey: boolean }> = {}) {
+function key(
+  over: Partial<{
+    key: string;
+    code: string;
+    metaKey: boolean;
+    ctrlKey: boolean;
+    altKey: boolean;
+  }> = {}
+) {
   return { key: "", code: "", metaKey: false, ctrlKey: false, altKey: false, ...over };
 }
 function el(tagName: string, over: { isContentEditable?: boolean; role?: string } = {}) {
   return {
     tagName,
     isContentEditable: over.isContentEditable ?? false,
-    getAttribute: (n: string) => (n === "role" ? over.role ?? null : null),
+    getAttribute: (n: string) => (n === "role" ? (over.role ?? null) : null),
   };
 }
 

@@ -168,4 +168,3 @@ export function calculateTotalStats(history: History): TotalStats {
 
   return { totalPomodoros, totalMinutes, totalDays };
 }
-

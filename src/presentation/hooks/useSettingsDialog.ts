@@ -37,7 +37,11 @@ export function useSettingsDialog({
     setSettings((current) => ({ ...current, ...DEFAULT_SETTINGS }));
     setHotkeyDraft(DEFAULT_SETTINGS.hotkey);
     setHotkeyError(null);
-    setNoise((n) => ({ on: n.on, type: DEFAULT_SETTINGS.noiseType, volume: DEFAULT_SETTINGS.noiseVolume }));
+    setNoise((n) => ({
+      on: n.on,
+      type: DEFAULT_SETTINGS.noiseType,
+      volume: DEFAULT_SETTINGS.noiseVolume,
+    }));
   }, [resetTimer, setSettings, setHotkeyError, setNoise]);
 
   const openSettings = useCallback(() => {

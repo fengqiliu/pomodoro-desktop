@@ -32,7 +32,9 @@ export function makeBuffer(ctx: AudioContext, type: NoiseType): AudioBuffer {
     }
   } else if (type === "pink") {
     // pink (Voss-McCartney approximation)
-    let b0 = 0, b1 = 0, b2 = 0;
+    let b0 = 0,
+      b1 = 0,
+      b2 = 0;
     for (let i = 0; i < len; i++) {
       const white = Math.random() * 2 - 1;
       b0 = 0.99765 * b0 + white * 0.099046;
@@ -42,7 +44,9 @@ export function makeBuffer(ctx: AudioContext, type: NoiseType): AudioBuffer {
     }
   } else if (type === "rain") {
     // Gentle rainfall: soft filtered atmospheric bed + randomized raindrop impacts
-    let b0 = 0, b1 = 0, b2 = 0;
+    let b0 = 0,
+      b1 = 0,
+      b2 = 0;
     for (let i = 0; i < len; i++) {
       const white = Math.random() * 2 - 1;
       b0 = 0.99765 * b0 + white * 0.099046;
@@ -208,18 +212,21 @@ export class NoiseEngine {
 
       const currentSrc = this.src;
       const currentGain = this.gain;
-      this.stopTimer = setTimeout(() => {
-        try {
-          currentSrc?.stop();
-        } catch {
-          /* already stopped */
-        }
-        currentSrc?.disconnect();
-        currentGain?.disconnect();
-        if (this.src === currentSrc) this.src = null;
-        if (this.gain === currentGain) this.gain = null;
-        this.stopTimer = null;
-      }, FADE_SEC * 1000 + 40);
+      this.stopTimer = setTimeout(
+        () => {
+          try {
+            currentSrc?.stop();
+          } catch {
+            /* already stopped */
+          }
+          currentSrc?.disconnect();
+          currentGain?.disconnect();
+          if (this.src === currentSrc) this.src = null;
+          if (this.gain === currentGain) this.gain = null;
+          this.stopTimer = null;
+        },
+        FADE_SEC * 1000 + 40
+      );
     } else {
       try {
         this.src?.stop();

@@ -47,8 +47,8 @@ export function TrendChart({ tr, history, metric, accent }: TrendProps) {
     delta.direction === "up"
       ? "stats.trend.up"
       : delta.direction === "down"
-      ? "stats.trend.down"
-      : "stats.trend.flat";
+        ? "stats.trend.down"
+        : "stats.trend.flat";
 
   const linePath = avgPoints
     .map((v, i) => {

@@ -43,7 +43,10 @@ export interface NativeTimerCompletion extends NativeTimerSnapshot {
 }
 
 export interface NativeTimerPort {
-  start(seconds: number, notification?: NativeTimerNotification): Promise<NativeTimerSnapshot | null>;
+  start(
+    seconds: number,
+    notification?: NativeTimerNotification
+  ): Promise<NativeTimerSnapshot | null>;
   pause(): Promise<NativeTimerSnapshot | null>;
   cancel(expectedGeneration?: number): Promise<NativeTimerSnapshot | null>;
   listenCompleted(handler: (completion: NativeTimerCompletion) => void): Promise<() => void>;

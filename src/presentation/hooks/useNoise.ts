@@ -21,9 +21,7 @@ export function useNoise({ noise, running, phase }: UseNoiseOptions) {
     eng.setType(noise.type);
     eng.setVolume(noise.volume);
 
-    const shouldPlay = noise.autoWithFocus
-      ? noise.on && running && phase === "focus"
-      : noise.on;
+    const shouldPlay = noise.autoWithFocus ? noise.on && running && phase === "focus" : noise.on;
 
     if (shouldPlay) {
       eng.start();

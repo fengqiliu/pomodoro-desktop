@@ -3,17 +3,11 @@ import { DEFAULT_SETTINGS, type Settings } from "../domain/settings";
 import type { Task } from "../domain/tasks";
 import type { History } from "../domain/stats";
 import type { DailyProgress } from "../domain/timer";
-import {
-  buildPhaseNotificationDescriptor,
-  completePhase,
-  predictNextPhase,
-} from "./completePhase";
+import { buildPhaseNotificationDescriptor, completePhase, predictNextPhase } from "./completePhase";
 
 describe("predictNextPhase", () => {
   it("predicts short break when cycle has not reached longEvery", () => {
-    expect(predictNextPhase({ finished: "focus", cycleFocusCount: 1, longEvery: 4 })).toBe(
-      "short"
-    );
+    expect(predictNextPhase({ finished: "focus", cycleFocusCount: 1, longEvery: 4 })).toBe("short");
   });
 
   it("predicts long break when cycle reaches longEvery", () => {
@@ -21,9 +15,7 @@ describe("predictNextPhase", () => {
   });
 
   it("predicts focus when finishing any break", () => {
-    expect(predictNextPhase({ finished: "short", cycleFocusCount: 0, longEvery: 4 })).toBe(
-      "focus"
-    );
+    expect(predictNextPhase({ finished: "short", cycleFocusCount: 0, longEvery: 4 })).toBe("focus");
     expect(predictNextPhase({ finished: "long", cycleFocusCount: 0, longEvery: 4 })).toBe("focus");
   });
 });
@@ -246,4 +238,3 @@ describe("completePhase use case", () => {
     expect(result2.goalReachedJustNow).toBe(false);
   });
 });
-

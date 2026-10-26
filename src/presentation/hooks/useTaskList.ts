@@ -12,7 +12,6 @@ import {
   type TaskCategory,
 } from "../../domain/tasks";
 
-
 interface Options {
   tasks: Task[];
   setTasks: Dispatch<SetStateAction<Task[]>>;
@@ -23,39 +22,59 @@ interface Options {
 export function useTaskList({ tasks, setTasks }: Options) {
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
 
-  const addTask = useCallback((title: string, estimatedPomodoros?: number, category?: TaskCategory) => {
-    setTasks((ts) => prependTask(ts, title, () => crypto.randomUUID(), estimatedPomodoros, category));
-  }, [setTasks]);
+  const addTask = useCallback(
+    (title: string, estimatedPomodoros?: number, category?: TaskCategory) => {
+      setTasks((ts) =>
+        prependTask(ts, title, () => crypto.randomUUID(), estimatedPomodoros, category)
+      );
+    },
+    [setTasks]
+  );
 
   const toggleTask = useCallback(
     (id: string) => setTasks((ts) => toggleTaskDone(ts, id)),
     [setTasks]
   );
 
-  const deleteTask = useCallback((id: string) => {
-    setTasks((ts) => removeTask(ts, id));
-    setActiveTaskId((cur) => (cur === id ? null : cur));
-  }, [setTasks]);
+  const deleteTask = useCallback(
+    (id: string) => {
+      setTasks((ts) => removeTask(ts, id));
+      setActiveTaskId((cur) => (cur === id ? null : cur));
+    },
+    [setTasks]
+  );
 
   const clearDoneTasks = useCallback(() => {
     setTasks((ts) => clearCompletedTasks(ts));
   }, [setTasks]);
 
-  const moveTask = useCallback((fromIndex: number, toIndex: number) => {
-    setTasks((ts) => reorderTask(ts, fromIndex, toIndex));
-  }, [setTasks]);
+  const moveTask = useCallback(
+    (fromIndex: number, toIndex: number) => {
+      setTasks((ts) => reorderTask(ts, fromIndex, toIndex));
+    },
+    [setTasks]
+  );
 
-  const updateEstimate = useCallback((id: string, estimated?: number) => {
-    setTasks((ts) => updateTaskEstimate(ts, id, estimated));
-  }, [setTasks]);
+  const updateEstimate = useCallback(
+    (id: string, estimated?: number) => {
+      setTasks((ts) => updateTaskEstimate(ts, id, estimated));
+    },
+    [setTasks]
+  );
 
-  const updateCategory = useCallback((id: string, category?: TaskCategory) => {
-    setTasks((ts) => updateTaskCategory(ts, id, category));
-  }, [setTasks]);
+  const updateCategory = useCallback(
+    (id: string, category?: TaskCategory) => {
+      setTasks((ts) => updateTaskCategory(ts, id, category));
+    },
+    [setTasks]
+  );
 
-  const renameTask = useCallback((id: string, newTitle: string) => {
-    setTasks((ts) => updateTaskTitle(ts, id, newTitle));
-  }, [setTasks]);
+  const renameTask = useCallback(
+    (id: string, newTitle: string) => {
+      setTasks((ts) => updateTaskTitle(ts, id, newTitle));
+    },
+    [setTasks]
+  );
 
   const activeTask = tasks.find((t) => t.id === activeTaskId) || null;
 

@@ -1,9 +1,5 @@
 import { useMemo } from "react";
-import {
-  calculateCategoryDistribution,
-  type Task,
-  type TaskCategory,
-} from "../../domain/tasks";
+import { calculateCategoryDistribution, type Task, type TaskCategory } from "../../domain/tasks";
 import { TASK_CATEGORY_KEY } from "../i18n";
 
 interface Props {
@@ -26,14 +22,16 @@ export function CategoryBreakdownCard({ tr, tasks }: Props) {
     <div className="category-breakdown">
       <div className="chart-head">
         <span className="chart-title">{tr("stats.category.title")}</span>
-        <span className="category-total-badge">
-          {dist.totalPomodoros} 🍅
-        </span>
+        <span className="category-total-badge">{dist.totalPomodoros} 🍅</span>
       </div>
 
       {hasData ? (
         <>
-          <div className="category-bar-wrap" role="progressbar" aria-label={tr("stats.category.title")}>
+          <div
+            className="category-bar-wrap"
+            role="progressbar"
+            aria-label={tr("stats.category.title")}
+          >
             {dist.items.map((item) => {
               if (item.pomodoros <= 0) return null;
               const segWidth = (item.pomodoros / dist.totalPomodoros) * 100;
@@ -58,9 +56,7 @@ export function CategoryBreakdownCard({ tr, tasks }: Props) {
                   className="category-legend-dot"
                   style={{ backgroundColor: CATEGORY_COLORS[item.category] }}
                 />
-                <span className="category-legend-name">
-                  {tr(TASK_CATEGORY_KEY[item.category])}
-                </span>
+                <span className="category-legend-name">{tr(TASK_CATEGORY_KEY[item.category])}</span>
                 <span className="category-legend-stats">
                   {item.pomodoros} 🍅 ({item.percent}%)
                 </span>
@@ -69,9 +65,7 @@ export function CategoryBreakdownCard({ tr, tasks }: Props) {
           </div>
         </>
       ) : (
-        <div className="category-empty">
-          {tr("stats.category.empty")}
-        </div>
+        <div className="category-empty">{tr("stats.category.empty")}</div>
       )}
     </div>
   );

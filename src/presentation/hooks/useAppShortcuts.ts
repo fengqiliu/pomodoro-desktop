@@ -27,7 +27,11 @@ export function resolveShortcut(
     ctrlKey: boolean;
     altKey: boolean;
   },
-  target: { tagName: string; isContentEditable: boolean; getAttribute(n: string): string | null } | null
+  target: {
+    tagName: string;
+    isContentEditable: boolean;
+    getAttribute(n: string): string | null;
+  } | null
 ): "toggle" | "reset" | "skip" | null {
   if (target) {
     const tag = target.tagName;
@@ -39,7 +43,10 @@ export function resolveShortcut(
 
   if (e.code === "Space") {
     const onActivatable =
-      !!target && (target.tagName === "BUTTON" || target.tagName === "A" || target.getAttribute("role") === "button");
+      !!target &&
+      (target.tagName === "BUTTON" ||
+        target.tagName === "A" ||
+        target.getAttribute("role") === "button");
     return onActivatable ? null : "toggle";
   }
   if (e.key === "r" || e.key === "R") return "reset";

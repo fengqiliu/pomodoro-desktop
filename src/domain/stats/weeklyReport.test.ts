@@ -74,7 +74,10 @@ describe("buildWeeklyReportCsv", () => {
   });
 
   it("omits the best-day row when the window is empty", () => {
-    const csv = buildWeeklyReportCsv(WEEK.map((d) => ({ ...d, pomodoros: 0, minutes: 0 })), labels);
+    const csv = buildWeeklyReportCsv(
+      WEEK.map((d) => ({ ...d, pomodoros: 0, minutes: 0 })),
+      labels
+    );
     expect(csv.split("\n")).toEqual([
       "date,weekday,pomodoros,minutes",
       "2026-9-27,Sun,0,0",

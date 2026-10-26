@@ -21,15 +21,7 @@ interface Props {
   onImport: () => void;
 }
 
-function Switch({
-  on,
-  onToggle,
-  label,
-}: {
-  on: boolean;
-  onToggle: () => void;
-  label: string;
-}) {
+function Switch({ on, onToggle, label }: { on: boolean; onToggle: () => void; label: string }) {
   return (
     <button className={on ? "switch on" : "switch"} onClick={onToggle} aria-label={label}>
       <span className="switch-knob" />
@@ -75,7 +67,11 @@ export function SettingsModal({
           <div className="field-divider">{tr("settings.section.general")}</div>
           <label className="field">
             <span>{tr("settings.language")}</span>
-            <select className="select" value={lang} onChange={(e) => onLangChange(e.target.value as Lang)}>
+            <select
+              className="select"
+              value={lang}
+              onChange={(e) => onLangChange(e.target.value as Lang)}
+            >
               {LANGS.map((l) => (
                 <option key={l.code} value={l.code}>
                   {l.label}
@@ -90,7 +86,9 @@ export function SettingsModal({
               min="1"
               max="120"
               value={settings.focus}
-              onChange={(e) => onSettingsChange((s) => ({ ...s, focus: Number(e.target.value) || 1 }))}
+              onChange={(e) =>
+                onSettingsChange((s) => ({ ...s, focus: Number(e.target.value) || 1 }))
+              }
             />
           </label>
           <label className="field">
@@ -100,7 +98,9 @@ export function SettingsModal({
               min="1"
               max="60"
               value={settings.short}
-              onChange={(e) => onSettingsChange((s) => ({ ...s, short: Number(e.target.value) || 1 }))}
+              onChange={(e) =>
+                onSettingsChange((s) => ({ ...s, short: Number(e.target.value) || 1 }))
+              }
             />
           </label>
           <label className="field">
@@ -110,7 +110,9 @@ export function SettingsModal({
               min="1"
               max="60"
               value={settings.long}
-              onChange={(e) => onSettingsChange((s) => ({ ...s, long: Number(e.target.value) || 1 }))}
+              onChange={(e) =>
+                onSettingsChange((s) => ({ ...s, long: Number(e.target.value) || 1 }))
+              }
             />
           </label>
           <label className="field">
@@ -120,7 +122,9 @@ export function SettingsModal({
               min="2"
               max="10"
               value={settings.longEvery}
-              onChange={(e) => onSettingsChange((s) => ({ ...s, longEvery: Number(e.target.value) || 4 }))}
+              onChange={(e) =>
+                onSettingsChange((s) => ({ ...s, longEvery: Number(e.target.value) || 4 }))
+              }
             />
           </label>
           <label className="field">
@@ -171,7 +175,9 @@ export function SettingsModal({
             <span>{tr("settings.autoStartBreaks")}</span>
             <Switch
               on={settings.autoStartBreaks}
-              onToggle={() => onSettingsChange((s) => ({ ...s, autoStartBreaks: !s.autoStartBreaks }))}
+              onToggle={() =>
+                onSettingsChange((s) => ({ ...s, autoStartBreaks: !s.autoStartBreaks }))
+              }
               label={tr("settings.autoStartBreaks")}
             />
           </label>
@@ -179,7 +185,9 @@ export function SettingsModal({
             <span>{tr("settings.autoStartFocus")}</span>
             <Switch
               on={settings.autoStartFocus}
-              onToggle={() => onSettingsChange((s) => ({ ...s, autoStartFocus: !s.autoStartFocus }))}
+              onToggle={() =>
+                onSettingsChange((s) => ({ ...s, autoStartFocus: !s.autoStartFocus }))
+              }
               label={tr("settings.autoStartFocus")}
             />
           </label>
@@ -216,12 +224,9 @@ export function SettingsModal({
             <input
               type="checkbox"
               checked={noise.autoWithFocus ?? false}
-              onChange={(e) =>
-                onNoiseChange((n) => ({ ...n, autoWithFocus: e.target.checked }))
-              }
+              onChange={(e) => onNoiseChange((n) => ({ ...n, autoWithFocus: e.target.checked }))}
             />
           </label>
-
 
           <div className="field-divider">{tr("settings.section.hotkey")}</div>
           <label className="field">

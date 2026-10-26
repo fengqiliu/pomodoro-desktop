@@ -34,7 +34,9 @@ export function TopBar({
           className={noise.on ? "icon-btn active-noise" : "icon-btn"}
           onClick={onToggleNoise}
           aria-label={tr("top.noise")}
-          title={noise.on ? tr("top.noise.on", { type: tr(NOISE_KEY[noise.type]) }) : tr("top.noise")}
+          title={
+            noise.on ? tr("top.noise.on", { type: tr(NOISE_KEY[noise.type]) }) : tr("top.noise")
+          }
         >
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
             <path
@@ -88,7 +90,12 @@ export function TopBar({
             />
           </svg>
         </button>
-        <button className="icon-btn" onClick={onOpenSettings} aria-label={tr("top.settings")} title={tr("top.settings")}>
+        <button
+          className="icon-btn"
+          onClick={onOpenSettings}
+          aria-label={tr("top.settings")}
+          title={tr("top.settings")}
+        >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path d="M12 15a3 3 0 100-6 3 3 0 000 6z" stroke="currentColor" strokeWidth="1.8" />
             <path

@@ -89,7 +89,6 @@ export interface CompletePhaseResult {
   goalReachedJustNow: boolean;
 }
 
-
 /**
  * Application use case: coordinates domain logic when a pomodoro phase completes.
  * Pure function: receives current state snapshots and returns updated state + side-effect descriptors.
@@ -147,11 +146,7 @@ export function completePhase({
 
   const nextSeconds = phaseMinutes(nextPhase, settings) * 60;
 
-  const notification = buildPhaseNotificationDescriptor(
-    finished,
-    settings,
-    cycleFocusCount
-  );
+  const notification = buildPhaseNotificationDescriptor(finished, settings, cycleFocusCount);
 
   return {
     nextPhase,
@@ -165,6 +160,4 @@ export function completePhase({
     notification,
     goalReachedJustNow,
   };
-
 }
-

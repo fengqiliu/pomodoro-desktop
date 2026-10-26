@@ -1,11 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isDesktop, nativeTimerAdapter } from "../../infrastructure/platform";
 import type { NativeTimerNotification } from "../../application/ports";
-import {
-  nextPhaseAfterSkip,
-  remainingSeconds,
-  type Phase,
-} from "../../domain/timer";
+import { nextPhaseAfterSkip, remainingSeconds, type Phase } from "../../domain/timer";
 
 export interface PhaseCompletion {
   nextPhase: Phase;
@@ -77,7 +73,10 @@ export function usePomodoroEngine(options: Options): PomodoroEngine {
     let nativeStarted = false;
 
     if (isDesktop() && nativeTimerListenerReadyRef.current) {
-      const snapshot = await nativeTimerAdapter.start(seconds, optionsRef.current.getCompletionNotification());
+      const snapshot = await nativeTimerAdapter.start(
+        seconds,
+        optionsRef.current.getCompletionNotification()
+      );
       if (action !== countdownActionRef.current) {
         if (snapshot) void nativeTimerAdapter.cancel(snapshot.generation);
         return;
@@ -96,44 +95,48 @@ export function usePomodoroEngine(options: Options): PomodoroEngine {
     setRunning(true);
   }, []);
 
-  const completeCurrentPhase = useCallback(async (nativeNotificationSent = false) => {
-    if (completionInFlightRef.current) return;
-    completionInFlightRef.current = true;
-    runningRef.current = false;
-    nativeTimerRunningRef.current = false;
-    setRunning(false);
+  const completeCurrentPhase = useCallback(
+    async (nativeNotificationSent = false) => {
+      if (completionInFlightRef.current) return;
+      completionInFlightRef.current = true;
+      runningRef.current = false;
+      nativeTimerRunningRef.current = false;
+      setRunning(false);
 
-    try {
-      const finished = phaseRef.current;
-      const result = await optionsRef.current.onPhaseComplete(finished, nativeNotificationSent);
+      try {
+        const finished = phaseRef.current;
+        const result = await optionsRef.current.onPhaseComplete(finished, nativeNotificationSent);
 
-      const nextSeconds = Math.max(1, Math.round(result.nextSeconds));
-      phaseRef.current = result.nextPhase;
-      secondsLeftRef.current = nextSeconds;
-      setPhase(result.nextPhase);
-      setSecondsLeft(nextSeconds);
+        const nextSeconds = Math.max(1, Math.round(result.nextSeconds));
+        phaseRef.current = result.nextPhase;
+        secondsLeftRef.current = nextSeconds;
+        setPhase(result.nextPhase);
+        setSecondsLeft(nextSeconds);
 
-      if (result.autoStart) {
-        await beginCountdown(nextSeconds);
-      } else {
-        endAtRef.current = null;
+        if (result.autoStart) {
+          await beginCountdown(nextSeconds);
+        } else {
+          endAtRef.current = null;
+        }
+      } finally {
+        completionInFlightRef.current = false;
       }
-    } finally {
-      completionInFlightRef.current = false;
-    }
-  }, [beginCountdown]);
+    },
+    [beginCountdown]
+  );
 
   useEffect(() => {
     if (!isDesktop()) return;
     let cancelled = false;
     let stopListening: (() => void) | null = null;
 
-    nativeTimerAdapter.listenCompleted((completion) => {
-      if (completion.generation !== nativeTimerGenerationRef.current) return;
-      nativeTimerGenerationRef.current = null;
-      nativeTimerRunningRef.current = false;
-      void completeCurrentPhase(completion.notificationSent);
-    })
+    nativeTimerAdapter
+      .listenCompleted((completion) => {
+        if (completion.generation !== nativeTimerGenerationRef.current) return;
+        nativeTimerGenerationRef.current = null;
+        nativeTimerRunningRef.current = false;
+        void completeCurrentPhase(completion.notificationSent);
+      })
       .then((unlisten) => {
         if (cancelled) {
           unlisten();

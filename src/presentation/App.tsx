@@ -93,9 +93,7 @@ export default function App() {
     setTasks,
   });
 
-
   useNoise({ noise, running, phase });
-
 
   const { hotkeyError, setHotkeyError } = useHotkey({ hotkey: settings.hotkey, toggle });
   const {
@@ -142,8 +140,7 @@ export default function App() {
   // ←/→ cycle, Home/End jump to the ends. Only the selected tab is tabbable,
   // so Tab moves out of the tablist instead of walking all three buttons.
   const onTabListKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
-    const offset =
-      e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+    const offset = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
     let index = TABS.findIndex((t) => t.id === tab);
     if (e.key === "Home") index = 0;
     else if (e.key === "End") index = TABS.length - 1;
@@ -193,62 +190,59 @@ export default function App() {
         id={`tabpanel-${tab}`}
         aria-labelledby={`tab-${tab}`}
       >
-      {tab === "timer" ? (
-        <TimerView
-          tr={tr}
-          phase={phase}
-          secondsLeft={secondsLeft}
-          running={running}
-          progress={progress}
-          accent={accent}
-          activeTaskTitle={
-            activeTask
-              ? formatTaskProgress(activeTask)
-                ? `${activeTask.title} (${formatTaskProgress(activeTask)} 🍅)`
-                : activeTask.title
-              : null
-          }
-          dailyProgress={dailyProgress}
-          dailyGoal={settings.dailyGoal}
-          cycleFocusCount={cycleFocusCount}
-          longEvery={settings.longEvery}
-          onToggle={() => void toggle()}
-          onReset={() => void reset()}
-          onSkip={() => void skip()}
-          onSwitchPhase={(p) => void switchTo(p)}
-        />
-      ) : tab === "tasks" ? (
-        <TasksView
-          tr={tr}
-          tasks={tasks}
-          activeTaskId={activeTaskId}
-          onSetActiveTask={setActiveTaskId}
-          onAdd={addTask}
-          onToggleDone={toggleTask}
-          onDelete={deleteTask}
-          onClearDone={clearDoneTasks}
-          onMoveTask={moveTask}
-          onRenameTask={renameTask}
-          onUpdateCategory={updateCategory}
-          onUpdateEstimate={updateEstimate}
-        />
-      ) : (
-
-
-        <StatsView
-          tr={tr}
-          lang={lang}
-          week={week}
-          history={history}
-          tasks={tasks}
-          dailyGoal={settings.dailyGoal}
-          chartMetric={chartMetric}
-          accent={accent}
-          onChartMetricChange={setChartMetric}
-          onExportCsv={() => void exportCsv()}
-        />
-
-      )}
+        {tab === "timer" ? (
+          <TimerView
+            tr={tr}
+            phase={phase}
+            secondsLeft={secondsLeft}
+            running={running}
+            progress={progress}
+            accent={accent}
+            activeTaskTitle={
+              activeTask
+                ? formatTaskProgress(activeTask)
+                  ? `${activeTask.title} (${formatTaskProgress(activeTask)} 🍅)`
+                  : activeTask.title
+                : null
+            }
+            dailyProgress={dailyProgress}
+            dailyGoal={settings.dailyGoal}
+            cycleFocusCount={cycleFocusCount}
+            longEvery={settings.longEvery}
+            onToggle={() => void toggle()}
+            onReset={() => void reset()}
+            onSkip={() => void skip()}
+            onSwitchPhase={(p) => void switchTo(p)}
+          />
+        ) : tab === "tasks" ? (
+          <TasksView
+            tr={tr}
+            tasks={tasks}
+            activeTaskId={activeTaskId}
+            onSetActiveTask={setActiveTaskId}
+            onAdd={addTask}
+            onToggleDone={toggleTask}
+            onDelete={deleteTask}
+            onClearDone={clearDoneTasks}
+            onMoveTask={moveTask}
+            onRenameTask={renameTask}
+            onUpdateCategory={updateCategory}
+            onUpdateEstimate={updateEstimate}
+          />
+        ) : (
+          <StatsView
+            tr={tr}
+            lang={lang}
+            week={week}
+            history={history}
+            tasks={tasks}
+            dailyGoal={settings.dailyGoal}
+            chartMetric={chartMetric}
+            accent={accent}
+            onChartMetricChange={setChartMetric}
+            onExportCsv={() => void exportCsv()}
+          />
+        )}
       </div>
 
       {showSettings && (

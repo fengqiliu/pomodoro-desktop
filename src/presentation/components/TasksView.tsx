@@ -76,9 +76,7 @@ export const TasksView = memo(function TasksView({
   const startEditing = (task: Task) => {
     setEditingId(task.id);
     setEditingTitle(task.title);
-    setEditingEstimate(
-      task.estimatedPomodoros ? String(task.estimatedPomodoros) : ""
-    );
+    setEditingEstimate(task.estimatedPomodoros ? String(task.estimatedPomodoros) : "");
     ignoreBlurRef.current = false;
   };
 
@@ -203,7 +201,9 @@ export const TasksView = memo(function TasksView({
           </select>
           <button
             type="button"
-            className={showSearch || searchQuery ? "task-search-toggle active" : "task-search-toggle"}
+            className={
+              showSearch || searchQuery ? "task-search-toggle active" : "task-search-toggle"
+            }
             onClick={() => {
               if (showSearch && searchQuery) setSearchQuery("");
               setShowSearch((v) => !v);
@@ -211,7 +211,16 @@ export const TasksView = memo(function TasksView({
             title={tr("task.search")}
             aria-label={tr("task.search")}
           >
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <svg
+              width="13"
+              height="13"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
@@ -399,4 +408,3 @@ export const TasksView = memo(function TasksView({
     </div>
   );
 });
-

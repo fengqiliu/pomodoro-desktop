@@ -17,20 +17,22 @@ export function useHotkey({ hotkey, toggle }: Options) {
   useEffect(() => {
     if (!isDesktop()) return;
     let cancelled = false;
-    shortcutAdapter.register(hotkey, () => {
-      void toggle();
-    }).then((ok) => {
-      if (cancelled) {
-        if (ok) void shortcutAdapter.unregister(hotkey);
-        return;
-      }
-      if (!ok) {
-        setHotkeyError("registration");
-        console.warn("hotkey registration failed:", hotkey);
-      } else {
-        setHotkeyError(null);
-      }
-    });
+    shortcutAdapter
+      .register(hotkey, () => {
+        void toggle();
+      })
+      .then((ok) => {
+        if (cancelled) {
+          if (ok) void shortcutAdapter.unregister(hotkey);
+          return;
+        }
+        if (!ok) {
+          setHotkeyError("registration");
+          console.warn("hotkey registration failed:", hotkey);
+        } else {
+          setHotkeyError(null);
+        }
+      });
     return () => {
       cancelled = true;
       void shortcutAdapter.unregister(hotkey);

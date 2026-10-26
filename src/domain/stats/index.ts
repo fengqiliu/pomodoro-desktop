@@ -57,7 +57,11 @@ export interface TrendDelta {
  * is empty and the result is reported as "flat" rather than throwing — a partial
  * history is a normal state for a fresh install.
  */
-export function compareWindows(values: number[], windowSize: number, baselineSize: number): TrendDelta {
+export function compareWindows(
+  values: number[],
+  windowSize: number,
+  baselineSize: number
+): TrendDelta {
   const split = values.length - windowSize;
   const recent = values.slice(split);
   const baselineWindow = values.slice(Math.max(0, split - baselineSize), Math.max(0, split));
@@ -118,5 +122,12 @@ export function summarizeMonth(history: History, now = new Date()): MonthSummary
     }
   }
 
-  return { month: `${year}-${month + 1}`, pomodoros, minutes, activeDays, prevPomodoros, prevMinutes };
+  return {
+    month: `${year}-${month + 1}`,
+    pomodoros,
+    minutes,
+    activeDays,
+    prevPomodoros,
+    prevMinutes,
+  };
 }

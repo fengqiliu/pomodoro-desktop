@@ -37,7 +37,6 @@ export const StatsView = memo(function StatsView({
   onChartMetricChange,
   onExportCsv,
 }: Props) {
-
   // The 30-day trend + monthly summary add ~175px, which overflows the fixed
   // 380x580 window. They live behind a collapsed disclosure so the default view
   // stays exactly as it was; the container also scrolls as a safety net.
@@ -82,9 +81,14 @@ export const StatsView = memo(function StatsView({
           </div>
           <div className="summary-label">{tr("stats.card.today")}</div>
         </div>
-        <div className="summary-card" title={tr("stats.card.bestStreak", { days: streak.bestStreak })}>
-
-          <div className="summary-num" style={{ color: streak.currentStreak > 0 ? "var(--accent)" : undefined }}>
+        <div
+          className="summary-card"
+          title={tr("stats.card.bestStreak", { days: streak.bestStreak })}
+        >
+          <div
+            className="summary-num"
+            style={{ color: streak.currentStreak > 0 ? "var(--accent)" : undefined }}
+          >
             {streak.currentStreak}
           </div>
           <div className="summary-label">{tr("stats.card.streak")}</div>
@@ -166,7 +170,9 @@ export const StatsView = memo(function StatsView({
       <div className="stats-report">
         <div className="report-summary">
           <span className="report-label">{tr("stats.report.title")}</span>
-          <span className="report-item">{tr("stats.report.active", { n: weekSummary.activeDays })}</span>
+          <span className="report-item">
+            {tr("stats.report.active", { n: weekSummary.activeDays })}
+          </span>
           <span className="report-item">
             {weekSummary.bestDay
               ? tr("stats.report.best", { date: weekSummary.bestDay, n: weekSummary.bestPomodoros })
@@ -189,11 +195,11 @@ export const StatsView = memo(function StatsView({
         </div>
         {totalStats.totalPomodoros > 0 && (
           <div style={{ marginTop: 4, opacity: 0.85, fontSize: "11px" }}>
-            {tr("stats.card.totalPomos")}: {totalStats.totalPomodoros} · {tr("stats.card.totalFocus")}: {totalHours}h
+            {tr("stats.card.totalPomos")}: {totalStats.totalPomodoros} ·{" "}
+            {tr("stats.card.totalFocus")}: {totalHours}h
           </div>
         )}
       </div>
     </div>
   );
 });
-

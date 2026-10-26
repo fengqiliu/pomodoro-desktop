@@ -26,7 +26,6 @@ interface Props {
   onSwitchPhase: (p: Phase) => void;
 }
 
-
 export function TimerView({
   tr,
   phase,
@@ -44,7 +43,6 @@ export function TimerView({
   onSkip,
   onSwitchPhase,
 }: Props) {
-
   const R = 132;
   const CIRC = 2 * Math.PI * R;
 
@@ -91,7 +89,12 @@ export function TimerView({
       )}
 
       <div className="controls">
-        <button className="ctrl ctrl-reset" onClick={onReset} aria-label={tr("control.reset")} title={tr("control.reset")}>
+        <button
+          className="ctrl ctrl-reset"
+          onClick={onReset}
+          aria-label={tr("control.reset")}
+          title={tr("control.reset")}
+        >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path
               d="M3 12a9 9 0 109-9 9 9 0 00-7 3.3M3 4v4h4"
@@ -119,7 +122,12 @@ export function TimerView({
             </svg>
           )}
         </button>
-        <button className="ctrl ctrl-reset" onClick={onSkip} aria-label={tr("control.skip")} title={tr("control.skip")}>
+        <button
+          className="ctrl ctrl-reset"
+          onClick={onSkip}
+          aria-label={tr("control.skip")}
+          title={tr("control.skip")}
+        >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
             <path d="M5 5l8 7-8 7V5z" fill="currentColor" />
             <rect x="16" y="5" width="2.4" height="14" rx="1" fill="currentColor" />
@@ -159,7 +167,6 @@ export function TimerView({
           <div className="stat-label">{tr("stat.toLong")}</div>
         </div>
       </div>
-
     </div>
   );
 }

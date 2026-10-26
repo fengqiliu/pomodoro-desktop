@@ -13,4 +13,3 @@ export function getMillisUntilNextMidnight(now = new Date(), bufferMs = 50): num
   nextMidnight.setHours(24, 0, 0, bufferMs);
   return Math.max(0, nextMidnight.getTime() - now.getTime());
 }
-

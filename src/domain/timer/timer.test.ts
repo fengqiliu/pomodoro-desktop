@@ -12,7 +12,6 @@ import {
   type DailyProgress,
 } from "./index";
 
-
 describe("completeFocusCycle", () => {
   it("uses a long break for every fourth completed focus session", () => {
     let cycleFocusCount = 0;
@@ -24,16 +23,7 @@ describe("completeFocusCycle", () => {
       cycleFocusCount = result.cycleFocusCount;
     }
 
-    expect(phases).toEqual([
-      "short",
-      "short",
-      "short",
-      "long",
-      "short",
-      "short",
-      "short",
-      "long",
-    ]);
+    expect(phases).toEqual(["short", "short", "short", "long", "short", "short", "short", "long"]);
     expect(cycleFocusCount).toBe(0);
   });
 });
@@ -77,7 +67,11 @@ describe("resetDailyProgressIfNeeded", () => {
 
 describe("addCompletedFocus", () => {
   it("increments the pomodoro count and accumulates focus minutes", () => {
-    const progress: DailyProgress = { date: "2026-08-22", completedToday: 2, focusMinutesToday: 50 };
+    const progress: DailyProgress = {
+      date: "2026-08-22",
+      completedToday: 2,
+      focusMinutesToday: 50,
+    };
     expect(addCompletedFocus(progress, 25)).toEqual({
       date: "2026-08-22",
       completedToday: 3,
@@ -88,7 +82,11 @@ describe("addCompletedFocus", () => {
 
 describe("isDailyGoalReached & getDailyGoalPercent", () => {
   it("determines if the daily pomodoro goal has been reached", () => {
-    const progress: DailyProgress = { date: "2026-08-22", completedToday: 7, focusMinutesToday: 175 };
+    const progress: DailyProgress = {
+      date: "2026-08-22",
+      completedToday: 7,
+      focusMinutesToday: 175,
+    };
     expect(isDailyGoalReached(progress, 8)).toBe(false);
     expect(isDailyGoalReached(progress, 7)).toBe(true);
     expect(isDailyGoalReached(progress, 6)).toBe(true);
@@ -96,7 +94,11 @@ describe("isDailyGoalReached & getDailyGoalPercent", () => {
   });
 
   it("calculates completion percentage capped at 100", () => {
-    const progress: DailyProgress = { date: "2026-08-22", completedToday: 4, focusMinutesToday: 100 };
+    const progress: DailyProgress = {
+      date: "2026-08-22",
+      completedToday: 4,
+      focusMinutesToday: 100,
+    };
     expect(getDailyGoalPercent(progress, 8)).toBe(50);
     expect(getDailyGoalPercent(progress, 4)).toBe(100);
     expect(getDailyGoalPercent(progress, 2)).toBe(100);
@@ -105,7 +107,6 @@ describe("isDailyGoalReached & getDailyGoalPercent", () => {
 });
 
 describe("phaseMinutes", () => {
-
   it("maps each phase to its configured duration", () => {
     const durations = { focus: 25, short: 5, long: 15 };
     expect(phaseMinutes("focus", durations)).toBe(25);

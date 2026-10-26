@@ -146,7 +146,11 @@ for (const file of allFiles) {
           (resolvedTarget.startsWith("presentation") ||
             resolvedTarget.startsWith("infrastructure")))
       ) {
-        reportViolation(file, specifier, "Application layer must not depend on presentation or infrastructure.");
+        reportViolation(
+          file,
+          specifier,
+          "Application layer must not depend on presentation or infrastructure."
+        );
       }
     }
 
@@ -156,15 +160,16 @@ for (const file of allFiles) {
         specifier.includes("/presentation/") ||
         (resolvedTarget && resolvedTarget.startsWith("presentation"))
       ) {
-        reportViolation(file, specifier, "Infrastructure layer must not depend on presentation layer.");
+        reportViolation(
+          file,
+          specifier,
+          "Infrastructure layer must not depend on presentation layer."
+        );
       }
     }
 
     // Rule 6: Infrastructure outside platform/ must not import @tauri-apps/*.
-    if (
-      relPath.startsWith("infrastructure/") &&
-      !relPath.startsWith("infrastructure/platform/")
-    ) {
+    if (relPath.startsWith("infrastructure/") && !relPath.startsWith("infrastructure/platform/")) {
       if (specifier.startsWith("@tauri-apps/")) {
         reportViolation(file, specifier, "Only infrastructure/platform may import @tauri-apps/*.");
       }
@@ -189,7 +194,11 @@ for (const file of allFiles) {
       /\b(localStorage|navigator|fetch|XMLHttpRequest|indexedDB|window|document)\b/
     );
     if (ioToken) {
-      reportViolation(file, ioToken[0], "Domain/application layers must not touch browser IO globals.");
+      reportViolation(
+        file,
+        ioToken[0],
+        "Domain/application layers must not touch browser IO globals."
+      );
     }
   }
 

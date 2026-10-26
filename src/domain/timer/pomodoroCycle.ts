@@ -12,10 +12,7 @@ function positiveInteger(value: number, fallback: number): number {
 // `cycleFocusCount` is the number of completed focus sessions since the last
 // long break. It intentionally survives a date change: the Pomodoro rhythm is
 // separate from a calendar day's statistics.
-export function completeFocusCycle(
-  cycleFocusCount: number,
-  longEvery: number
-): FocusCycleResult {
+export function completeFocusCycle(cycleFocusCount: number, longEvery: number): FocusCycleResult {
   const interval = positiveInteger(longEvery, 1);
   const completedInCycle = Math.max(0, Math.floor(cycleFocusCount)) + 1;
 

@@ -30,7 +30,6 @@ export function defaultState(): PersistedState {
       autoWithFocus: false,
     },
   };
-
 }
 
 // Merge a partial (possibly untrusted, e.g. imported) state over the defaults.
@@ -88,4 +87,3 @@ export function composePersistedState({
     noise,
   };
 }
-

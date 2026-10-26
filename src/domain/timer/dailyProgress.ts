@@ -6,10 +6,7 @@ export interface DailyProgress {
   focusMinutesToday: number;
 }
 
-export function resetDailyProgressIfNeeded(
-  progress: DailyProgress,
-  today: string
-): DailyProgress {
+export function resetDailyProgressIfNeeded(progress: DailyProgress, today: string): DailyProgress {
   if (progress.date === today) return progress;
 
   return {
@@ -35,4 +32,3 @@ export function getDailyGoalPercent(progress: DailyProgress, goal: number): numb
   if (goal <= 0) return 0;
   return Math.min(100, Math.round((progress.completedToday / goal) * 100));
 }
-

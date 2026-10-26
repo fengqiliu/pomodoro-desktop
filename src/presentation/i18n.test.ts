@@ -40,9 +40,7 @@ describe("translate", () => {
   });
 
   it("substitutes named parameters", () => {
-    expect(translate("zh", "task.footer", { total: 3, done: 1 })).toBe(
-      "共 3 个任务 · 已完成 1 个"
-    );
+    expect(translate("zh", "task.footer", { total: 3, done: 1 })).toBe("共 3 个任务 · 已完成 1 个");
     expect(translate("en", "task.footer", { total: 3, done: 1 })).toBe("3 tasks · 1 done");
   });
 

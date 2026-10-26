@@ -73,14 +73,19 @@ const DICT: Dict = {
   "stat.focusMins": ["专注分钟", "Focus min"],
   "stat.toLong": ["距长休息", "To long break"],
   "stat.goalReached": ["今日目标已达成", "Daily goal reached"],
-  "stat.goalProgress": ["今日目标: {goal} 个 (达成率 {percent}%)", "Daily goal: {goal} (Progress {percent}%)"],
-
+  "stat.goalProgress": [
+    "今日目标: {goal} 个 (达成率 {percent}%)",
+    "Daily goal: {goal} (Progress {percent}%)",
+  ],
 
   // tasks view
   "task.addPlaceholder": ["添加一个任务…", "Add a task…"],
   "task.estPlaceholder": ["预估", "Est."],
   "task.addBtn": ["添加", "Add"],
-  "task.empty.title": ["还没有任务，添加一个开始专注吧", "No tasks yet — add one to start focusing"],
+  "task.empty.title": [
+    "还没有任务，添加一个开始专注吧",
+    "No tasks yet — add one to start focusing",
+  ],
   "task.empty.icon": ["○", "○"],
   "task.activeHint": ["选为当前专注任务", "Set as current focus task"],
   "task.done.aria": ["完成", "Done"],
@@ -109,7 +114,6 @@ const DICT: Dict = {
   "task.searchPlaceholder": ["搜索任务…", "Search tasks…"],
   "task.searchClear": ["清除搜索", "Clear search"],
 
-
   // stats view
   "stats.card.today": ["今日", "Today"],
   "stats.card.weekPomos": ["本周番茄", "Week pomodoros"],
@@ -124,7 +128,10 @@ const DICT: Dict = {
 
   "stats.chart.pomos": ["番茄数", "Pomodoros"],
   "stats.chart.minutes": ["分钟数", "Minutes"],
-  "stats.footer.empty": ["本周还没有专注记录，开始第一个番茄吧 🍅", "No focus this week yet — start your first pomodoro 🍅"],
+  "stats.footer.empty": [
+    "本周还没有专注记录，开始第一个番茄吧 🍅",
+    "No focus this week yet — start your first pomodoro 🍅",
+  ],
   "stats.footer.avg": ["平均每天 {avg} 个番茄 · {mins} 分钟", "{avg} pomodoros / day · {mins} min"],
   "stats.report.title": ["本周简报", "Weekly report"],
   "stats.report.active": ["活跃 {n} 天", "{n} active day(s)"],
@@ -211,7 +218,6 @@ const DICT: Dict = {
     "🎉 Fantastic! Daily goal of {goal} pomodoro(s) reached!",
   ],
 
-
   // phase-complete notifications (native system notification)
   "notif.title": ["专注完成", "Focus complete"],
   "notif.title.break": ["休息结束", "Break complete"],
@@ -227,7 +233,11 @@ const DICT: Dict = {
 
 const INDEX: Record<Lang, 0 | 1> = { zh: 0, en: 1 };
 
-export function translate(lang: Lang, key: string, params?: Record<string, string | number>): string {
+export function translate(
+  lang: Lang,
+  key: string,
+  params?: Record<string, string | number>
+): string {
   const entry = DICT[key];
   const raw = entry ? entry[INDEX[lang]] : key;
   if (!params) return raw;
