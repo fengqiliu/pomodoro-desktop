@@ -6,6 +6,7 @@ import {
   clearCompletedTasks,
   filterTaskEntries,
   filterTasks,
+  formatEstimateInput,
   formatTaskProgress,
   nextTaskCategory,
   parseEstimate,
@@ -295,5 +296,16 @@ describe("parseEstimate", () => {
 
   it("returns undefined for empty, zero, negative and non-numeric input", () => {
     for (const s of ["", "0", "-2", "abc"]) expect(parseEstimate(s)).toBeUndefined();
+  });
+});
+
+describe("formatEstimateInput", () => {
+  it("renders an estimate as input text and an absent one as empty", () => {
+    expect(formatEstimateInput(3)).toBe("3");
+    expect(formatEstimateInput(undefined)).toBe("");
+  });
+
+  it("round-trips through parseEstimate so an untouched edit keeps the estimate", () => {
+    for (const n of [undefined, 1, 12]) expect(parseEstimate(formatEstimateInput(n))).toBe(n);
   });
 });

@@ -9,7 +9,6 @@ import { TasksView } from "./components/TasksView";
 
 import { StatsView } from "./components/StatsView";
 import { SettingsModal } from "./components/SettingsModal";
-import "./a11y.css";
 import type { ChartMetric, Tab } from "./uiTypes";
 import { usePersistedState } from "./hooks/usePersistedState";
 import { usePomodoroSession } from "./hooks/usePomodoroSession";

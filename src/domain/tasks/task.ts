@@ -125,6 +125,11 @@ export function parseEstimate(input: string): number | undefined {
   return Number.isNaN(n) || n <= 0 ? undefined : n;
 }
 
+/** Inverse of parseEstimate: the text an estimate input shows for a stored value. */
+export function formatEstimateInput(estimate?: number): string {
+  return estimate ? String(estimate) : "";
+}
+
 /** Updates category for a given task. */
 export function updateTaskCategory(tasks: Task[], id: string, category?: TaskCategory): Task[] {
   return tasks.map((t) => (t.id === id ? { ...t, category } : t));

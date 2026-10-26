@@ -1,5 +1,10 @@
 import { useRef, useState, type KeyboardEvent } from "react";
-import { formatTaskProgress, parseEstimate, type Task } from "../../domain/tasks";
+import {
+  formatEstimateInput,
+  formatTaskProgress,
+  parseEstimate,
+  type Task,
+} from "../../domain/tasks";
 import { TASK_CATEGORY_KEY } from "../i18n";
 
 interface Props {
@@ -37,8 +42,12 @@ export function TaskItem({
   onCancelEdit,
   onMove,
 }: Props) {
-  const [editingTitle, setEditingTitle] = useState("");
-  const [editingEstimate, setEditingEstimate] = useState("");
+  // Seeded from the task (not "") so a row that remounts while still in edit
+  // mode shows — and on blur commits — the current values instead of blanks.
+  const [editingTitle, setEditingTitle] = useState(() => t.title);
+  const [editingEstimate, setEditingEstimate] = useState(() =>
+    formatEstimateInput(t.estimatedPomodoros)
+  );
   // Suppresses the blur-save that follows an explicit Enter/Escape, and the
   // focus move from the title input to the estimate input (same edit row).
   const ignoreBlurRef = useRef(false);
@@ -46,7 +55,7 @@ export function TaskItem({
 
   const startEditing = () => {
     setEditingTitle(t.title);
-    setEditingEstimate(t.estimatedPomodoros ? String(t.estimatedPomodoros) : "");
+    setEditingEstimate(formatEstimateInput(t.estimatedPomodoros));
     ignoreBlurRef.current = false;
     onStartEdit();
   };
