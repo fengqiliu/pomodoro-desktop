@@ -1,0 +1,175 @@
+/* ---------- stats tab ---------- */
+.stats-view {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* The window is fixed at 380x580 and not resizable. Collapsing the trend
+     section keeps the default view within budget; this is the safety net for
+     when it is expanded, or when a translated label wraps to two lines. */
+  overflow-y: auto;
+}
+
+.stats-summary {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 18px;
+}
+
+.summary-card {
+  flex: 1;
+  background: var(--bg-elev);
+  border-radius: var(--radius);
+  padding: 14px 8px 12px;
+  text-align: center;
+}
+
+.summary-num {
+  font-size: 22px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.summary-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 3px;
+}
+
+.chart-toggle {
+  display: flex;
+  gap: 2px;
+  background: var(--bg-elev);
+  padding: 3px;
+  border-radius: 8px;
+}
+
+.seg {
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-dim);
+  border-radius: 6px;
+  transition: all 0.15s;
+}
+
+.seg.active {
+  background: var(--text);
+  color: #fff;
+}
+
+.chart {
+  display: block;
+  margin: 0 auto;
+}
+
+.chart-bar {
+  transition:
+    height 0.4s ease,
+    y 0.4s ease;
+}
+
+.chart-axis {
+  fill: var(--text-faint);
+  font-size: 10px;
+  font-family: var(--font);
+}
+
+.chart-val {
+  fill: var(--text-dim);
+  font-size: 10px;
+  font-weight: 600;
+  font-family: var(--font);
+}
+
+.stats-foot {
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-dim);
+  margin-top: auto;
+  padding-top: 14px;
+}
+
+/* weekly report summary + CSV export */
+.stats-report {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 14px;
+  padding: 10px 12px;
+  background: var(--bg-elev);
+  border-radius: var(--radius);
+  font-size: 11px;
+}
+
+.report-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+.report-label {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.report-export {
+  flex-shrink: 0;
+  padding: 7px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 8px;
+  transition: opacity 0.15s;
+}
+
+.report-export:hover {
+  opacity: 0.85;
+}
+
+/* ---------- collapsible "trends & monthly" section ---------- */
+.stats-more {
+  flex-shrink: 0;
+  margin-top: 14px;
+}
+
+.more-toggle {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-dim);
+  background: var(--bg-elev);
+  border-radius: var(--radius);
+  transition:
+    color 0.15s,
+    background 0.15s;
+}
+.more-toggle:hover {
+  color: var(--text);
+}
+
+.more-caret {
+  display: inline-block;
+  font-size: 9px;
+  transition: transform 0.18s ease;
+}
+.more-caret.open {
+  transform: rotate(180deg);
+}
+
+.more-body {
+  margin-top: 12px;
+}

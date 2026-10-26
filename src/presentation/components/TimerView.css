@@ -1,0 +1,188 @@
+/* ---------- timer view ---------- */
+.phase-pills {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+
+.phase-pill {
+  padding: 5px 14px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-dim);
+  border-radius: 20px;
+  transition: all 0.18s ease;
+}
+
+.phase-pill.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.ring-wrap {
+  position: relative;
+  width: 300px;
+  height: 300px;
+  margin: 4px auto 0;
+  display: grid;
+  place-items: center;
+}
+
+.ring {
+  display: block;
+}
+
+.ring-track {
+  fill: none;
+  stroke: var(--border);
+  stroke-width: 12;
+}
+
+.ring-progress {
+  fill: none;
+  stroke-width: 12;
+  stroke-linecap: round;
+  transition:
+    stroke-dashoffset 0.95s linear,
+    stroke 0.4s ease;
+}
+
+.ring-center {
+  position: absolute;
+  text-align: center;
+}
+
+.time {
+  font-size: 58px;
+  font-weight: 300;
+  letter-spacing: -1px;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  line-height: 1;
+}
+
+.phase-label {
+  margin-top: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-dim);
+  letter-spacing: 1px;
+}
+
+.active-task {
+  margin: 12px auto 0;
+  max-width: 240px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.active-task-label {
+  font-size: 11px;
+  color: var(--text-faint);
+  letter-spacing: 0.5px;
+}
+
+.active-task-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+/* ---------- controls ---------- */
+.controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  margin: 20px 0 18px;
+}
+
+.ctrl {
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  transition:
+    transform 0.12s ease,
+    background 0.15s ease;
+  color: var(--text-dim);
+}
+
+.ctrl:active {
+  transform: scale(0.93);
+}
+
+.ctrl-reset {
+  width: 44px;
+  height: 44px;
+  background: var(--bg-elev);
+  color: var(--text-dim);
+}
+
+.ctrl-reset:hover {
+  color: var(--text);
+}
+
+.ctrl-main {
+  width: 64px;
+  height: 64px;
+  background: var(--accent);
+  color: #fff;
+  box-shadow: 0 6px 18px -6px var(--accent);
+}
+
+.ctrl-main:hover {
+  filter: brightness(1.05);
+}
+
+/* ---------- stats ---------- */
+.stats {
+  display: flex;
+  justify-content: space-around;
+  padding: 14px 0 4px;
+  border-top: 1px solid var(--border);
+  margin-top: auto;
+}
+
+.stat {
+  text-align: center;
+}
+
+.stat-num {
+  font-size: 20px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+}
+
+.stat-goal-badge {
+  font-size: 12px;
+  font-weight: 700;
+  color: #f59e0b;
+  margin-left: 3px;
+  padding: 0 3px;
+  border-radius: 4px;
+  background: rgba(245, 158, 11, 0.15);
+  line-height: 1.2;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-dim);
+  margin-top: 3px;
+  letter-spacing: 0.3px;
+}
+
+/* dark-mode tweak: keep switch knob legible, soften shadows */
+[data-theme="dark"] .ctrl-main {
+  box-shadow: 0 6px 22px -8px var(--accent);
+}

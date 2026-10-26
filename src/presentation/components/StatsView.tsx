@@ -11,6 +11,7 @@ import type { Task } from "../../domain/tasks";
 import type { ChartMetric } from "../uiTypes";
 import { MonthSummaryCard, TrendChart } from "./TrendPanel";
 import { CategoryBreakdownCard } from "./CategoryBreakdown";
+import "./StatsView.css";
 
 interface Props {
   tr: (key: string, params?: Record<string, string | number>) => string;

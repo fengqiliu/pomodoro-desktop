@@ -9,6 +9,7 @@ import {
 import { TaskAddForm } from "./TaskAddForm";
 import { TaskFilterBar } from "./TaskFilterBar";
 import { TaskItem } from "./TaskItem";
+import "./TasksView.css";
 
 interface Props {
   tr: (key: string, params?: Record<string, string | number>) => string;

@@ -1,0 +1,65 @@
+/* ---------- category breakdown card ---------- */
+.category-breakdown {
+  margin-top: 14px;
+  flex-shrink: 0;
+}
+
+.category-total-badge {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
+.category-bar-wrap {
+  display: flex;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--bg-soft);
+  margin: 6px 0 10px 0;
+  gap: 1px;
+}
+
+.category-bar-seg {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+.category-legend {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 12px;
+}
+
+.category-legend-item {
+  display: flex;
+  align-items: center;
+  font-size: 11px;
+  gap: 6px;
+}
+
+.category-legend-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.category-legend-name {
+  color: var(--text-dim);
+}
+
+.category-legend-stats {
+  margin-left: auto;
+  color: var(--text);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  font-size: 10px;
+}
+
+.category-empty {
+  font-size: 11px;
+  color: var(--text-faint);
+  text-align: center;
+  padding: 12px 0 6px 0;
+}

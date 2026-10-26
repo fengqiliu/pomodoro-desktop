@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { LANGS, type Lang } from "../i18n";
 import type { NoisePref, NoiseType, Settings } from "../../domain/settings";
 import { playChime } from "../../infrastructure/audio/chime";
+import "./SettingsModal.css";
 
 interface Props {
   tr: (key: string, params?: Record<string, string | number>) => string;

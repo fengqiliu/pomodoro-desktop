@@ -1,6 +1,7 @@
 import { NOISE_KEY } from "../i18n";
 import type { NoisePref } from "../../domain/settings";
 import type { Theme } from "../uiTypes";
+import "./TopBar.css";
 
 interface Props {
   tr: (key: string, params?: Record<string, string | number>) => string;

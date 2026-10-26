@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { calculateCategoryDistribution, type Task, type TaskCategory } from "../../domain/tasks";
 import { TASK_CATEGORY_KEY } from "../i18n";
+import "./CategoryBreakdown.css";
 
 interface Props {
   tr: (key: string, params?: Record<string, string | number>) => string;

@@ -1,0 +1,42 @@
+/* ---------- top bar ---------- */
+.window-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.brand-dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: var(--accent);
+  transition: background 0.4s ease;
+}
+
+.brand-name {
+  font-size: 15px;
+  font-weight: 600;
+  letter-spacing: 0.2px;
+}
+
+/* ---------- top bar button cluster + active states ---------- */
+.ctrl-cluster {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.active-noise {
+  color: var(--accent);
+}
+
+.active-pin {
+  color: var(--accent);
+}

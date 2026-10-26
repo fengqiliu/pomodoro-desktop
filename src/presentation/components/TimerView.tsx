@@ -7,6 +7,7 @@ import {
   type DailyProgress,
   type Phase,
 } from "../../domain/timer";
+import "./TimerView.css";
 
 interface Props {
   tr: (key: string, params?: Record<string, string | number>) => string;

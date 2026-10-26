@@ -6,6 +6,7 @@ import {
   type History,
 } from "../../domain/stats";
 import type { ChartMetric } from "../uiTypes";
+import "./TrendPanel.css";
 
 const TREND_DAYS = 30;
 const RECENT = 7;
