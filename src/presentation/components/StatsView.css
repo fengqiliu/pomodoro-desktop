@@ -157,6 +157,12 @@
     color 0.15s,
     background 0.15s;
 }
+
+/* a11y.css loads last; keep this toggle's own radius when the focus ring shows
+   (in the single-file App.css this rule came after the :focus-visible block). */
+.more-toggle:focus-visible {
+  border-radius: var(--radius);
+}
 .more-toggle:hover {
   color: var(--text);
 }

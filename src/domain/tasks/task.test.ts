@@ -17,6 +17,7 @@ import {
   updateTaskCategory,
   updateTaskEstimate,
   type Task,
+  type TaskCategory,
 } from "./index";
 
 let nextId = 0;
@@ -279,6 +280,10 @@ describe("nextTaskCategory", () => {
     expect(nextTaskCategory("study")).toBe("life");
     expect(nextTaskCategory("life")).toBe("other");
     expect(nextTaskCategory("other")).toBeUndefined();
+  });
+
+  it("clears an unknown stored category instead of restarting the cycle", () => {
+    expect(nextTaskCategory("bogus" as TaskCategory)).toBeUndefined();
   });
 });
 

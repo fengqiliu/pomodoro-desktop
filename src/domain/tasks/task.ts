@@ -115,7 +115,8 @@ export function formatTaskProgress(task: Task): string {
 /** Category badge click cycle: none → work → study → life → other → none. */
 export function nextTaskCategory(current?: TaskCategory): TaskCategory | undefined {
   if (!current) return TASK_CATEGORIES[0];
-  return TASK_CATEGORIES[TASK_CATEGORIES.indexOf(current) + 1];
+  const i = TASK_CATEGORIES.indexOf(current);
+  return i < 0 ? undefined : TASK_CATEGORIES[i + 1];
 }
 
 /** Parses a pomodoro estimate input; anything that is not a positive integer means "none". */
