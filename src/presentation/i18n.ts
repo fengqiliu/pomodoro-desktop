@@ -94,7 +94,7 @@ const DICT: Dict = {
   "task.moveUp": ["上移", "Move up"],
   "task.moveDown": ["下移", "Move down"],
   "task.delete": ["删除", "Delete"],
-  "task.editTitle": ["双击编辑任务", "Double click to edit"],
+  "task.editTitle": ["双击或按 Enter 编辑任务", "Double-click or press Enter to edit"],
   "task.editPlaceholder": ["输入任务名称…", "Task title…"],
   "task.footer": ["共 {total} 个任务 · 已完成 {done} 个", "{total} tasks · {done} done"],
 

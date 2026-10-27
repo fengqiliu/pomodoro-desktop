@@ -1,4 +1,4 @@
-import { useRef, useState, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import {
   formatEstimateInput,
   formatTaskProgress,
@@ -51,7 +51,17 @@ export function TaskItem({
   // Suppresses the blur-save that follows an explicit Enter/Escape, and the
   // focus move from the title input to the estimate input (same edit row).
   const ignoreBlurRef = useRef(false);
+  // Enter/Escape leave edit mode from the keyboard: hand focus back to the
+  // title so keyboard users keep their place (a blur-out never steals focus).
+  const titleRef = useRef<HTMLSpanElement>(null);
+  const refocusTitleRef = useRef(false);
   const progress = formatTaskProgress(t);
+
+  useEffect(() => {
+    if (isEditing || !refocusTitleRef.current) return;
+    refocusTitleRef.current = false;
+    titleRef.current?.focus();
+  }, [isEditing]);
 
   const startEditing = () => {
     setEditingTitle(t.title);
@@ -60,13 +70,15 @@ export function TaskItem({
     onStartEdit();
   };
 
-  const finishEditing = () => {
+  const finishEditing = (viaKeyboard = false) => {
     ignoreBlurRef.current = true;
+    refocusTitleRef.current = viaKeyboard;
     onCommitEdit(editingTitle.trim(), parseEstimate(editingEstimate));
   };
 
-  const cancelEditing = () => {
+  const cancelEditing = (viaKeyboard = false) => {
     ignoreBlurRef.current = true;
+    refocusTitleRef.current = viaKeyboard;
     onCancelEdit();
   };
 
@@ -82,8 +94,8 @@ export function TaskItem({
   };
 
   const onEditKeyDown = (e: KeyboardEvent) => {
-    if (e.key === "Enter") finishEditing();
-    else if (e.key === "Escape") cancelEditing();
+    if (e.key === "Enter") finishEditing(true);
+    else if (e.key === "Escape") cancelEditing(true);
   };
 
   return (
@@ -172,9 +184,18 @@ export function TaskItem({
         </div>
       ) : (
         <span
+          ref={titleRef}
           className="task-title"
           title={`${t.title} (${tr("task.editTitle")})`}
           onDoubleClick={() => !t.done && startEditing()}
+          // Done tasks are not editable, so only open tasks join the tab order.
+          role={t.done ? undefined : "button"}
+          tabIndex={t.done ? undefined : 0}
+          onKeyDown={(e) => {
+            if (t.done || !(e.key === "Enter" || e.key === " " || e.key === "F2")) return;
+            e.preventDefault();
+            startEditing();
+          }}
         >
           {t.title}
         </span>
