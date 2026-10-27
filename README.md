@@ -22,7 +22,7 @@ v2.0 重点：前端由单文件重构为「引擎 hook + 组件」模块化架�
 - **系统托盘与通知** —— 关闭窗口后继续驻留托盘；托盘悬停提示实时显示剩余时间与阶段；可显示/隐藏、退出，并在阶段结束时发送原生通知
 - **本地持久化** —— 全部状态保存在 localStorage，跨重启保留；每日自动重置今日计数
 - **数据备份** —— 设置中一键导出/导入（剪贴板 JSON 往返，浏览器与桌面端通用）
-- **应用内快捷键** —— `Space` 开始/暂停、`R` 重置、`S` 跳过；窗口标题实时显示倒计时
+- **应用内快捷键** —— `Space` 开始/暂停、`R` 重置、`S` 跳过；在输入框中或聚焦按钮、复选框、开关时 `Space` 交给该控件，不会误触发计时；窗口标题实时显示倒计时
 - **键盘与读屏友好** —— 按钮、输入框、任务完成框与任务标题均可用 Tab 到达并显示焦点环；任务完成框支持 Space / Enter 切换，任务标题按 Enter / Space / F2 进入编辑（均不会误触发计时），Enter 保存或 Esc 取消后焦点回到标题；切换类控件提供 `aria-pressed` / `aria-checked` / `aria-expanded` 选中状态；尊重系统「减少动态效果」设置
 - **中文安装包** —— Windows NSIS 安装器已本地化为简体中文（含语言选择框），详见 `docs/NSIS-中文化.md`
 
@@ -31,7 +31,7 @@ v2.0 重点：前端由单文件重构为「引擎 hook + 组件」模块化架�
 | 层 | 技术 |
 | --- | --- |
 | 桌面框架 | Tauri 2 |
-| 前端 | React 18、TypeScript 5.6、Vite 6 |
+| 前端 | React 18、TypeScript 5、Vite 6 |
 | 后端 | Rust（edition 2021） |
 | 原生插件 | `tauri-plugin-global-shortcut`、`tauri-plugin-notification` |
 | 音频 | WebAudio API（噪音合成 + 钟声） |
@@ -41,7 +41,7 @@ v2.0 重点：前端由单文件重构为「引擎 hook + 组件」模块化架�
 
 ## 前置要求
 
-- **Node.js** 18+
+- **Node.js** 20+（Vitest 4 要求；CI 使用 Node 20）
 - **Rust** 稳定版工具链（`rustup` 安装）
 - **Tauri 2 系统依赖** —— 因平台而异，详见 [Tauri 官方前置说明](https://tauri.app/start/prerequisites/)
   - macOS：Xcode Command Line Tools
