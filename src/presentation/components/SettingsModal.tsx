@@ -1,7 +1,8 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { LANGS, type Lang } from "../i18n";
 import type { NoisePref, NoiseType, Settings } from "../../domain/settings";
 import { playChime } from "../../infrastructure/audio/chime";
+import { FOCUSABLE_SELECTOR, wrapFocusIndex } from "../focusTrap";
 import "./SettingsModal.css";
 
 interface Props {
@@ -53,9 +54,33 @@ export function SettingsModal({
   onExport,
   onImport,
 }: Props) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Modal focus management: move focus into the dialog on open, hand it back
+  // to whatever opened it (the settings button) on close.
+  useEffect(() => {
+    const opener = document.activeElement as HTMLElement | null;
+    dialogRef.current?.focus();
+    return () => {
+      if (opener?.isConnected) opener.focus();
+    };
+  }, []);
+
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+      // Keep Tab inside the dialog instead of reaching the page behind the overlay.
+      const dialog = dialogRef.current;
+      if (e.key !== "Tab" || !dialog) return;
+      const focusables = Array.from(dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+      const current = focusables.indexOf(document.activeElement as HTMLElement);
+      const target = wrapFocusIndex(current, focusables.length, e.shiftKey);
+      if (target === null) return;
+      e.preventDefault();
+      focusables[target].focus();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -63,10 +88,18 @@ export function SettingsModal({
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        ref={dialogRef}
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="settings-title"
+        tabIndex={-1}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="modal-head">
-          <span>{tr("settings.title")}</span>
-          <button className="icon-btn" onClick={onClose}>
+          <span id="settings-title">{tr("settings.title")}</span>
+          <button className="icon-btn" onClick={onClose} aria-label={tr("settings.close")}>
             ×
           </button>
         </div>

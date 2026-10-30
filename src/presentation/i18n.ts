@@ -166,6 +166,7 @@ const DICT: Dict = {
 
   // settings modal
   "settings.title": ["设置", "Settings"],
+  "settings.close": ["关闭", "Close"],
   "settings.section.general": ["通用", "General"],
   "settings.section.noise": ["白噪音", "White noise"],
   "settings.section.hotkey": ["全局快捷键", "Global shortcut"],

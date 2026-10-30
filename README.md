@@ -23,7 +23,7 @@ v2.0 重点：前端由单文件重构为「引擎 hook + 组件」模块化架�
 - **本地持久化** —— 全部状态保存在 localStorage，跨重启保留；每日自动重置今日计数
 - **数据备份** —— 设置中一键导出/导入（剪贴板 JSON 往返，浏览器与桌面端通用）
 - **应用内快捷键** —— `Space` 开始/暂停、`R` 重置、`S` 跳过；在输入框中或聚焦按钮、复选框、开关时 `Space` 交给该控件，不会误触发计时；窗口标题实时显示倒计时
-- **键盘与读屏友好** —— 按钮、输入框、任务完成框与任务标题均可用 Tab 到达并显示焦点环；任务完成框支持 Space / Enter 切换，任务标题按 Enter / Space / F2 进入编辑（均不会误触发计时），Enter 保存或 Esc 取消后焦点回到标题；切换类控件提供 `aria-pressed` / `aria-checked` / `aria-expanded` 选中状态；尊重系统「减少动态效果」设置
+- **键盘与读屏友好** —— 按钮、输入框、任务完成框与任务标题均可用 Tab 到达并显示焦点环；任务完成框支持 Space / Enter 切换，任务标题按 Enter / Space / F2 进入编辑（均不会误触发计时），Enter 保存或 Esc 取消后焦点回到标题；设置弹窗为模态对话框（`role="dialog"`），打开时焦点移入、Tab 在弹窗内循环、关闭后焦点回到设置按钮；顶栏白噪音 / 置顶按钮提供开关状态；切换类控件提供 `aria-pressed` / `aria-checked` / `aria-expanded` 选中状态；尊重系统「减少动态效果」设置
 - **中文安装包** —— Windows NSIS 安装器已本地化为简体中文（含语言选择框），详见 `docs/NSIS-中文化.md`
 
 ## 技术栈
@@ -68,7 +68,7 @@ npm run dev           # 仅 Vite，端口 1420，可在普通浏览器打开
 ```bash
 npm install           # 安装依赖
 npm run dev           # 仅前端开发（浏览器，:1420）
-npm test              # DDD 架构守卫（R1–R7）+ Vitest 回归测试（13 套 137 例）
+npm test              # DDD 架构守卫（R1–R7）+ Vitest 回归测试（14 套 142 例）
 npm run typecheck     # tsc --noEmit —— TypeScript 静态检查（无 lint）
 npm run format        # Prettier 全量格式化（format:check 仅检查，CI 使用）
 npm run build         # tsc -b && vite build → dist/
@@ -134,7 +134,7 @@ pomodoro-desktop/
 - **番茄循环**：今日统计与长休息循环分别记录。`cycleFocusCount` 在每次完成专注后推进、触发长休息后归零，并会跨日期延续，因此“每 N 个番茄长休息”不受每日统计重置影响。
 - **历史自动裁剪**：`domain/stats` 在启动、记录和导入时把历史裁剪到近 60 天，防止 localStorage 无界增长（图表只用近 7 天）。
 - **数据备份**：设置面板可导出/导入 JSON 备份（经剪贴板往返，桌面与浏览器通用）。导入时 `application/backupService.parseBackup` 校验载荷、按默认值合并状态并裁剪历史，坏数据不会写入存储。
-- **测试**：计时规则位于 `src/domain/timer/`，通过 Vitest 覆盖长休息周期、跳过阶段、跨日重置和延迟回调的剩余时间计算；`focusHistory.test.ts` 与 `weeklyReport.test.ts` 覆盖历史裁剪、连击累计、周报汇总与 CSV 转义；`task.test.ts`、`backupService.test.ts`、`i18n.test.ts` 与 `noiseEngine.test.ts` 分别覆盖任务规则（含分类筛选、搜索、预估编辑与分布计算）、备份往返、双语字典（含五种噪音 / 四种分类标签）、噪音缓冲区合成与缓存；`useAppShortcuts.test.ts` 覆盖快捷键解析（输入框内与聚焦控件上不抢占 Space）。前端共 13 个测试文件 137 例，Rust 9 例（引擎 5 + 完成审计日志 4）；`npm test` 会先执行 DDD 分层架构守卫（R1–R7，78 源文件）；推送/PR 时 GitHub Actions（`.github/workflows/ci.yml`）依次执行 Prettier 格式检查、架构守卫、测试、类型检查、构建与 cargo test。
+- **测试**：计时规则位于 `src/domain/timer/`，通过 Vitest 覆盖长休息周期、跳过阶段、跨日重置和延迟回调的剩余时间计算；`focusHistory.test.ts` 与 `weeklyReport.test.ts` 覆盖历史裁剪、连击累计、周报汇总与 CSV 转义；`task.test.ts`、`backupService.test.ts`、`i18n.test.ts` 与 `noiseEngine.test.ts` 分别覆盖任务规则（含分类筛选、搜索、预估编辑与分布计算）、备份往返、双语字典（含五种噪音 / 四种分类标签）、噪音缓冲区合成与缓存；`useAppShortcuts.test.ts` 覆盖快捷键解析（输入框内与聚焦控件上不抢占 Space）；`focusTrap.test.ts` 覆盖弹窗内 Tab 循环。前端共 14 个测试文件 142 例，Rust 9 例（引擎 5 + 完成审计日志 4）；`npm test` 会先执行 DDD 分层架构守卫（R1–R7，80 源文件）；推送/PR 时 GitHub Actions（`.github/workflows/ci.yml`）依次执行 Prettier 格式检查、架构守卫、测试、类型检查、构建与 cargo test。
 - **双计时适配器**：桌面端通过 `native_timer_start` / `pause` / `cancel` 命令让 Rust 按墙上时间判断完成；启动时会把完成通知的标题与正文交给原生 worker，worker 先发送系统通知、再发送完成事件，因此托盘中不依赖 WebView 的 JS interval 或通知回调。浏览器模式仍使用相同的结束时间戳算法本地完成。React 只负责界面刷新、阶段规则、统计和自动衔接。
 - **原生层**：`src-tauri/src/lib.rs` 作为组合根，只负责装配——注册全局快捷键与通知插件、三个 `native_timer_*` 命令、注入完成审计日志、托盘 setup 与关闭到托盘；业务逻辑在 `timer/`（`engine.rs` 引擎 + `commands.rs` IPC 适配器 + `completion_log.rs` 审计日志端口）与 `tray/`（托盘菜单与窗口显隐）两个限界上下文。全局开始/暂停快捷键由 App 注册，编辑时仅保存草稿，点击「完成」后才尝试应用。每次计时完成，`commands.rs` 会向 `<app_data_dir>/completion-log.jsonl` 追加一行 JSON（`completedAtMs`/`durationMs`/`generation`/`notificationSent`），best-effort 供诊断审计。
 - **主题与样式组织**：CSS 变量在 `App.css` 的 `:root`（浅色）与 `[data-theme="dark"]`（深色）定义；阶段强调色 `--accent`（红/绿/蓝）在每次渲染时以行内样式覆盖。样式按归属拆分：只被一个组件使用的类写在该组件同名 CSS 中，跨组件共享的留在 `App.css`；`a11y.css` 在 `main.tsx` 中紧随 App 导入，保证焦点环在同优先级规则中最后生效。类名仍是全局的，新增类时注意不要与其他组件重名。

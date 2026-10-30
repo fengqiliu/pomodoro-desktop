@@ -35,6 +35,12 @@
   animation: pop 0.18s ease;
 }
 
+/* The dialog only takes focus on open so screen readers announce its title;
+   it is not an interactive target, so no outline (inner controls keep theirs). */
+.modal:focus {
+  outline: none;
+}
+
 @keyframes pop {
   from {
     transform: scale(0.96);

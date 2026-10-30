@@ -35,6 +35,7 @@ export function TopBar({
           className={noise.on ? "icon-btn active-noise" : "icon-btn"}
           onClick={onToggleNoise}
           aria-label={tr("top.noise")}
+          aria-pressed={noise.on}
           title={
             noise.on ? tr("top.noise.on", { type: tr(NOISE_KEY[noise.type]) }) : tr("top.noise")
           }
@@ -79,6 +80,7 @@ export function TopBar({
           className={pinned ? "icon-btn active-pin" : "icon-btn"}
           onClick={onTogglePin}
           aria-label={tr("top.pin")}
+          aria-pressed={pinned}
           title={pinned ? tr("top.unpin") : tr("top.pin")}
         >
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
