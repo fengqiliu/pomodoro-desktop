@@ -136,6 +136,13 @@ const DICT: Dict = {
   "stats.footer.avg": ["平均每天 {avg} 个番茄 · {mins} 分钟", "{avg} pomodoros / day · {mins} min"],
   "stats.report.title": ["本周简报", "Weekly report"],
   "stats.report.active": ["活跃 {n} 天", "{n} active day(s)"],
+  "stats.report.interruptions": ["打断 {n} 次", "{n} interruption(s)"],
+  "interrupt.log": ["记一次打断", "Log interruption"],
+  "interrupt.today": ["今日 {n}", "today {n}"],
+  "interrupt.hint": [
+    "专注中被打断时点一下记录（快捷键 I）",
+    "Click when something interrupts your focus (shortcut I)",
+  ],
   "stats.report.best": ["最佳 {date}（{n} 🍅）", "Best {date} ({n} 🍅)"],
   "stats.report.export": ["导出 CSV（复制到剪贴板）", "Export CSV (copies to clipboard)"],
   "stats.more.title": ["趋势与月度", "Trends & monthly"],

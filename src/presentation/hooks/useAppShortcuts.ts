@@ -6,6 +6,8 @@ interface Options {
   toggle: () => Promise<void>;
   reset: () => Promise<void>;
   skip: () => Promise<void>;
+  /** I — log a focus interruption (the callee decides whether it applies now) */
+  interrupt: () => void;
 }
 
 /**
@@ -35,7 +37,7 @@ export function resolveShortcut(
     isContentEditable: boolean;
     getAttribute(n: string): string | null;
   } | null
-): "toggle" | "reset" | "skip" | null {
+): "toggle" | "reset" | "skip" | "interrupt" | null {
   if (target) {
     const tag = target.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target.isContentEditable) {
@@ -54,11 +56,12 @@ export function resolveShortcut(
   }
   if (e.key === "r" || e.key === "R") return "reset";
   if (e.key === "s" || e.key === "S") return "skip";
+  if (e.key === "i" || e.key === "I") return "interrupt";
   return null;
 }
 
 // ---- in-app keyboard shortcuts: Space=开始/暂停, R=重置, S=跳过 ----
-export function useAppShortcuts({ showSettings, toggle, reset, skip }: Options) {
+export function useAppShortcuts({ showSettings, toggle, reset, skip, interrupt }: Options) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (showSettings) return;
@@ -68,8 +71,9 @@ export function useAppShortcuts({ showSettings, toggle, reset, skip }: Options) 
       if (action === "toggle") void toggle();
       else if (action === "reset") void reset();
       else if (action === "skip") void skip();
+      else if (action === "interrupt") interrupt();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [showSettings, toggle, reset, skip]);
+  }, [showSettings, toggle, reset, skip, interrupt]);
 }

@@ -25,6 +25,9 @@ interface Props {
   onReset: () => void;
   onSkip: () => void;
   onSwitchPhase: (p: Phase) => void;
+  interruptionsToday: number;
+  canLogInterruption: boolean;
+  onLogInterruption: () => void;
 }
 
 export function TimerView({
@@ -43,6 +46,9 @@ export function TimerView({
   onReset,
   onSkip,
   onSwitchPhase,
+  interruptionsToday,
+  canLogInterruption,
+  onLogInterruption,
 }: Props) {
   const R = 132;
   const CIRC = 2 * Math.PI * R;
@@ -79,6 +85,17 @@ export function TimerView({
         <div className="ring-center" role="timer" aria-label={tr("a11y.countdown")}>
           <div className="time">{formatClock(secondsLeft)}</div>
           <div className="phase-label">{tr(PHASE_KEY[phase])}</div>
+          {canLogInterruption && (
+            <button
+              type="button"
+              className="interrupt-btn"
+              onClick={onLogInterruption}
+              title={tr("interrupt.hint")}
+              aria-label={`${tr("interrupt.log")}（${tr("interrupt.today", { n: interruptionsToday })}）`}
+            >
+              ⚡ {tr("interrupt.log")} · {tr("interrupt.today", { n: interruptionsToday })}
+            </button>
+          )}
         </div>
       </div>
 

@@ -92,3 +92,14 @@ describe("buildWeeklyReportCsv", () => {
     ]);
   });
 });
+
+describe("summarizeWeek interruptions", () => {
+  it("totals interruptions across the window, counting missing fields as 0", () => {
+    const week = [
+      { ...day("2026-9-10", 4, 1, 25), interruptions: 3 },
+      day("2026-9-11", 5, 2, 50),
+      { ...day("2026-9-12", 6, 0, 0), interruptions: 1 },
+    ];
+    expect(summarizeWeek(week).totalInterruptions).toBe(4);
+  });
+});

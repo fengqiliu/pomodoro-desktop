@@ -21,6 +21,7 @@ import { useNoise } from "./hooks/useNoise";
 import { useHotkey } from "./hooks/useHotkey";
 import { useSettingsDialog } from "./hooks/useSettingsDialog";
 import { useAppShortcuts } from "./hooks/useAppShortcuts";
+import { useInterruptions } from "./hooks/useInterruptions";
 import { useDocumentTitle } from "./hooks/useDocumentTitle";
 import { useTrayTooltip } from "./hooks/useTrayTooltip";
 import { useBackup } from "./hooks/useBackup";
@@ -112,7 +113,16 @@ export default function App() {
     resetTimer: reset,
   });
 
-  useAppShortcuts({ showSettings, toggle, reset, skip });
+  const phaseSeconds = phaseMinutes(phase, settings) * 60;
+  const interruptions = useInterruptions({
+    history,
+    setHistory,
+    phase,
+    running,
+    secondsLeft,
+    phaseSeconds,
+  });
+  useAppShortcuts({ showSettings, toggle, reset, skip, interrupt: interruptions.log });
   useDocumentTitle({ running, secondsLeft, phase, tr });
   useTrayTooltip({ running, secondsLeft, phase, tr });
   const { exportData, importData } = useBackup({
@@ -131,7 +141,7 @@ export default function App() {
   const [chartMetric, setChartMetric] = useState<ChartMetric>("pomodoros");
 
   // ---- derived ----
-  const progress = 1 - secondsLeft / (phaseMinutes(phase, settings) * 60);
+  const progress = 1 - secondsLeft / phaseSeconds;
   const accent = PHASE_COLOR[phase];
   const week = useMemo(() => last7Days(history), [history, dailyProgress.date]);
   const { exportCsv } = useWeeklyReport({ lang, week, showToast });
@@ -213,6 +223,9 @@ export default function App() {
             onReset={() => void reset()}
             onSkip={() => void skip()}
             onSwitchPhase={(p) => void switchTo(p)}
+            interruptionsToday={interruptions.todayCount}
+            canLogInterruption={interruptions.canLog}
+            onLogInterruption={interruptions.log}
           />
         ) : tab === "tasks" ? (
           <TasksView

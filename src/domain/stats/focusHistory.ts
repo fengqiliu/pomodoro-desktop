@@ -5,6 +5,8 @@ export interface DayRecord {
   dayIndex: number; // 0..6 — label resolved at render time by lang
   pomodoros: number;
   minutes: number;
+  /** Focus interruptions logged that day; absent on records saved before the feature. */
+  interruptions?: number;
 }
 
 export type History = Record<string, DayRecord>;
@@ -47,6 +49,17 @@ export function recordFocus(history: History, minutes: number, now = new Date())
     ...history,
     [key]: { ...cur, pomodoros: cur.pomodoros + 1, minutes: cur.minutes + minutes },
   };
+}
+
+/** Logs one focus interruption on today's record (created if this is the day's first event). */
+export function recordInterruption(history: History, now = new Date()): History {
+  const key = todayKey(now);
+  const cur = history[key] || emptyDay(key, now.getDay());
+  return { ...history, [key]: { ...cur, interruptions: (cur.interruptions ?? 0) + 1 } };
+}
+
+export function todayInterruptions(history: History, now = new Date()): number {
+  return history[todayKey(now)]?.interruptions ?? 0;
 }
 
 export interface StreakStats {

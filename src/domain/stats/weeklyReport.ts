@@ -17,6 +17,8 @@ export interface WeekSummary {
   /** Date key (`YYYY-M-D`) of the day with the most pomodoros; null when the window is all empty. */
   bestDay: string | null;
   bestPomodoros: number;
+  /** Focus interruptions logged in the window. */
+  totalInterruptions: number;
 }
 
 /** Summarizes a focus window (normally the last 7 days). */
@@ -26,8 +28,10 @@ export function summarizeWeek(week: DayRecord[]): WeekSummary {
   let activeDays = 0;
   let bestDay: string | null = null;
   let bestPomodoros = 0;
+  let totalInterruptions = 0;
 
   for (const day of week) {
+    totalInterruptions += day.interruptions ?? 0;
     totalPomodoros += day.pomodoros;
     totalMinutes += day.minutes;
     if (day.pomodoros > 0) activeDays += 1;
@@ -46,6 +50,7 @@ export function summarizeWeek(week: DayRecord[]): WeekSummary {
     avgMinutes: round(totalMinutes / dayCount),
     bestDay,
     bestPomodoros,
+    totalInterruptions,
   };
 }
 

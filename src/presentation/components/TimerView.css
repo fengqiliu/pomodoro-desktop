@@ -70,6 +70,27 @@
   letter-spacing: 1px;
 }
 
+.interrupt-btn {
+  margin-top: 10px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  color: var(--text-dim);
+  border: 1px solid var(--border);
+  background: var(--bg-elev);
+  transition: all 0.15s;
+}
+
+.interrupt-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* a11y.css loads last and would square this pill to --radius-sm on focus. */
+.interrupt-btn:focus-visible {
+  border-radius: 999px;
+}
+
 .active-task {
   margin: 12px auto 0;
   max-width: 240px;

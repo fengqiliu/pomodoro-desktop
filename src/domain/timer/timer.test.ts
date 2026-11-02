@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   addCompletedFocus,
+  canLogInterruption,
   completeFocusCycle,
   formatClock,
   getDailyGoalPercent,
@@ -140,5 +141,18 @@ describe("formatClock", () => {
     expect(formatClock(9)).toBe("00:09");
     expect(formatClock(25 * 60)).toBe("25:00");
     expect(formatClock(59 * 60 + 59)).toBe("59:59");
+  });
+});
+
+describe("canLogInterruption", () => {
+  it("allows logging during a focus session that is running or paused mid-way", () => {
+    expect(canLogInterruption("focus", true, 1500, 1500)).toBe(true);
+    expect(canLogInterruption("focus", false, 900, 1500)).toBe(true);
+  });
+
+  it("refuses before a focus session has started and during breaks", () => {
+    expect(canLogInterruption("focus", false, 1500, 1500)).toBe(false);
+    expect(canLogInterruption("short", true, 200, 300)).toBe(false);
+    expect(canLogInterruption("long", false, 600, 900)).toBe(false);
   });
 });

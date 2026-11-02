@@ -5,6 +5,8 @@ import {
   last7Days,
   pruneHistory,
   recordFocus,
+  recordInterruption,
+  todayInterruptions,
   type History,
 } from "./index";
 
@@ -141,5 +143,43 @@ describe("calculateTotalStats", () => {
       totalMinutes: 150,
       totalDays: 2,
     });
+  });
+});
+
+describe("interruptions", () => {
+  it("counts an interruption on today's record without touching focus totals", () => {
+    const start: History = {
+      "2026-9-11": { date: "2026-9-11", dayIndex: 5, pomodoros: 2, minutes: 50 },
+    };
+    const h = recordInterruption(recordInterruption(start, NOW), NOW);
+    expect(h["2026-9-11"]).toEqual({
+      date: "2026-9-11",
+      dayIndex: 5,
+      pomodoros: 2,
+      minutes: 50,
+      interruptions: 2,
+    });
+    expect(start["2026-9-11"].interruptions).toBeUndefined();
+  });
+
+  it("creates today's record when the first event of the day is an interruption", () => {
+    expect(recordInterruption({}, NOW)["2026-9-11"]).toEqual({
+      date: "2026-9-11",
+      dayIndex: 5,
+      pomodoros: 0,
+      minutes: 0,
+      interruptions: 1,
+    });
+  });
+
+  it("reads today's count, treating records saved before the field existed as 0", () => {
+    expect(todayInterruptions({}, NOW)).toBe(0);
+    expect(
+      todayInterruptions(
+        { "2026-9-11": { date: "2026-9-11", dayIndex: 5, pomodoros: 1, minutes: 25 } },
+        NOW
+      )
+    ).toBe(0);
+    expect(todayInterruptions(recordInterruption({}, NOW), NOW)).toBe(1);
   });
 });

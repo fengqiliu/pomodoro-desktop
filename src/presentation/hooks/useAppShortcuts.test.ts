@@ -30,6 +30,12 @@ describe("resolveShortcut", () => {
     expect(resolveShortcut(key({ key: "S" }), el("DIV"))).toBe("skip");
   });
 
+  it("maps I to logging an interruption, but not while typing", () => {
+    expect(resolveShortcut(key({ key: "i" }), el("DIV"))).toBe("interrupt");
+    expect(resolveShortcut(key({ key: "I" }), el("BUTTON"))).toBe("interrupt");
+    expect(resolveShortcut(key({ key: "i" }), el("INPUT"))).toBeNull();
+  });
+
   it("ignores unrelated keys and a null target", () => {
     expect(resolveShortcut(key({ key: "q" }), el("DIV"))).toBeNull();
     expect(resolveShortcut(key({ key: "r" }), null)).toBe("reset");
