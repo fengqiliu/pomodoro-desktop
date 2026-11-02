@@ -70,8 +70,14 @@
   letter-spacing: 1px;
 }
 
-.interrupt-btn {
+.interrupt-row {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
   margin-top: 10px;
+}
+
+.interrupt-btn {
   padding: 3px 10px;
   border-radius: 999px;
   font-size: 11px;

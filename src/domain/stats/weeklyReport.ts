@@ -19,6 +19,8 @@ export interface WeekSummary {
   bestPomodoros: number;
   /** Focus interruptions logged in the window. */
   totalInterruptions: number;
+  /** The external share of `totalInterruptions`. */
+  externalInterruptions: number;
 }
 
 /** Summarizes a focus window (normally the last 7 days). */
@@ -29,9 +31,11 @@ export function summarizeWeek(week: DayRecord[]): WeekSummary {
   let bestDay: string | null = null;
   let bestPomodoros = 0;
   let totalInterruptions = 0;
+  let externalInterruptions = 0;
 
   for (const day of week) {
     totalInterruptions += day.interruptions ?? 0;
+    externalInterruptions += day.externalInterruptions ?? 0;
     totalPomodoros += day.pomodoros;
     totalMinutes += day.minutes;
     if (day.pomodoros > 0) activeDays += 1;
@@ -51,6 +55,7 @@ export function summarizeWeek(week: DayRecord[]): WeekSummary {
     bestDay,
     bestPomodoros,
     totalInterruptions,
+    externalInterruptions,
   };
 }
 

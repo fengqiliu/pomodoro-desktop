@@ -223,7 +223,7 @@ export default function App() {
             onReset={() => void reset()}
             onSkip={() => void skip()}
             onSwitchPhase={(p) => void switchTo(p)}
-            interruptionsToday={interruptions.todayCount}
+            interruptionsToday={interruptions.today}
             canLogInterruption={interruptions.canLog}
             onLogInterruption={interruptions.log}
           />

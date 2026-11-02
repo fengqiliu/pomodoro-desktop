@@ -30,10 +30,13 @@ describe("resolveShortcut", () => {
     expect(resolveShortcut(key({ key: "S" }), el("DIV"))).toBe("skip");
   });
 
-  it("maps I to logging an interruption, but not while typing", () => {
-    expect(resolveShortcut(key({ key: "i" }), el("DIV"))).toBe("interrupt");
-    expect(resolveShortcut(key({ key: "I" }), el("BUTTON"))).toBe("interrupt");
+  it("maps I / E to logging an internal / external interruption, but not while typing", () => {
+    expect(resolveShortcut(key({ key: "i" }), el("DIV"))).toBe("interrupt-internal");
+    expect(resolveShortcut(key({ key: "I" }), el("BUTTON"))).toBe("interrupt-internal");
+    expect(resolveShortcut(key({ key: "e" }), el("DIV"))).toBe("interrupt-external");
+    expect(resolveShortcut(key({ key: "E" }), el("BUTTON"))).toBe("interrupt-external");
     expect(resolveShortcut(key({ key: "i" }), el("INPUT"))).toBeNull();
+    expect(resolveShortcut(key({ key: "e" }), el("INPUT"))).toBeNull();
   });
 
   it("ignores unrelated keys and a null target", () => {

@@ -7,6 +7,7 @@ import {
   type DailyProgress,
   type Phase,
 } from "../../domain/timer";
+import type { InterruptionCounts, InterruptionKind } from "../../domain/stats";
 import "./TimerView.css";
 
 interface Props {
@@ -25,9 +26,9 @@ interface Props {
   onReset: () => void;
   onSkip: () => void;
   onSwitchPhase: (p: Phase) => void;
-  interruptionsToday: number;
+  interruptionsToday: InterruptionCounts;
   canLogInterruption: boolean;
-  onLogInterruption: () => void;
+  onLogInterruption: (kind: InterruptionKind) => void;
 }
 
 export function TimerView({
@@ -86,15 +87,25 @@ export function TimerView({
           <div className="time">{formatClock(secondsLeft)}</div>
           <div className="phase-label">{tr(PHASE_KEY[phase])}</div>
           {canLogInterruption && (
-            <button
-              type="button"
-              className="interrupt-btn"
-              onClick={onLogInterruption}
-              title={tr("interrupt.hint")}
-              aria-label={`${tr("interrupt.log")}（${tr("interrupt.today", { n: interruptionsToday })}）`}
-            >
-              ⚡ {tr("interrupt.log")} · {tr("interrupt.today", { n: interruptionsToday })}
-            </button>
+            <div className="interrupt-row" role="group" aria-label={tr("interrupt.group")}>
+              {(
+                [
+                  ["internal", "💭", interruptionsToday.internal],
+                  ["external", "👤", interruptionsToday.external],
+                ] as const
+              ).map(([kind, icon, n]) => (
+                <button
+                  key={kind}
+                  type="button"
+                  className="interrupt-btn"
+                  onClick={() => onLogInterruption(kind)}
+                  title={tr(`interrupt.${kind}.hint`)}
+                  aria-label={`${tr(`interrupt.${kind}`)}（${tr("interrupt.today", { n })}）`}
+                >
+                  {icon} {tr(`interrupt.${kind}`)} {n}
+                </button>
+              ))}
+            </div>
           )}
         </div>
       </div>

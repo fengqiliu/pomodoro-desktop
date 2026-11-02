@@ -101,5 +101,18 @@ describe("summarizeWeek interruptions", () => {
       { ...day("2026-9-12", 6, 0, 0), interruptions: 1 },
     ];
     expect(summarizeWeek(week).totalInterruptions).toBe(4);
+    expect(summarizeWeek(week).externalInterruptions).toBe(0);
+  });
+});
+
+describe("summarizeWeek external interruptions", () => {
+  it("totals the external share separately from the overall count", () => {
+    const week = [
+      { ...day("2026-9-10", 4, 1, 25), interruptions: 3, externalInterruptions: 2 },
+      { ...day("2026-9-11", 5, 0, 0), interruptions: 1, externalInterruptions: 1 },
+    ];
+    const s = summarizeWeek(week);
+    expect(s.totalInterruptions).toBe(4);
+    expect(s.externalInterruptions).toBe(3);
   });
 });

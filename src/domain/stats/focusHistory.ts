@@ -5,8 +5,10 @@ export interface DayRecord {
   dayIndex: number; // 0..6 — label resolved at render time by lang
   pomodoros: number;
   minutes: number;
-  /** Focus interruptions logged that day; absent on records saved before the feature. */
+  /** Focus interruptions logged that day (total); absent on records saved before the feature. */
   interruptions?: number;
+  /** How many of `interruptions` were external (someone/something else); the rest were internal. */
+  externalInterruptions?: number;
 }
 
 export type History = Record<string, DayRecord>;
@@ -51,15 +53,40 @@ export function recordFocus(history: History, minutes: number, now = new Date())
   };
 }
 
-/** Logs one focus interruption on today's record (created if this is the day's first event). */
-export function recordInterruption(history: History, now = new Date()): History {
-  const key = todayKey(now);
-  const cur = history[key] || emptyDay(key, now.getDay());
-  return { ...history, [key]: { ...cur, interruptions: (cur.interruptions ?? 0) + 1 } };
+export type InterruptionKind = "internal" | "external";
+
+export interface InterruptionCounts {
+  total: number;
+  internal: number;
+  external: number;
 }
 
-export function todayInterruptions(history: History, now = new Date()): number {
-  return history[todayKey(now)]?.interruptions ?? 0;
+/**
+ * Logs one focus interruption on today's record (created if this is the day's
+ * first event). `interruptions` stays the total; external ones are also counted
+ * in `externalInterruptions`, so internal = total − external.
+ */
+export function recordInterruption(
+  history: History,
+  kind: InterruptionKind,
+  now = new Date()
+): History {
+  const key = todayKey(now);
+  const cur = history[key] || emptyDay(key, now.getDay());
+  const next: DayRecord = { ...cur, interruptions: (cur.interruptions ?? 0) + 1 };
+  if (kind === "external") next.externalInterruptions = (cur.externalInterruptions ?? 0) + 1;
+  return { ...history, [key]: next };
+}
+
+/** Splits a day's interruptions; records from before classification count as internal. */
+export function interruptionCounts(record?: DayRecord): InterruptionCounts {
+  const total = record?.interruptions ?? 0;
+  const external = Math.min(record?.externalInterruptions ?? 0, total);
+  return { total, internal: total - external, external };
+}
+
+export function todayInterruptions(history: History, now = new Date()): InterruptionCounts {
+  return interruptionCounts(history[todayKey(now)]);
 }
 
 export interface StreakStats {

@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import type { InterruptionKind } from "../../domain/stats";
 
 interface Options {
   /** while the settings modal is open the shortcuts are inert */
@@ -6,8 +7,8 @@ interface Options {
   toggle: () => Promise<void>;
   reset: () => Promise<void>;
   skip: () => Promise<void>;
-  /** I — log a focus interruption (the callee decides whether it applies now) */
-  interrupt: () => void;
+  /** I / E — log an internal / external interruption (the callee decides whether it applies now) */
+  interrupt: (kind: InterruptionKind) => void;
 }
 
 /**
@@ -37,7 +38,7 @@ export function resolveShortcut(
     isContentEditable: boolean;
     getAttribute(n: string): string | null;
   } | null
-): "toggle" | "reset" | "skip" | "interrupt" | null {
+): "toggle" | "reset" | "skip" | "interrupt-internal" | "interrupt-external" | null {
   if (target) {
     const tag = target.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target.isContentEditable) {
@@ -56,7 +57,8 @@ export function resolveShortcut(
   }
   if (e.key === "r" || e.key === "R") return "reset";
   if (e.key === "s" || e.key === "S") return "skip";
-  if (e.key === "i" || e.key === "I") return "interrupt";
+  if (e.key === "i" || e.key === "I") return "interrupt-internal";
+  if (e.key === "e" || e.key === "E") return "interrupt-external";
   return null;
 }
 
@@ -71,7 +73,8 @@ export function useAppShortcuts({ showSettings, toggle, reset, skip, interrupt }
       if (action === "toggle") void toggle();
       else if (action === "reset") void reset();
       else if (action === "skip") void skip();
-      else if (action === "interrupt") interrupt();
+      else if (action === "interrupt-internal") interrupt("internal");
+      else if (action === "interrupt-external") interrupt("external");
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);

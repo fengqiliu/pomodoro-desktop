@@ -1,5 +1,10 @@
 import { useCallback, type Dispatch, type SetStateAction } from "react";
-import { recordInterruption, todayInterruptions, type History } from "../../domain/stats";
+import {
+  recordInterruption,
+  todayInterruptions,
+  type History,
+  type InterruptionKind,
+} from "../../domain/stats";
 import { canLogInterruption, type Phase } from "../../domain/timer";
 import { historyStore } from "../../infrastructure/storage";
 
@@ -12,7 +17,7 @@ interface Options {
   phaseSeconds: number;
 }
 
-// Focus interruption log: today's count, whether logging is allowed right now,
+// Focus interruption log: today's internal/external counts, whether logging is allowed right now,
 // and the action that records one into the persisted per-day history.
 export function useInterruptions({
   history,
@@ -24,14 +29,17 @@ export function useInterruptions({
 }: Options) {
   const canLog = canLogInterruption(phase, running, secondsLeft, phaseSeconds);
 
-  const log = useCallback(() => {
-    if (!canLog) return;
-    setHistory((prev) => {
-      const next = recordInterruption(prev);
-      historyStore.save(next);
-      return next;
-    });
-  }, [canLog, setHistory]);
+  const log = useCallback(
+    (kind: InterruptionKind) => {
+      if (!canLog) return;
+      setHistory((prev) => {
+        const next = recordInterruption(prev, kind);
+        historyStore.save(next);
+        return next;
+      });
+    },
+    [canLog, setHistory]
+  );
 
-  return { todayCount: todayInterruptions(history), canLog, log };
+  return { today: todayInterruptions(history), canLog, log };
 }

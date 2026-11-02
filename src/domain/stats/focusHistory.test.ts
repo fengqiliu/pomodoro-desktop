@@ -147,12 +147,14 @@ describe("calculateTotalStats", () => {
 });
 
 describe("interruptions", () => {
-  it("counts an interruption on today's record without touching focus totals", () => {
+  const today = (h: History) => h["2026-9-11"];
+
+  it("counts interruptions on today's record without touching focus totals", () => {
     const start: History = {
       "2026-9-11": { date: "2026-9-11", dayIndex: 5, pomodoros: 2, minutes: 50 },
     };
-    const h = recordInterruption(recordInterruption(start, NOW), NOW);
-    expect(h["2026-9-11"]).toEqual({
+    const h = recordInterruption(recordInterruption(start, "internal", NOW), "internal", NOW);
+    expect(today(h)).toEqual({
       date: "2026-9-11",
       dayIndex: 5,
       pomodoros: 2,
@@ -162,24 +164,35 @@ describe("interruptions", () => {
     expect(start["2026-9-11"].interruptions).toBeUndefined();
   });
 
+  it("keeps the total in `interruptions` and the external share in `externalInterruptions`", () => {
+    const h = recordInterruption(recordInterruption({}, "external", NOW), "internal", NOW);
+    expect(today(h)).toMatchObject({ interruptions: 2, externalInterruptions: 1 });
+  });
+
   it("creates today's record when the first event of the day is an interruption", () => {
-    expect(recordInterruption({}, NOW)["2026-9-11"]).toEqual({
+    expect(today(recordInterruption({}, "external", NOW))).toEqual({
       date: "2026-9-11",
       dayIndex: 5,
       pomodoros: 0,
       minutes: 0,
       interruptions: 1,
+      externalInterruptions: 1,
     });
   });
 
-  it("reads today's count, treating records saved before the field existed as 0", () => {
-    expect(todayInterruptions({}, NOW)).toBe(0);
-    expect(
-      todayInterruptions(
-        { "2026-9-11": { date: "2026-9-11", dayIndex: 5, pomodoros: 1, minutes: 25 } },
-        NOW
-      )
-    ).toBe(0);
-    expect(todayInterruptions(recordInterruption({}, NOW), NOW)).toBe(1);
+  it("breaks today's count into internal and external", () => {
+    let h: History = {};
+    for (const kind of ["internal", "external", "internal"] as const) {
+      h = recordInterruption(h, kind, NOW);
+    }
+    expect(todayInterruptions(h, NOW)).toEqual({ total: 3, internal: 2, external: 1 });
+  });
+
+  it("reads records saved before the fields existed as zero, and unclassified ones as internal", () => {
+    expect(todayInterruptions({}, NOW)).toEqual({ total: 0, internal: 0, external: 0 });
+    const legacy: History = {
+      "2026-9-11": { date: "2026-9-11", dayIndex: 5, pomodoros: 1, minutes: 25, interruptions: 2 },
+    };
+    expect(todayInterruptions(legacy, NOW)).toEqual({ total: 2, internal: 2, external: 0 });
   });
 });

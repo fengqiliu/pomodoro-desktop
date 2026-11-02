@@ -174,8 +174,21 @@ export const StatsView = memo(function StatsView({
         <div className="report-summary">
           <span className="report-label">{tr("stats.report.title")}</span>
           <span className="report-item">
-            {tr("stats.report.active", { n: weekSummary.activeDays })} ·{" "}
-            {tr("stats.report.interruptions", { n: weekSummary.totalInterruptions })}
+            {tr("stats.report.active", { n: weekSummary.activeDays })}
+          </span>
+          <span
+            className="report-item"
+            title={tr("stats.report.interruptions.full", {
+              n: weekSummary.totalInterruptions,
+              internal: weekSummary.totalInterruptions - weekSummary.externalInterruptions,
+              external: weekSummary.externalInterruptions,
+            })}
+          >
+            {tr("stats.report.interruptions", {
+              n: weekSummary.totalInterruptions,
+              internal: weekSummary.totalInterruptions - weekSummary.externalInterruptions,
+              external: weekSummary.externalInterruptions,
+            })}
           </span>
           <span className="report-item">
             {weekSummary.bestDay
