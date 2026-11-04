@@ -54,23 +54,41 @@ describe("buildWeeklyReportCsv", () => {
     const csv = buildWeeklyReportCsv(WEEK, labels);
     const lines = csv.split("\n");
 
-    expect(lines[0]).toBe("date,weekday,pomodoros,minutes");
-    expect(lines[1]).toBe("2026-9-27,Sun,0,0");
-    expect(lines[7]).toBe("2026-10-3,Sat,4,100");
-    expect(lines[8]).toBe("total,,19,475");
-    expect(lines[9]).toBe("average,,2.7,68");
-    expect(lines[10]).toBe("best-day,,2026-9-30,5");
+    expect(lines[0]).toBe(
+      "date,weekday,pomodoros,minutes,internal_interruptions,external_interruptions"
+    );
+    expect(lines[1]).toBe("2026-9-27,Sun,0,0,0,0");
+    expect(lines[7]).toBe("2026-10-3,Sat,4,100,0,0");
+    expect(lines[8]).toBe("total,,19,475,0,0");
+    expect(lines[9]).toBe("average,,2.7,68,0.0,0.0");
+    expect(lines[10]).toBe("best-day,,2026-9-30,5,,");
+  });
+
+  it("exports interruptions split into internal and external, with totals and daily averages", () => {
+    const week: DayRecord[] = [
+      { ...day("2026-9-28", 1, 2, 50), interruptions: 3, externalInterruptions: 1 },
+      { ...day("2026-9-29", 2, 1, 25), interruptions: 2 }, // legacy/unclassified → internal
+      day("2026-9-30", 3, 0, 0),
+      { ...day("2026-10-1", 4, 0, 0), interruptions: 2, externalInterruptions: 2 },
+    ];
+    const lines = buildWeeklyReportCsv(week, labels).split("\n");
+    expect(lines[1]).toBe("2026-9-28,Mon,2,50,2,1");
+    expect(lines[2]).toBe("2026-9-29,Tue,1,25,2,0");
+    expect(lines[3]).toBe("2026-9-30,Wed,0,0,0,0");
+    expect(lines[4]).toBe("2026-10-1,Thu,0,0,0,2");
+    expect(lines[5]).toBe("total,,3,75,4,3");
+    expect(lines[6]).toBe("average,,0.8,19,1.0,0.8");
   });
 
   it("injected labels can be localized", () => {
     const zh = buildWeeklyReportCsv([WEEK[6]], () => "周六");
-    expect(zh.split("\n")[1]).toBe("2026-10-3,周六,4,100");
+    expect(zh.split("\n")[1]).toBe("2026-10-3,周六,4,100,0,0");
   });
 
   it("escapes fields containing commas, quotes or newlines", () => {
     const tricky: DayRecord[] = [day("2026-1-1", 0, 0, 0)];
     const csv = buildWeeklyReportCsv(tricky, () => `a "quoted", label`);
-    expect(csv.split("\n")[1]).toBe('2026-1-1,"a ""quoted"", label",0,0');
+    expect(csv.split("\n")[1]).toBe('2026-1-1,"a ""quoted"", label",0,0,0,0');
   });
 
   it("omits the best-day row when the window is empty", () => {
@@ -79,16 +97,27 @@ describe("buildWeeklyReportCsv", () => {
       labels
     );
     expect(csv.split("\n")).toEqual([
-      "date,weekday,pomodoros,minutes",
-      "2026-9-27,Sun,0,0",
-      "2026-9-28,Mon,0,0",
-      "2026-9-29,Tue,0,0",
-      "2026-9-30,Wed,0,0",
-      "2026-10-1,Thu,0,0",
-      "2026-10-2,Fri,0,0",
-      "2026-10-3,Sat,0,0",
-      "total,,0,0",
-      "average,,0.0,0",
+      "date,weekday,pomodoros,minutes,internal_interruptions,external_interruptions",
+      "2026-9-27,Sun,0,0,0,0",
+      "2026-9-28,Mon,0,0,0,0",
+      "2026-9-29,Tue,0,0,0,0",
+      "2026-9-30,Wed,0,0,0,0",
+      "2026-10-1,Thu,0,0,0,0",
+      "2026-10-2,Fri,0,0,0,0",
+      "2026-10-3,Sat,0,0,0,0",
+      "total,,0,0,0,0",
+      "average,,0.0,0,0.0,0.0",
+    ]);
+  });
+
+  it("still exports interruptions on a window with no completed pomodoros", () => {
+    const week = [{ ...day("2026-9-28", 1, 0, 0), interruptions: 2, externalInterruptions: 1 }];
+    const lines = buildWeeklyReportCsv(week, labels).split("\n");
+    expect(lines).toEqual([
+      "date,weekday,pomodoros,minutes,internal_interruptions,external_interruptions",
+      "2026-9-28,Mon,0,0,1,1",
+      "total,,0,0,1,1",
+      "average,,0.0,0,1.0,1.0",
     ]);
   });
 });

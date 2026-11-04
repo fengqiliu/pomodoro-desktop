@@ -1,4 +1,4 @@
-import type { DayRecord } from "./focusHistory";
+import { interruptionCounts, type DayRecord } from "./focusHistory";
 
 /**
  * Aggregate of one focus window (normally `last7Days(history)`, ordered
@@ -21,6 +21,10 @@ export interface WeekSummary {
   totalInterruptions: number;
   /** The external share of `totalInterruptions`. */
   externalInterruptions: number;
+  /** totalInterruptions / window length (float, like avgPomodoros). */
+  avgInterruptions: number;
+  /** externalInterruptions / window length. */
+  avgExternalInterruptions: number;
 }
 
 /** Summarizes a focus window (normally the last 7 days). */
@@ -56,6 +60,8 @@ export function summarizeWeek(week: DayRecord[]): WeekSummary {
     bestPomodoros,
     totalInterruptions,
     externalInterruptions,
+    avgInterruptions: totalInterruptions / dayCount,
+    avgExternalInterruptions: externalInterruptions / dayCount,
   };
 }
 
@@ -82,16 +88,48 @@ export function buildWeeklyReportCsv(
   const row = (...fields: (string | number)[]) => fields.map(csvField).join(",");
   const lines: string[] = [];
 
-  lines.push(row("date", "weekday", "pomodoros", "minutes"));
+  lines.push(
+    row(
+      "date",
+      "weekday",
+      "pomodoros",
+      "minutes",
+      "internal_interruptions",
+      "external_interruptions"
+    )
+  );
   for (const day of week) {
-    lines.push(row(day.date, weekdayLabel(day.dayIndex), day.pomodoros, day.minutes));
+    const { internal, external } = interruptionCounts(day);
+    lines.push(
+      row(day.date, weekdayLabel(day.dayIndex), day.pomodoros, day.minutes, internal, external)
+    );
   }
 
   const summary = summarizeWeek(week);
-  lines.push(row("total", "", summary.totalPomodoros, summary.totalMinutes));
-  lines.push(row("average", "", summary.avgPomodoros.toFixed(1), round(summary.avgMinutes)));
+  const totalExternal = summary.externalInterruptions;
+  const avgExternal = summary.avgExternalInterruptions;
+  lines.push(
+    row(
+      "total",
+      "",
+      summary.totalPomodoros,
+      summary.totalMinutes,
+      summary.totalInterruptions - totalExternal,
+      totalExternal
+    )
+  );
+  lines.push(
+    row(
+      "average",
+      "",
+      summary.avgPomodoros.toFixed(1),
+      round(summary.avgMinutes),
+      (summary.avgInterruptions - avgExternal).toFixed(1),
+      avgExternal.toFixed(1)
+    )
+  );
   if (summary.bestDay !== null) {
-    lines.push(row("best-day", "", summary.bestDay, summary.bestPomodoros));
+    lines.push(row("best-day", "", summary.bestDay, summary.bestPomodoros, "", ""));
   }
 
   return lines.join("\n");
