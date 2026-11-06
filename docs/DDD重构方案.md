@@ -2,6 +2,7 @@
 
 > 版本：v1.0（对应代码库 v2.0.0，commit 基线 `080dbfe`）
 > 状态：**已实施完成** —— 前端 4 文件映射全部落地，Rust 双上下文拆分完成；`npm run typecheck` / `npm test`(23/23) / `npm run build` 全部通过。
+> 说明：本文是重构完成时点的**历史记录**（含 commit 基线与当时的实测数字，如「10 套 84 例」）；之后又做过多轮迭代，当前的模块清单、测试计数与约定以 `README.md`、`CLAUDE.md`、`docs/概要设计说明.md` 为准，§11 记录了重构之后的演进。
 > 性质：**行为保持型（behavior-preserving）重构** —— 不改任何用户可见行为、持久化数据格式与 IPC 契约。
 
 ---
@@ -49,7 +50,7 @@
 2. **IPC 契约不变**：命令 `native_timer_start` / `native_timer_pause` / `native_timer_cancel`；事件 `native-timer-completed`；payload 均为 camelCase。
 3. **浏览器可跑**：`npm run dev` 在纯浏览器中仍可用（Tauri API 懒加载 + no-op/回退路径保持）。
 4. **依赖单向**：presentation → application / infrastructure → domain；domain、application 不得反向依赖。
-5. **工具链不变**：不新增运行时依赖；测试仍用 Vitest（当前 10 套 84 例）与 `cargo test`（9 例），并在 `npm test` 前置 DDD 架构守卫（见 §11.4）。
+5. **工具链不变**：不新增运行时依赖；测试仍用 Vitest（重构时点 10 套 84 例）与 `cargo test`（9 例），并在 `npm test` 前置 DDD 架构守卫（见 §11.4）。
 
 ---
 
@@ -424,6 +425,12 @@ src-tauri/src/
 3. **Rust 侧告警/持久化**（**已完成**）：新增专项迭代「完成审计日志」——`timer/completion_log.rs` 定义 `CompletionLog` 仓储端口（`FileCompletionLog` JSONL 落盘 / `NullCompletionLog` 空实现，4 例测试），组合根在 `lib.rs` setup 中解析 app data dir 并注入 `CompletionLogHandle`，`commands.rs` 完成回调里记录；`engine.rs` 未改动、保持纯逻辑可测。
 4. **依赖约束 CI**（**已完成**）：`scripts/check-architecture.mjs` 实现 §3.2 的 R1–R4（domain 禁 React/Tauri/外层、application 禁 React/Tauri/infrastructure/presentation、infrastructure 禁 presentation、presentation 禁直连 `@tauri-apps/*`），并接入 `npm test` 在 Vitest 之前执行。**已细化**：① 新增 R5——domain/application 禁浏览器 IO 全局（`localStorage/navigator/fetch/XMLHttpRequest/indexedDB/window/document`，先剥离注释与字符串再扫描）；② 新增 R6——仅 `infrastructure/platform` 可 import `@tauri-apps/*`；③ 新增 R7——测试文件必须与源码同目录；④ 新增 `.github/workflows/ci.yml`，推送/PR 在 GitHub Actions 上自动执行前端全量校验（check-arch / test / typecheck / build）与 `cargo test --lib`。
 5. **多语言**：按 i18n 既有约定扩展 `Lang` 与 `DICT` 第三元组，不引第三方 i18n 库。
+6. **重构之后的功能迭代**（**均已完成**，都沿用本文的分层与依赖规则，规则落在 `domain/`、`App.tsx` 未增长）：
+   - 任务：分类标签、完成时间戳、状态/分类/关键字筛选与搜索（`filterTaskEntries` 保留原始下标，使筛选视图下可安全重排）、预估准确度（`domain/tasks/estimateAccuracy.ts`）；`TasksView` 拆为 `TaskAddForm` / `TaskFilterBar` / `TaskItem`。
+   - 统计：30 天趋势、月度汇总、分类专注分布（均在统计页折叠区），专注打断记录（走神 / 被打扰，随 `DayRecord` 按天保存）及其周报 CSV 导出。
+   - 原生与音频：托盘悬停提示（`TrayPort` / `trayAdapter` / `set_tray_tooltip`，`useTrayTooltip` 接线）；雨声与海浪两种噪音及淡入淡出。
+   - 工程化：Prettier 作为格式规范（CI 校验）；`App.css` 按组件拆分、`a11y.css` 最后加载；键盘与读屏无障碍（`focusTrap.ts`、ARIA 角色与选中状态）。
+   - 守卫之外的约定：`AGENTS.md` 与 `CLAUDE.md` 正文保持一致，修改时同步。
 
 ---
 
@@ -435,7 +442,7 @@ src-tauri/src/
 npm install            # 依赖（勿并发多个 npm install）
 npm run dev            # Vite :1420（浏览器/tauri 共用）
 npm run typecheck      # tsc --noEmit —— 唯一静态检查
-npm test               # scripts/check-architecture.mjs（DDD 架构守卫 R1–R7）+ vitest run —— 10 套 84 例
+npm test               # scripts/check-architecture.mjs（DDD 架构守卫 R1–R7）+ vitest run —— 重构时点 10 套 84 例（现状见 README）
 npm run build          # tsc -b && vite build
 npm run tauri dev      # 完整桌面应用
 cargo test --manifest-path src-tauri/Cargo.toml --lib   # Rust 9 例（engine 5 + completion_log 4；旧 native_timer 过滤器已失效）

@@ -1,82 +1,88 @@
 # AGENTS.md
 
-This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
+This file provides guidance to Codex when working with code in this repository.
+
+> `CLAUDE.md` carries the same guidance for Claude Code: all sections below this note are identical in both files. When you change one, change the other in the same commit.
 
 ## What this is
 
-A single-window Tauri 2 desktop Pomodoro timer (380×580, non-resizable). React 18 + TypeScript + Vite frontend; a thin Rust/Tauri shell that exposes three `native_timer_*` IPC commands plus tray/window lifecycle — every other native capability is invoked from JS via Tauri plugin APIs. Default language is Chinese (`zh`); English is also bundled.
+A single-window Tauri 2 desktop Pomodoro timer (380×580, non-resizable). React 18 + TypeScript + Vite frontend; the Rust/Tauri host owns tray/window lifecycle and the authoritative desktop countdown. Three custom timer commands bridge the native clock to React, and one more (`set_tray_tooltip`) updates the tray hover text. Default language is Chinese (`zh`); English is also bundled.
 
 ## Commands
 
 ```bash
 npm install
 npm run dev          # Vite dev server only — port 1420 (strictPort; Tauri expects this). Works in a plain browser too (see src/infrastructure/platform/).
+npm test             # DDD architecture guard (scripts/check-architecture.mjs, R1–R7) + Vitest — 15 suites / 160 cases
 npm run typecheck    # tsc --noEmit
-npm run check-arch   # Architecture guard: enforces DDD layering constraints
-npm test             # architecture guard (scripts/check-architecture.mjs, R1–R7) + Vitest unit tests (colocated *.test.ts)
+npm run format       # prettier --write .  (format:check = --check, run in CI)
 npm run build        # tsc -b && vite build  →  dist/
 npm run preview      # serve the built dist/
 
 npm run tauri dev    # full app: launches Vite (beforeDevCommand) + native window
 npm run tauri build  # bundled desktop app (runs npm run build first via beforeBuildCommand)
 npx tauri build --bundles nsis  # rebuild only the NSIS .exe (faster when Rust is cached)
-
-cargo test --manifest-path src-tauri/Cargo.toml --lib  # Rust timer engine + completion-log tests
+cargo test --manifest-path src-tauri/Cargo.toml --lib
 ```
 
-There is no linter. `npm run typecheck` is the only static check; `npm test` runs the Vitest suites.
+`npm test` runs `scripts/check-architecture.mjs` (DDD layering guard over `src/`, rules R1–R7: layer imports, domain/application purity vs browser IO globals, `@tauri-apps/*` confined to `infrastructure/platform`, colocated tests) first, then Vitest: currently 15 colocated suites / 160 cases across `domain/timer`, `domain/tasks` (incl. estimate accuracy), `domain/stats` (focus history + trend + weekly report/CSV), `domain/settings`, `application/backupService`, `application/completePhase`, `infrastructure/storage`, `infrastructure/audio`, `shared/date`, `presentation/i18n`, `presentation/focusTrap` (modal Tab wrapping), and `presentation/hooks` (shortcut resolution). Rust cases live in `src-tauri/src/timer/engine.rs` and `completion_log.rs` (`cargo test --manifest-path src-tauri/Cargo.toml --lib`, 9 cases). `npm run check-arch` runs just the guard. Push/PR CI (`.github/workflows/ci.yml`) runs the Prettier check, the guard, tests, typecheck, build and `cargo test --lib`. Formatting is Prettier (`.prettierrc.json`: printWidth 100, double quotes, semicolons, `trailingComma: "es5"`; `.prettierignore` excludes `docs/`, `*.md`, `src-tauri/`, `dist/`, `package-lock.json`), checked in CI via `npm run format:check`; the one-off full-format commit is listed in `.git-blame-ignore-revs`. Prettier 3 reads `.prettierignore` only from the current working directory, so run it from the repo root (an editor/agent hook that formats single files should `cd` to the repo root first, or `*.md` files get reformatted). There is no linter; `npm run typecheck` remains the TypeScript static check.
 
 Regenerate the app icon set (needs Pillow): `python3 gen_icons.py` → writes `src-tauri/icons/`.
 
 ## Architecture
 
-### Frontend layering (DDD, `src/`)
-The frontend is split into layers; new features go into the matching layer instead of piling into `App.tsx`:
-- `src/domain/` — pure rules, no IO/React/Tauri: `timer/` (phase, pomodoro cycle, daily progress & goal, countdown math + `timer.test.ts`), `tasks/` (task entity, progress formatting, estimates, safe reordering, inline rename + `task.test.ts`), `stats/` (focus history: record, 7-day view, 60-day prune, streaks, weekly report & CSV export + `focusHistory.test.ts`/`weeklyReport.test.ts`), `settings/` (defaults, persisted-state merge & daily-reset rules, state composition + `persistedState.test.ts`).
+### Frontend layering (DDD)
+The frontend is split into `domain/` (pure rules), `application/` (ports + use cases), `infrastructure/` (adapters) and `presentation/`. `presentation/App.tsx` is the assembly layer: it composes state/side-effect hooks from `presentation/hooks/` and presentational components from `presentation/components/` (`TopBar`, `TimerView`, `TasksView` — composed of `TaskAddForm`, `TaskFilterBar`, `TaskItem` — `StatsView` with `TrendPanel` and `CategoryBreakdown`, `SettingsModal`). State and side effects live in the hooks — `usePersistedState` (persisted state + localStorage save + daily-reset guards), `usePomodoroSession` (engine wiring + end-of-phase business rules + ref mirrors), `useTaskList`, `useSettingsDialog`, `useHotkey`, `useAppShortcuts`, `useBackup`, `useWeeklyReport`, `useToast`, `useTheme`, `usePinned`, `useLanguage`, `useNoise`, `useMidnightRollover`, `useDocumentTitle`, `useTrayTooltip` (tray hover text mirrors the countdown), `useInterruptions` (focus interruption log: ring buttons or `I` = internal / `E` = external, counted per day in optional `DayRecord.interruptions` (total) + `externalInterruptions` (external share; internal = total − external, unclassified legacy counts read as internal)). No router, no state library: state is `useState`/`useRef` plus `localStorage` persistence. Three tabs (`timer` | `tasks` | `stats`) are conditionally rendered.
 
-
-
-- `src/application/` — ports and use cases: `ports.ts` (`WindowPort` / `ShortcutPort` / `NotificationPort` / `NativeTimerPort` / `StateStore` / `HistoryStore`), `backupService.ts` (build/validate JSON backup + test), `completePhase.ts` (cross-domain phase completion coordinator use case + test).
-- `src/infrastructure/` — adapters implementing the ports: `platform/` (desktop detection + lazy Tauri imports → `windowAdapter` / `shortcutAdapter` / `notificationAdapter` / `nativeTimerAdapter`), `storage/` (localStorage stores with versioned keys, `safeStorage` fallback, `preferenceStore`), `audio/` (`noiseEngine.ts`, `chime.ts`).
-- `src/presentation/` — `App.tsx` (composition root: hook wiring + JSX only), `components/`, `hooks/` (`usePomodoroEngine.ts` countdown/native bridge/generation cancel; `usePomodoroSession.ts` end-of-phase business rules; `usePersistedState`/`useMidnightRollover`/`useTaskList`/`useSettingsDialog`/`useHotkey`/`useAppShortcuts`/`useBackup`/`useWeeklyReport`/`useToast`/`useTheme`/`usePinned`/`useLanguage`/`useNoise`/`useDocumentTitle` state & side effects), `i18n.ts`, `uiTypes.ts`.
-- `src/shared/date.ts` — `todayKey()` and `getMillisUntilNextMidnight()` shared date helpers.
-
-Dependencies point inward: presentation → application/domain/infrastructure; domain and application must stay free of React/Tauri imports. Unit tests live next to the code they cover (`*.test.ts`).
+- **`presentation/hooks/usePomodoroEngine.ts`** owns the countdown *mechanics*: wall-clock deadline, native timer bridge, generation-based cancellation, the 1s paint loop, and toggle/pause/reset/skip/switchTo. Business rules for what a completed phase means are injected via the `onPhaseComplete` callback (returns `{ nextPhase, nextSeconds, autoStart }`). The engine never touches stats/tasks/notifications itself.
+- **Pure domain/application modules** (directly unit-testable, no React/Tauri/IO): `domain/timer` (phase cycle, daily reset, remaining time), `domain/stats` (history record / 7-day view / 60-day pruning / streaks / weekly summary + CSV export), `domain/tasks` (task rules, filters, category stats, estimate-vs-actual accuracy), `domain/settings` (defaults, state merging, daily reset), `application/backupService` (backup build + validated import).
+- **Shared** (`src/shared/date.ts`): `todayKey()` and `getMillisUntilNextMidnight()` — the only date helpers; domain code takes `now`/`today` as arguments instead of reading the clock.
+- **Ports** (`application/ports.ts`): `WindowPort`, `TrayPort`, `ShortcutPort`, `NotificationPort`, `NativeTimerPort`, `StateStore`, `HistoryStore` — implemented by `infrastructure/`, consumed by hooks.
+- **Adapters** (`infrastructure/`): `platform/` (window/shortcut/notification/nativeTimer/tray), `storage/` (`stateStore`/`historyStore`, versioned keys), `audio/` (`noiseEngine`, `chime`).
+- When adding a feature, put mechanics in the engine, rules in a pure module, markup in a component — don't grow `App.tsx`. Domain/application must stay free of React/Tauri imports.
 
 ### `src/infrastructure/platform/` — the browser/desktop abstraction (important)
 The app must run both as a Tauri desktop window *and* in a plain browser during UI iteration. `@tauri-apps/*` imports would fail to resolve at runtime in a browser, so this layer:
 - Detects desktop via `"__TAURI_INTERNALS__" in window` (`isDesktop()` in `runtime.ts`).
-- **Lazy dynamic-imports** the Tauri APIs (`@tauri-apps/api/window`, `@tauri-apps/api/core` + `event` for `native_timer_*` IPC, `@tauri-apps/plugin-global-shortcut`, notification) only when `isDesktop()`, then caches the module.
-- Exposes `windowAdapter.setAlwaysOnTop/isAlwaysOnTop`, `shortcutAdapter.register/unregister`, `notificationAdapter.notifyPhaseDone`, `nativeTimerAdapter.start/pause/cancel/listenCompleted` — all no-ops (or local fallbacks) in the browser.
+- **Lazy dynamic-imports** the Tauri APIs (`@tauri-apps/api/window`, core invoke/event, global shortcut, notification) only when `isDesktop()`, then caches the module.
+- Exposes `windowAdapter`, `shortcutAdapter`, `notificationAdapter`, `nativeTimerAdapter`, `trayAdapter` (implementing the ports in `application/ports.ts`). Browser-only rendering never invokes Tauri and uses the JS timer fallback.
 
 Always go through this layer; never import `@tauri-apps/*` directly from presentation code or it breaks browser dev.
 
 ### `src/infrastructure/audio/` — WebAudio, no audio assets
-Generates white/brown/pink noise procedurally into a 2s `AudioBuffer` that loops, with a controllable `GainNode`. `setType()` rebuilds the buffer gap-free while playing. `presentation/hooks/useNoise.ts` owns one `NoiseEngine` instance in a `useRef`. The completion chime (`playChime`) is a separate short oscillator sequence, not part of the engine.
+Generates five noise types procedurally — white/brown/pink into a 2s looping `AudioBuffer`, rain (Poisson raindrop impulses) and waves (tidal envelope) into a 4s one — with a controllable `GainNode`, 350 ms linear fades on start/stop, and buffers cached per (AudioContext, type). `setType()` rebuilds the buffer gap-free while playing. `presentation/hooks/useNoise.ts` owns one `NoiseEngine` instance in a `useRef`. The completion chime (`playChime`) is a separate short oscillator sequence, not part of the engine.
 
-### i18n — hand-rolled, no library
-`src/presentation/i18n.ts` is a flat `DICT` mapping keys to `[zh, en]` tuples, plus `translate(lang, key, params)` with `{param}` interpolation and `weekdayLabel(lang, dayIndex)`. To add a language: extend the `Lang` type, add it to `LANGS`, and add a third tuple element (then update `INDEX`). Keys are referenced throughout presentation code via the `tr()` callback.
+### `presentation/i18n.ts` — hand-rolled, no library
+A flat `DICT` mapping keys to `[zh, en]` tuples, plus `translate(lang, key, params)` with `{param}` interpolation and `weekdayLabel(lang, dayIndex)`. To add a language: extend the `Lang` type, add it to `LANGS`, and add a third tuple element (then update `INDEX`). Keys are referenced throughout presentation code via the `tr()` callback.
 
 ### State, persistence, and daily reset
 Everything persists to versioned `localStorage` keys (defined in `src/infrastructure/storage/keys.ts`):
-- `pomodoro-state-v3` — settings, tasks, `completedToday`/`focusMinutesToday`/`cycleFocusCount`, `noise`, and a `date` string (`YYYY-M-D`).
+- `pomodoro-state-v3` — settings, tasks, daily progress (`completedToday`, `focusMinutesToday`, `date`), `cycleFocusCount`, and `noise`.
 - `pomodoro-history-v1` — `Record<dateKey, DayRecord>` powering the 7-day chart.
 - `pomodoro-theme`, `pomodoro-pinned`, `pomodoro-lang`.
 
-`stateStore.load()` (merge/daily-reset logic in `src/domain/settings/persistedState.ts`) merges stored state over `DEFAULT_SETTINGS` and **resets `completedToday`/`focusMinutesToday` to 0 when the stored `date` != today**. When changing persisted state shapes, bump the key suffix (`-v3`, `-v1`) rather than migrating.
+`stateStore.load()` (merge/daily-reset logic in `src/domain/settings/persistedState.ts` via `mergeState()`) **resets `completedToday`/`focusMinutesToday` to 0 when the stored `date` != today**. Runtime guards repeat that check at midnight, on focus/visibility restoration, before a completed focus is recorded, and before persistence. `cycleFocusCount` is independent from the daily statistics and resets only after a long break is due. When changing persisted state shapes, bump the key suffix rather than migrating.
+
+History (`pomodoro-history-v1`) is pruned to the last 60 days on startup, on each recorded focus, and on backup import — the chart only shows 7 days. **Data backup** (Settings → 数据): `application/backupService.buildBackup` serializes `{app, version, exportedAt, state, history}`; export copies it to the clipboard and import reads the clipboard (falls back to a prompt), validates via `parseBackup`, re-merges state over defaults, prunes history, then reloads.
 
 ### Timer tick
-`setInterval(…, 1000)` in `usePomodoroEngine.ts` runs only while `running`; the closure reads fresh values through refs rather than re-subscribing each tick. On a focus phase ending: play chime (if `settings.sound`), `addCompletedFocus` bumps today's counters, `recordFocus` writes history, `recordPomodoro` increments the active task, `completeFocusCycle` advances the long-break cycle, then `nextPhaseAfterCompletedBreak` picks `long` vs `short` using `cycleFocusCount + 1 >= settings.longEvery`. `phaseMinutes()` (domain/timer) converts phase → duration in minutes. On desktop the Rust engine owns the wall-clock deadline and emits a completion event; in the browser a local end-timestamp drives completion.
+On desktop, `src-tauri/src/timer/engine.rs` owns the completion deadline. `native_timer_start` creates a generation ticket and a Rust worker; pause/cancel increment the generation so stale workers cannot complete. The worker polls wall-clock time at most once per second, sends its native completion notification payload, and emits `native-timer-completed` with `notificationSent`. The React interval only paints remaining seconds. In a plain browser, that same interval becomes the completion adapter. Both paths converge in the engine's `completeCurrentPhase`, which delegates to `usePomodoroSession`'s `onPhaseComplete` (chime, daily/history/task updates, cycle advancement, notification fallback, auto-start decision). `skip()` cancels first and never records a completed focus.
 
 ### Theming
 CSS custom properties in `App.css`: a `:root` (light) block and a `[data-theme="dark"]` override. The phase accent color (`--accent`, red/green/blue by phase) is set as an inline style on the root `.app` div each render, overriding the CSS default. `index.css` is just the 7-line browser reset.
 
-### Native layer (`src-tauri/`) — two bounded contexts + assembly root
-- `src/lib.rs` — composition root only: registers plugins (`tauri-plugin-global-shortcut`, `tauri-plugin-notification`), manages `NativeTimer` state, injects the `CompletionLogHandle` completion audit log (app data dir JSONL, falls back to null), registers the three `native_timer_*` commands, wires tray setup and close-to-tray.
-- `src/timer/` — timer context: `engine.rs` (wall-clock engine, generation-based cancellation, completion worker, Rust unit tests), `commands.rs` (thin IPC adapters `native_timer_start` / `native_timer_pause` / `native_timer_cancel` that also record a `CompletionEntry` on completion), `completion_log.rs` (`CompletionLog` trait port + `FileCompletionLog` JSONL writer + `NullCompletionLog`).
-- `src/tray/` — tray context: tray menu build (`build_tray`) and window show/hide toggle (`toggle_window`).
+CSS is split by owner: `App.css` keeps only theme variables, global element rules, `.app`, tabs, toast and classes shared by several components (`.icon-btn`, `.stat-sub`, `.chart-head`, `.chart-title`); each component imports its own colocated stylesheet (`components/TasksView.css` serves the whole task family); `a11y.css` (`:focus-visible` ring, `prefers-reduced-motion`) is imported in `main.tsx` right after `App`, so it loads after every component stylesheet and wins equal-specificity ties. Class names are global — put a rule in the file of the only component that uses the class, otherwise in `App.css`.
 
-Window config and bundle targets live in `tauri.conf.json`. Permissions (window always-on-top, notification, global-shortcut register/unregister/is-registered) are granted in `capabilities/default.json`. The global start/pause hotkey (default `CommandOrControl+Shift+P`) is registered from the presentation layer via `shortcutAdapter` and re-registers when `settings.hotkey` changes.
+### Accessibility conventions
+Keep these when touching UI (all verified with real keyboard input, not just DOM inspection):
+- Anything clickable is a real `<button>`, or a focusable element with the right ARIA role: the task "done" box is `role="checkbox"` + `aria-checked`, a task title is `role="button"` (Enter / Space / F2 starts editing, Enter / Esc return focus to it), settings switches are `role="switch"` + `aria-checked`. Toggle-style buttons (phase pills, status filters, chart metric, top-bar noise/pin, current-task radio) carry `aria-pressed`; the search toggle carries `aria-expanded`.
+- The settings modal is a real dialog: `role="dialog"` + `aria-modal` + `aria-labelledby`, focus moves in on open, Tab / Shift+Tab wrap inside (`presentation/focusTrap.ts`, pure and unit-tested), and focus returns to the opener on close. The container takes focus only so its title is announced, so it has no outline.
+- The global Space shortcut (`resolveShortcut` in `hooks/useAppShortcuts.ts`) must yield to any focused control that Space activates: inputs, buttons, and `role="button" | "checkbox" | "switch"` elements. Add new Space-activated roles to `SPACE_ACTIVATED_ROLES`.
+- Every aria-label / title goes through `tr()` — no hard-coded strings in markup.
+- `a11y.css` restores the `:focus-visible` ring (components set `outline: none` for mouse focus). It loads last, so a component whose rounded shape the ring would flatten (pill, round checkbox) needs its own `:focus-visible { border-radius }` rule.
+
+### Native layer (`src-tauri/`, two bounded contexts + assembly root)
+`lib.rs` is the composition root: it registers `tauri-plugin-global-shortcut` and `tauri-plugin-notification`, manages `NativeTimer`, injects the `CompletionLogHandle` (file-backed audit log from the app data dir, falling back to a no-op), registers the three `native_timer_*` commands plus `tray::set_tray_tooltip`, wires the tray setup, and hides the main window on close. Business logic lives in `src/timer/` (`engine.rs` — wall-clock deadlines, remaining-time snapshots, generation-based cancellation, deterministic tests; `commands.rs` — thin IPC adapters that also append one `CompletionEntry` to `completion-log.jsonl` per completed session; `completion_log.rs` — the `CompletionLog` port plus `FileCompletionLog`/`NullCompletionLog`) and `src/tray/` (tray menu, window show/hide, tooltip updates). Window config and bundle targets live in `tauri.conf.json`. Permissions (window always-on-top, global-shortcut register/unregister/is-registered, notification) are granted in `capabilities/default.json`. The global start/pause hotkey (default `CommandOrControl+Shift+P`) is registered from the presentation layer (`hooks/useHotkey.ts`) via `shortcutAdapter`; settings edit a draft and apply it only when the modal is confirmed.
 
 ### NSIS installer localization (`src-tauri/nsis/SimpChinese.nsh`)
 The Windows NSIS (`.exe`) installer is localized to Simplified Chinese. NSIS installer text comes from **two layers**, both configured in `tauri.conf.json` under `bundle.windows.nsis`:
