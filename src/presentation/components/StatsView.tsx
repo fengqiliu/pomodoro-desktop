@@ -11,6 +11,7 @@ import type { Task } from "../../domain/tasks";
 import type { ChartMetric } from "../uiTypes";
 import { MonthSummaryCard, TrendChart } from "./TrendPanel";
 import { CategoryBreakdownCard } from "./CategoryBreakdown";
+import { EstimateAccuracyCard } from "./EstimateAccuracy";
 import "./StatsView.css";
 
 interface Props {
@@ -166,6 +167,7 @@ export const StatsView = memo(function StatsView({
             <TrendChart tr={tr} history={history} metric={chartMetric} accent={accent} />
             <MonthSummaryCard tr={tr} history={history} />
             <CategoryBreakdownCard tr={tr} tasks={tasks} />
+            <EstimateAccuracyCard tr={tr} tasks={tasks} />
           </div>
         )}
       </div>

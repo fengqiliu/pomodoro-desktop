@@ -174,6 +174,27 @@ const DICT: Dict = {
   "stats.category.title": ["任务分类分布", "Focus by category"],
   "stats.category.empty": ["暂无分类专注数据", "No categorized pomodoro data yet"],
   "stats.category.count": ["{n} 个任务", "{n} task(s)"],
+  "stats.estimate.title": ["预估准确度", "Estimate accuracy"],
+  "stats.estimate.summary": [
+    "{n} 个已计时完成的任务：预估 {estimated} 🍅，实际 {actual} 🍅",
+    "{n} timed finished task(s): {estimated} 🍅 planned, {actual} 🍅 spent",
+  ],
+  "stats.estimate.over": ["超出 {n}", "{n} over"],
+  "stats.estimate.exact": ["吻合 {n}", "{n} on target"],
+  "stats.estimate.under": ["提前 {n}", "{n} under"],
+  "stats.estimate.hint.underestimate": [
+    "实际比预估多：下次估算可以多留一点余量",
+    "Tasks ran longer than planned — leave more headroom next time",
+  ],
+  "stats.estimate.hint.overestimate": [
+    "实际比预估少：你可以把任务估得更紧凑",
+    "Tasks finished sooner than planned — you can estimate tighter",
+  ],
+  "stats.estimate.hint.accurate": ["估算很准，继续保持", "Your estimates are on the mark"],
+  "stats.estimate.empty": [
+    "给任务填预估番茄数、用番茄计时完成后，这里会显示你的估算准确度",
+    "Add a pomodoro estimate to a task and finish it with the timer to see your accuracy",
+  ],
 
   // weekdays
   "day.0": ["周日", "Sun"],
