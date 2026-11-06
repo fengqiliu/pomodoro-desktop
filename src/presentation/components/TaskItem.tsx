@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState, type KeyboardEvent } from "react";
 import {
+  describeCompletion,
   formatEstimateInput,
   formatTaskProgress,
   parseEstimate,
+  type CompletionLabel,
   type Task,
 } from "../../domain/tasks";
 import { TASK_CATEGORY_KEY } from "../i18n";
@@ -24,6 +26,18 @@ interface Props {
   onCancelEdit: () => void;
   /** omitted → reorder buttons are not rendered */
   onMove?: (direction: -1 | 1) => void;
+}
+
+function completionText(
+  tr: (key: string, params?: Record<string, string | number>) => string,
+  label: CompletionLabel
+): string {
+  if (label.kind === "date") {
+    return label.year === undefined
+      ? tr("task.doneAt.date", { month: label.month, day: label.day })
+      : tr("task.doneAt.dateYear", { year: label.year, month: label.month, day: label.day });
+  }
+  return tr(`task.doneAt.${label.kind}`, { time: label.time });
 }
 
 export function TaskItem({
@@ -56,6 +70,7 @@ export function TaskItem({
   const titleRef = useRef<HTMLSpanElement>(null);
   const refocusTitleRef = useRef(false);
   const progress = formatTaskProgress(t);
+  const completion = t.done ? describeCompletion(t.completedAt) : null;
 
   useEffect(() => {
     if (isEditing || !refocusTitleRef.current) return;
@@ -97,6 +112,25 @@ export function TaskItem({
     if (e.key === "Enter") finishEditing(true);
     else if (e.key === "Escape") cancelEditing(true);
   };
+
+  const titleSpan = (
+    <span
+      ref={titleRef}
+      className="task-title"
+      title={`${t.title} (${tr("task.editTitle")})`}
+      onDoubleClick={() => !t.done && startEditing()}
+      // Done tasks are not editable, so only open tasks join the tab order.
+      role={t.done ? undefined : "button"}
+      tabIndex={t.done ? undefined : 0}
+      onKeyDown={(e) => {
+        if (t.done || !(e.key === "Enter" || e.key === " " || e.key === "F2")) return;
+        e.preventDefault();
+        startEditing();
+      }}
+    >
+      {t.title}
+    </span>
+  );
 
   return (
     <div className={t.done ? "task done" : "task"}>
@@ -182,23 +216,20 @@ export function TaskItem({
             onKeyDown={onEditKeyDown}
           />
         </div>
-      ) : (
-        <span
-          ref={titleRef}
-          className="task-title"
-          title={`${t.title} (${tr("task.editTitle")})`}
-          onDoubleClick={() => !t.done && startEditing()}
-          // Done tasks are not editable, so only open tasks join the tab order.
-          role={t.done ? undefined : "button"}
-          tabIndex={t.done ? undefined : 0}
-          onKeyDown={(e) => {
-            if (t.done || !(e.key === "Enter" || e.key === " " || e.key === "F2")) return;
-            e.preventDefault();
-            startEditing();
-          }}
-        >
-          {t.title}
+      ) : completion ? (
+        // Done rows put the completion time on a second line so a long
+        // title is not squeezed to a single character beside it.
+        <span className="task-title-stack">
+          {titleSpan}
+          <span
+            className="task-done-at"
+            title={tr("task.doneAt", { when: completionText(tr, completion) })}
+          >
+            {completionText(tr, completion)}
+          </span>
         </span>
+      ) : (
+        titleSpan
       )}
 
       {!isEditing && progress && (

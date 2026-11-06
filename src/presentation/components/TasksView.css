@@ -432,6 +432,20 @@
   flex-shrink: 0;
 }
 
+.task-title-stack {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.task-done-at {
+  font-size: 11px;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
+}
+
 .task-actions {
   display: flex;
   align-items: center;
