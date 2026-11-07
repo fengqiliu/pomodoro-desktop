@@ -145,6 +145,17 @@ input {
   white-space: nowrap;
 }
 
+.toast-action {
+  margin-left: 12px;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
 @keyframes toast-in {
   from {
     opacity: 0;

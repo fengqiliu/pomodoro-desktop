@@ -1,26 +1,54 @@
 import { useCallback, useState, type Dispatch, type SetStateAction } from "react";
 import {
   addTask as prependTask,
-  clearCompletedTasks,
   renameTask as updateTaskTitle,
   reorderTask,
-  removeTask,
+  restoreRemovedTasks,
+  splitTasks,
   toggleTaskDone,
   updateTaskCategory,
   updateTaskEstimate,
+  type RemovedTask,
   type Task,
   type TaskCategory,
 } from "../../domain/tasks";
+import type { ToastAction } from "./useToast";
 
 interface Options {
   tasks: Task[];
   setTasks: Dispatch<SetStateAction<Task[]>>;
+  /** shows the "deleted · Undo" toast; omitted → deletions are silent */
+  showToast?: (key: string, action?: ToastAction, params?: Record<string, string | number>) => void;
 }
 
 // Task list operations (domain functions) + the currently focused task.
 // `crypto.randomUUID` is injected as the id generator so the domain stays pure.
-export function useTaskList({ tasks, setTasks }: Options) {
+export function useTaskList({ tasks, setTasks, showToast }: Options) {
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null);
+
+  // Deletions are immediate; the toast offers to put the tasks back where they
+  // were (and re-select the focused task if it was among them).
+  const offerUndo = useCallback(
+    (
+      key: string,
+      removed: RemovedTask[],
+      removedActiveId: string | null,
+      params?: Record<string, string | number>
+    ) => {
+      showToast?.(
+        key,
+        {
+          labelKey: "toast.undo",
+          onAction: () => {
+            setTasks((ts) => restoreRemovedTasks(ts, removed));
+            if (removedActiveId) setActiveTaskId((cur) => cur ?? removedActiveId);
+          },
+        },
+        params
+      );
+    },
+    [setTasks, showToast]
+  );
 
   const addTask = useCallback(
     (title: string, estimatedPomodoros?: number, category?: TaskCategory) => {
@@ -38,15 +66,24 @@ export function useTaskList({ tasks, setTasks }: Options) {
 
   const deleteTask = useCallback(
     (id: string) => {
-      setTasks((ts) => removeTask(ts, id));
-      setActiveTaskId((cur) => (cur === id ? null : cur));
+      const { removed } = splitTasks(tasks, (t) => t.id === id);
+      if (removed.length === 0) return;
+      const removedActiveId = activeTaskId === id ? id : null;
+      setTasks((ts) => splitTasks(ts, (t) => t.id === id).kept);
+      if (removedActiveId) setActiveTaskId(null);
+      offerUndo("toast.taskDeleted", removed, removedActiveId);
     },
-    [setTasks]
+    [tasks, activeTaskId, setTasks, offerUndo]
   );
 
   const clearDoneTasks = useCallback(() => {
-    setTasks((ts) => clearCompletedTasks(ts));
-  }, [setTasks]);
+    const { removed } = splitTasks(tasks, (t) => t.done);
+    if (removed.length === 0) return;
+    const removedActiveId = removed.some((r) => r.task.id === activeTaskId) ? activeTaskId : null;
+    setTasks((ts) => splitTasks(ts, (t) => t.done).kept);
+    if (removedActiveId) setActiveTaskId(null);
+    offerUndo("toast.doneCleared", removed, removedActiveId, { n: removed.length });
+  }, [tasks, activeTaskId, setTasks, offerUndo]);
 
   const moveTask = useCallback(
     (fromIndex: number, toIndex: number) => {

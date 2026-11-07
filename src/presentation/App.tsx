@@ -60,7 +60,7 @@ export default function App() {
   } = usePersistedState();
 
   const { lang, setLang, tr } = useLanguage();
-  const { toast, showToast } = useToast();
+  const { toast, showToast, dismissToast } = useToast();
   const { theme, setTheme } = useTheme();
   const { pinned, setPinned } = usePinned();
 
@@ -76,7 +76,7 @@ export default function App() {
     updateCategory,
     updateEstimate,
     renameTask,
-  } = useTaskList({ tasks, setTasks });
+  } = useTaskList({ tasks, setTasks, showToast });
 
   // ---- countdown engine + end-of-phase business rules ----
   const { phase, secondsLeft, running, toggle, reset, switchTo, skip } = usePomodoroSession({
@@ -280,7 +280,19 @@ export default function App() {
 
       {toast && (
         <div className="toast" role="status">
-          {tr(toast)}
+          {tr(toast.key, toast.params)}
+          {toast.action && (
+            <button
+              type="button"
+              className="toast-action"
+              onClick={() => {
+                toast.action?.onAction();
+                dismissToast();
+              }}
+            >
+              {tr(toast.action.labelKey)}
+            </button>
+          )}
         </div>
       )}
     </div>
