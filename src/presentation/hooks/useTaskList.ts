@@ -39,6 +39,7 @@ export function useTaskList({ tasks, setTasks, showToast }: Options) {
         key,
         {
           labelKey: "toast.undo",
+          titleKey: "toast.undoHint",
           onAction: () => {
             setTasks((ts) => restoreRemovedTasks(ts, removed));
             if (removedActiveId) setActiveTaskId((cur) => cur ?? removedActiveId);

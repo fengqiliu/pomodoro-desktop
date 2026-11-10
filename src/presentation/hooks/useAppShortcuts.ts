@@ -9,6 +9,8 @@ interface Options {
   skip: () => Promise<void>;
   /** I / E — log an internal / external interruption (the callee decides whether it applies now) */
   interrupt: (kind: InterruptionKind) => void;
+  /** Ctrl/Cmd+Z — run the pending toast action (undo the last delete), if any */
+  undo: () => void;
 }
 
 /**
@@ -16,7 +18,8 @@ interface Options {
  * Returns which timer action a keydown should trigger, or null to let the
  * browser handle it natively.
  *
- * - Modifier combos are never shortcuts (Cmd+R, Ctrl+S, …).
+ * - Modifier combos are never shortcuts (Cmd+R, Ctrl+S, …), except Ctrl/Cmd+Z
+ *   (undo the last task deletion) outside text fields, which keep native undo.
  * - Typing in a field is never a shortcut.
  * - Space is the native activation key for buttons/links/checkboxes — a focused control
  *   must keep it, otherwise keyboard users toggle the timer instead of the
@@ -32,18 +35,22 @@ export function resolveShortcut(
     metaKey: boolean;
     ctrlKey: boolean;
     altKey: boolean;
+    shiftKey?: boolean;
   },
   target: {
     tagName: string;
     isContentEditable: boolean;
     getAttribute(n: string): string | null;
   } | null
-): "toggle" | "reset" | "skip" | "interrupt-internal" | "interrupt-external" | null {
+): "toggle" | "reset" | "skip" | "interrupt-internal" | "interrupt-external" | "undo" | null {
   if (target) {
     const tag = target.tagName;
     if (tag === "INPUT" || tag === "TEXTAREA" || tag === "SELECT" || target.isContentEditable) {
       return null;
     }
+  }
+  if ((e.metaKey || e.ctrlKey) && !e.altKey && !e.shiftKey && (e.key === "z" || e.key === "Z")) {
+    return "undo";
   }
   if (e.metaKey || e.ctrlKey || e.altKey) return null;
 
@@ -62,21 +69,22 @@ export function resolveShortcut(
   return null;
 }
 
-// ---- in-app keyboard shortcuts: Space=开始/暂停, R=重置, S=跳过 ----
-export function useAppShortcuts({ showSettings, toggle, reset, skip, interrupt }: Options) {
+// ---- in-app keyboard shortcuts: Space=开始/暂停, R=重置, S=跳过, Ctrl/Cmd+Z=撤销删除 ----
+export function useAppShortcuts({ showSettings, toggle, reset, skip, interrupt, undo }: Options) {
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (showSettings) return;
       const action = resolveShortcut(e, e.target as HTMLElement | null);
       // Space only needs suppressing when we act on it, otherwise the page scrolls.
-      if (action === "toggle") e.preventDefault();
+      if (action === "toggle" || action === "undo") e.preventDefault();
       if (action === "toggle") void toggle();
       else if (action === "reset") void reset();
       else if (action === "skip") void skip();
       else if (action === "interrupt-internal") interrupt("internal");
       else if (action === "interrupt-external") interrupt("external");
+      else if (action === "undo") undo();
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
-  }, [showSettings, toggle, reset, skip, interrupt]);
+  }, [showSettings, toggle, reset, skip, interrupt, undo]);
 }

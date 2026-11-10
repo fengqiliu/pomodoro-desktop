@@ -3,6 +3,8 @@ import { useCallback, useRef, useState } from "react";
 export interface ToastAction {
   /** i18n key of the button label */
   labelKey: string;
+  /** optional i18n key for the button tooltip (e.g. its keyboard shortcut) */
+  titleKey?: string;
   onAction: () => void;
 }
 
@@ -21,6 +23,9 @@ const ACTION_MS = 5000;
 export function useToast() {
   const [toast, setToast] = useState<Toast | null>(null);
   const toastTimer = useRef<number | null>(null);
+  // Mirrors `toast` so runAction stays stable for keyboard listeners.
+  const toastRef = useRef<Toast | null>(null);
+  toastRef.current = toast;
 
   const dismissToast = useCallback(() => {
     if (toastTimer.current) window.clearTimeout(toastTimer.current);
@@ -37,5 +42,14 @@ export function useToast() {
     []
   );
 
-  return { toast, showToast, dismissToast };
+  /** Runs the visible toast's action (button click or Ctrl/Cmd+Z), then hides it. */
+  const runToastAction = useCallback(() => {
+    const action = toastRef.current?.action;
+    if (!action) return;
+    toastRef.current = null;
+    action.onAction();
+    dismissToast();
+  }, [dismissToast]);
+
+  return { toast, showToast, dismissToast, runToastAction };
 }

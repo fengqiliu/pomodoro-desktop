@@ -60,7 +60,7 @@ export default function App() {
   } = usePersistedState();
 
   const { lang, setLang, tr } = useLanguage();
-  const { toast, showToast, dismissToast } = useToast();
+  const { toast, showToast, runToastAction } = useToast();
   const { theme, setTheme } = useTheme();
   const { pinned, setPinned } = usePinned();
 
@@ -122,7 +122,14 @@ export default function App() {
     secondsLeft,
     phaseSeconds,
   });
-  useAppShortcuts({ showSettings, toggle, reset, skip, interrupt: interruptions.log });
+  useAppShortcuts({
+    showSettings,
+    toggle,
+    reset,
+    skip,
+    interrupt: interruptions.log,
+    undo: runToastAction,
+  });
   useDocumentTitle({ running, secondsLeft, phase, tr });
   useTrayTooltip({ running, secondsLeft, phase, tr });
   const { exportData, importData } = useBackup({
@@ -285,10 +292,8 @@ export default function App() {
             <button
               type="button"
               className="toast-action"
-              onClick={() => {
-                toast.action?.onAction();
-                dismissToast();
-              }}
+              onClick={runToastAction}
+              title={toast.action.titleKey ? tr(toast.action.titleKey) : undefined}
             >
               {tr(toast.action.labelKey)}
             </button>

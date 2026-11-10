@@ -9,9 +9,18 @@ function key(
     metaKey: boolean;
     ctrlKey: boolean;
     altKey: boolean;
+    shiftKey: boolean;
   }> = {}
 ) {
-  return { key: "", code: "", metaKey: false, ctrlKey: false, altKey: false, ...over };
+  return {
+    key: "",
+    code: "",
+    metaKey: false,
+    ctrlKey: false,
+    altKey: false,
+    shiftKey: false,
+    ...over,
+  };
 }
 function el(tagName: string, over: { isContentEditable?: boolean; role?: string } = {}) {
   return {
@@ -69,5 +78,17 @@ describe("resolveShortcut", () => {
     expect(resolveShortcut(key({ code: "Space" }), el("SPAN", { role: "switch" }))).toBeNull();
     // R/S are unaffected — they never collide with native activation.
     expect(resolveShortcut(key({ key: "r" }), el("BUTTON"))).toBe("reset");
+  });
+
+  it("maps Ctrl+Z / Cmd+Z to undo, outside text fields only", () => {
+    expect(resolveShortcut(key({ key: "z", ctrlKey: true }), el("DIV"))).toBe("undo");
+    expect(resolveShortcut(key({ key: "z", metaKey: true }), el("BUTTON"))).toBe("undo");
+    expect(resolveShortcut(key({ key: "Z", ctrlKey: true }), null)).toBe("undo");
+    // Fields keep their native text undo.
+    expect(resolveShortcut(key({ key: "z", ctrlKey: true }), el("INPUT"))).toBeNull();
+    // Shift+Z is redo, Alt combos are not ours; a bare Z does nothing.
+    expect(resolveShortcut(key({ key: "Z", ctrlKey: true, shiftKey: true }), el("DIV"))).toBeNull();
+    expect(resolveShortcut(key({ key: "z", ctrlKey: true, altKey: true }), el("DIV"))).toBeNull();
+    expect(resolveShortcut(key({ key: "z" }), el("DIV"))).toBeNull();
   });
 });

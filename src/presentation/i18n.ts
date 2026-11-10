@@ -262,6 +262,7 @@ const DICT: Dict = {
   "toast.taskDeleted": ["已删除任务", "Task deleted"],
   "toast.doneCleared": ["已清除 {n} 个已完成任务", "Cleared {n} completed task(s)"],
   "toast.undo": ["撤销", "Undo"],
+  "toast.undoHint": ["撤销（Ctrl/⌘+Z）", "Undo (Ctrl/⌘+Z)"],
   "toast.copyFailed": ["复制失败，请重试", "Copy failed — please retry"],
   "toast.importFailed": ["导入失败：备份数据无效", "Import failed: invalid backup data"],
   "toast.goalReached": [
