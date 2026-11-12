@@ -25,8 +25,12 @@ export interface PomodoroEngine {
 
 interface Options {
   getPhaseSeconds: (phase: Phase) => number;
-  /** native worker sends this when the countdown expires (desktop only) */
-  getCompletionNotification: () => NativeTimerNotification | undefined;
+  /**
+   * Native worker sends this when the countdown expires (desktop only). Gets the
+   * phase being started: on auto-start it is not rendered yet, so callers
+   * cannot read it from their own state.
+   */
+  getCompletionNotification: (phase: Phase) => NativeTimerNotification | undefined;
   /** business end-of-phase: chime, stats, tasks, notifications. Returns what to run next. */
   onPhaseComplete: (
     finished: Phase,
@@ -75,7 +79,7 @@ export function usePomodoroEngine(options: Options): PomodoroEngine {
     if (isDesktop() && nativeTimerListenerReadyRef.current) {
       const snapshot = await nativeTimerAdapter.start(
         seconds,
-        optionsRef.current.getCompletionNotification()
+        optionsRef.current.getCompletionNotification(phaseRef.current)
       );
       if (action !== countdownActionRef.current) {
         if (snapshot) void nativeTimerAdapter.cancel(snapshot.generation);

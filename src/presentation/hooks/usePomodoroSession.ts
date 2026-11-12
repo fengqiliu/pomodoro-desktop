@@ -65,28 +65,26 @@ export function usePomodoroSession({
   const showToastRef = useRef(showToast);
   showToastRef.current = showToast;
 
-  // The engine owns the authoritative phase; keep a ref for code that runs
-
-  // outside render (notification builder reads it before a countdown starts).
-  const enginePhaseRef = useRef<Phase>("focus");
-
   const getPhaseSeconds = useCallback((p: Phase) => phaseMinutes(p, settingsRef.current) * 60, []);
 
-  const buildCompletionNotification = useCallback((): NativeTimerNotification | undefined => {
-    const descriptor = buildPhaseNotificationDescriptor(
-      enginePhaseRef.current,
-      settingsRef.current,
-      cycleFocusCountRef.current
-    );
-    if (!descriptor) return undefined;
-    const translateNow = trRef.current;
-    return {
-      title: translateNow(descriptor.titleKey),
-      body: translateNow(descriptor.bodyKey, {
-        next: translateNow(PHASE_KEY[descriptor.nextPhase]),
-      }),
-    };
-  }, []);
+  const buildCompletionNotification = useCallback(
+    (startingPhase: Phase): NativeTimerNotification | undefined => {
+      const descriptor = buildPhaseNotificationDescriptor(
+        startingPhase,
+        settingsRef.current,
+        cycleFocusCountRef.current
+      );
+      if (!descriptor) return undefined;
+      const translateNow = trRef.current;
+      return {
+        title: translateNow(descriptor.titleKey),
+        body: translateNow(descriptor.bodyKey, {
+          next: translateNow(PHASE_KEY[descriptor.nextPhase]),
+        }),
+      };
+    },
+    []
+  );
 
   // ---- end-of-phase coordination via application use case ----
   const onPhaseComplete = useCallback(
@@ -140,7 +138,6 @@ export function usePomodoroSession({
     onPhaseComplete,
   });
   const { phase, secondsLeft, running, toggle, reset, switchTo, skip, syncIfIdle } = engine;
-  enginePhaseRef.current = phase;
 
   // Keep the paused countdown in sync with duration setting changes.
   useEffect(() => {
