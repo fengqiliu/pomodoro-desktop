@@ -73,6 +73,8 @@ export interface CompletePhaseCommand {
   tasks: Task[];
   activeTaskId: string | null;
   history: History;
+  /** minutes the finished focus actually ran; defaults to `settings.focus` */
+  focusMinutes?: number;
   now?: Date;
 }
 
@@ -102,6 +104,7 @@ export function completePhase({
   tasks,
   activeTaskId,
   history,
+  focusMinutes,
   now,
 }: CompletePhaseCommand): CompletePhaseResult {
   const currentDate = now ?? new Date();
@@ -115,7 +118,8 @@ export function completePhase({
   let goalReachedJustNow = false;
 
   if (finished === "focus") {
-    const focusMins = settings.focus;
+    // The setting may have been edited while this focus ran; count what ran.
+    const focusMins = focusMinutes ?? settings.focus;
     const cycle = completeFocusCycle(cycleFocusCount, settings.longEvery);
     nextCycleFocusCount = cycle.cycleFocusCount;
     nextPhase = cycle.nextPhase;

@@ -5,7 +5,7 @@ import {
   mergeState,
   type PersistedState,
 } from "./persistedState";
-import { DEFAULT_SETTINGS } from "./settings";
+import { DEFAULT_SETTINGS, type Settings } from "./settings";
 
 describe("persistedState domain", () => {
   it("defaultState returns valid defaults with today date", () => {
@@ -26,6 +26,29 @@ describe("persistedState domain", () => {
     // @ts-expect-error test non-object
     const s3 = mergeState("invalid");
     expect(s3.settings).toEqual(DEFAULT_SETTINGS);
+  });
+
+  it("mergeState drops settings and counters of the wrong type (hand-edited backup)", () => {
+    const s = mergeState({
+      settings: {
+        ...DEFAULT_SETTINGS,
+        focus: "50" as unknown as number,
+        short: Number.NaN,
+        sound: "yes" as unknown as boolean,
+        hotkey: 42 as unknown as string,
+        long: 20,
+        noiseType: "jazz" as unknown as Settings["noiseType"],
+      },
+      cycleFocusCount: "3" as unknown as number,
+    });
+    expect(s.settings.focus).toBe(DEFAULT_SETTINGS.focus);
+    expect(s.settings.short).toBe(DEFAULT_SETTINGS.short);
+    expect(s.settings.sound).toBe(DEFAULT_SETTINGS.sound);
+    expect(s.settings.hotkey).toBe(DEFAULT_SETTINGS.hotkey);
+    expect(s.settings.noiseType).toBe(DEFAULT_SETTINGS.noiseType);
+    // Valid values survive.
+    expect(s.settings.long).toBe(20);
+    expect(s.cycleFocusCount).toBe(0);
   });
 
   it("composePersistedState correctly aggregates runtime state slices", () => {

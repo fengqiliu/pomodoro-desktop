@@ -88,7 +88,7 @@ export function usePomodoroSession({
 
   // ---- end-of-phase coordination via application use case ----
   const onPhaseComplete = useCallback(
-    async (finished: Phase, nativeNotificationSent: boolean) => {
+    async (finished: Phase, nativeNotificationSent: boolean, phaseSeconds: number) => {
       const result = completePhase({
         finished,
         settings: settingsRef.current,
@@ -97,6 +97,7 @@ export function usePomodoroSession({
         tasks: tasksRef.current,
         activeTaskId: activeTaskIdRef.current,
         history: historyRef.current,
+        focusMinutes: Math.round(phaseSeconds / 60),
       });
 
       if (result.playSound) playChime(finished);

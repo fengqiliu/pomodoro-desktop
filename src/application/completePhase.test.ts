@@ -114,6 +114,23 @@ describe("completePhase use case", () => {
     });
   });
 
+  it("records the length the focus actually ran, not a duration edited mid-run", () => {
+    // Started a 25-minute focus, then changed the setting to 50 while it ran.
+    const result = completePhase({
+      finished: "focus",
+      settings: { ...baseSettings, focus: 50 },
+      focusMinutes: 25,
+      dailyProgress: initialProgress,
+      cycleFocusCount: 1,
+      tasks: initialTasks,
+      activeTaskId: null,
+      history: initialHistory,
+      now: fixedDate,
+    });
+    expect(result.nextDailyProgress.focusMinutesToday).toBe(75);
+    expect(result.nextHistory["2026-9-28"].minutes).toBe(25);
+  });
+
   it("transitions to long break and resets cycle count when cycle hits longEvery", () => {
     const result = completePhase({
       finished: "focus",

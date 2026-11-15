@@ -34,7 +34,9 @@ interface Options {
   /** business end-of-phase: chime, stats, tasks, notifications. Returns what to run next. */
   onPhaseComplete: (
     finished: Phase,
-    nativeNotificationSent: boolean
+    nativeNotificationSent: boolean,
+    /** full length of the finished phase, fixed when the phase was set up */
+    phaseSeconds: number
   ) => PhaseCompletion | Promise<PhaseCompletion>;
   initialPhase?: Phase;
 }
@@ -58,6 +60,9 @@ export function usePomodoroEngine(options: Options): PomodoroEngine {
   secondsLeftRef.current = secondsLeft;
   const runningRef = useRef(running);
   runningRef.current = running;
+  // Full length of the current phase. Set whenever a phase is (re)initialised,
+  // not on settings edits mid-run, so a completion reports what actually ran.
+  const phaseSecondsRef = useRef(secondsLeft);
 
   // Wall-clock end timestamp for the running countdown. Recomputed when (re)starting;
   // the tick derives remaining time from this so setInterval jitter / background
@@ -109,10 +114,15 @@ export function usePomodoroEngine(options: Options): PomodoroEngine {
 
       try {
         const finished = phaseRef.current;
-        const result = await optionsRef.current.onPhaseComplete(finished, nativeNotificationSent);
+        const result = await optionsRef.current.onPhaseComplete(
+          finished,
+          nativeNotificationSent,
+          phaseSecondsRef.current
+        );
 
         const nextSeconds = Math.max(1, Math.round(result.nextSeconds));
         phaseRef.current = result.nextPhase;
+        phaseSecondsRef.current = nextSeconds;
         secondsLeftRef.current = nextSeconds;
         setPhase(result.nextPhase);
         setSecondsLeft(nextSeconds);
@@ -227,6 +237,7 @@ export function usePomodoroEngine(options: Options): PomodoroEngine {
   const reset = useCallback(async () => {
     await cancelCountdown();
     const nextSeconds = optionsRef.current.getPhaseSeconds(phaseRef.current);
+    phaseSecondsRef.current = nextSeconds;
     secondsLeftRef.current = nextSeconds;
     setSecondsLeft(nextSeconds);
   }, [cancelCountdown]);
@@ -237,6 +248,7 @@ export function usePomodoroEngine(options: Options): PomodoroEngine {
       phaseRef.current = p;
       setPhase(p);
       const nextSeconds = optionsRef.current.getPhaseSeconds(p);
+      phaseSecondsRef.current = nextSeconds;
       secondsLeftRef.current = nextSeconds;
       setSecondsLeft(nextSeconds);
     },
@@ -249,6 +261,7 @@ export function usePomodoroEngine(options: Options): PomodoroEngine {
     phaseRef.current = np;
     setPhase(np);
     const nextSeconds = optionsRef.current.getPhaseSeconds(np);
+    phaseSecondsRef.current = nextSeconds;
     secondsLeftRef.current = nextSeconds;
     setSecondsLeft(nextSeconds);
   }, [cancelCountdown]);
@@ -259,6 +272,7 @@ export function usePomodoroEngine(options: Options): PomodoroEngine {
   const syncIfIdle = useCallback(() => {
     if (runningRef.current) return;
     const configuredSeconds = optionsRef.current.getPhaseSeconds(phaseRef.current);
+    phaseSecondsRef.current = configuredSeconds;
     secondsLeftRef.current = configuredSeconds;
     setSecondsLeft(configuredSeconds);
   }, []);

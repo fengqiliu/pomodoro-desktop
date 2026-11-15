@@ -37,7 +37,15 @@ type Session = ReturnType<typeof usePomodoroSession>;
 const tr = (key: string, params?: Record<string, string | number>) =>
   params?.next ? `${key}>${params.next}` : key;
 
-function Harness({ settings, expose }: { settings: Settings; expose: (s: Session) => void }) {
+function Harness({
+  settings,
+  expose,
+  onProgress,
+}: {
+  settings: Settings;
+  expose: (s: Session) => void;
+  onProgress?: (p: DailyProgress) => void;
+}) {
   const [dailyProgress, setDailyProgress] = useState<DailyProgress>({
     date: "2026-1-1",
     completedToday: 0,
@@ -46,6 +54,7 @@ function Harness({ settings, expose }: { settings: Settings; expose: (s: Session
   const [cycleFocusCount, setCycleFocusCount] = useState(0);
   const [tasks, setTasks] = useState<Task[]>([]);
   const [history, setHistory] = useState<History>({});
+  onProgress?.(dailyProgress);
   expose(
     usePomodoroSession({
       settings,
@@ -120,5 +129,31 @@ describe("usePomodoroSession — native completion notification", () => {
       title: "notif.title.break",
       body: "notif.body>phase.focus",
     });
+  });
+
+  it("records the focus length that ran, even if the setting changed mid-run", async () => {
+    let progress: DailyProgress | undefined;
+    const render = (focus: number) =>
+      root.render(
+        createElement(Harness, {
+          settings: { ...DEFAULT_SETTINGS, sound: false, focus },
+          expose: (s) => (session = s),
+          onProgress: (p) => (progress = p),
+        })
+      );
+    render(25);
+    await settle();
+    await session.toggle();
+    render(50); // edited in Settings while the 25-minute focus is running
+    await settle();
+    native.complete?.({
+      generation: native.starts.length,
+      running: false,
+      remainingMs: 0,
+      notificationSent: true,
+    });
+    await settle();
+    expect(progress?.completedToday).toBe(1);
+    expect(progress?.focusMinutesToday).toBe(25);
   });
 });
