@@ -12,6 +12,8 @@ export interface PhaseCompletion {
 export interface PomodoroEngine {
   phase: Phase;
   secondsLeft: number;
+  /** full length of the current phase, fixed when it was set up (progress ring denominator) */
+  phaseSeconds: number;
   running: boolean;
   toggle: () => Promise<void>;
   reset: () => Promise<void>;
@@ -62,7 +64,12 @@ export function usePomodoroEngine(options: Options): PomodoroEngine {
   runningRef.current = running;
   // Full length of the current phase. Set whenever a phase is (re)initialised,
   // not on settings edits mid-run, so a completion reports what actually ran.
-  const phaseSecondsRef = useRef(secondsLeft);
+  const [phaseSeconds, setPhaseSeconds] = useState(secondsLeft);
+  const phaseSecondsRef = useRef(phaseSeconds);
+  const setPhaseLength = useCallback((seconds: number) => {
+    phaseSecondsRef.current = seconds;
+    setPhaseSeconds(seconds);
+  }, []);
 
   // Wall-clock end timestamp for the running countdown. Recomputed when (re)starting;
   // the tick derives remaining time from this so setInterval jitter / background
@@ -122,7 +129,7 @@ export function usePomodoroEngine(options: Options): PomodoroEngine {
 
         const nextSeconds = Math.max(1, Math.round(result.nextSeconds));
         phaseRef.current = result.nextPhase;
-        phaseSecondsRef.current = nextSeconds;
+        setPhaseLength(nextSeconds);
         secondsLeftRef.current = nextSeconds;
         setPhase(result.nextPhase);
         setSecondsLeft(nextSeconds);
@@ -136,7 +143,7 @@ export function usePomodoroEngine(options: Options): PomodoroEngine {
         completionInFlightRef.current = false;
       }
     },
-    [beginCountdown]
+    [beginCountdown, setPhaseLength]
   );
 
   useEffect(() => {
@@ -237,10 +244,10 @@ export function usePomodoroEngine(options: Options): PomodoroEngine {
   const reset = useCallback(async () => {
     await cancelCountdown();
     const nextSeconds = optionsRef.current.getPhaseSeconds(phaseRef.current);
-    phaseSecondsRef.current = nextSeconds;
+    setPhaseLength(nextSeconds);
     secondsLeftRef.current = nextSeconds;
     setSecondsLeft(nextSeconds);
-  }, [cancelCountdown]);
+  }, [cancelCountdown, setPhaseLength]);
 
   const switchTo = useCallback(
     async (p: Phase) => {
@@ -248,11 +255,11 @@ export function usePomodoroEngine(options: Options): PomodoroEngine {
       phaseRef.current = p;
       setPhase(p);
       const nextSeconds = optionsRef.current.getPhaseSeconds(p);
-      phaseSecondsRef.current = nextSeconds;
+      setPhaseLength(nextSeconds);
       secondsLeftRef.current = nextSeconds;
       setSecondsLeft(nextSeconds);
     },
-    [cancelCountdown]
+    [cancelCountdown, setPhaseLength]
   );
 
   const skip = useCallback(async () => {
@@ -261,10 +268,10 @@ export function usePomodoroEngine(options: Options): PomodoroEngine {
     phaseRef.current = np;
     setPhase(np);
     const nextSeconds = optionsRef.current.getPhaseSeconds(np);
-    phaseSecondsRef.current = nextSeconds;
+    setPhaseLength(nextSeconds);
     secondsLeftRef.current = nextSeconds;
     setSecondsLeft(nextSeconds);
-  }, [cancelCountdown]);
+  }, [cancelCountdown, setPhaseLength]);
 
   // When the current phase's duration changes while paused, keep secondsLeft in
   // sync so the ring and countdown reflect the new length. A running session is
@@ -272,14 +279,15 @@ export function usePomodoroEngine(options: Options): PomodoroEngine {
   const syncIfIdle = useCallback(() => {
     if (runningRef.current) return;
     const configuredSeconds = optionsRef.current.getPhaseSeconds(phaseRef.current);
-    phaseSecondsRef.current = configuredSeconds;
+    setPhaseLength(configuredSeconds);
     secondsLeftRef.current = configuredSeconds;
     setSecondsLeft(configuredSeconds);
-  }, []);
+  }, [setPhaseLength]);
 
   return {
     phase,
     secondsLeft,
+    phaseSeconds,
     running,
     toggle,
     reset,

@@ -156,4 +156,28 @@ describe("usePomodoroSession — native completion notification", () => {
     expect(progress?.completedToday).toBe(1);
     expect(progress?.focusMinutesToday).toBe(25);
   });
+
+  it("keeps the running phase's full length when the setting changes mid-run", async () => {
+    const render = (focus: number) =>
+      root.render(
+        createElement(Harness, {
+          settings: { ...DEFAULT_SETTINGS, sound: false, focus },
+          expose: (s) => (session = s),
+        })
+      );
+    render(25);
+    await settle();
+    await session.toggle();
+    render(50);
+    await settle();
+    // The ring's denominator: still the 25 minutes that are running.
+    expect(session.phaseSeconds).toBe(25 * 60);
+
+    // Once paused and edited again, the idle countdown follows the setting.
+    await session.toggle();
+    render(30);
+    await settle();
+    expect(session.phaseSeconds).toBe(30 * 60);
+    expect(session.secondsLeft).toBe(30 * 60);
+  });
 });

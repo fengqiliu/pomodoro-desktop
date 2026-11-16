@@ -138,7 +138,8 @@ export function usePomodoroSession({
     getCompletionNotification: buildCompletionNotification,
     onPhaseComplete,
   });
-  const { phase, secondsLeft, running, toggle, reset, switchTo, skip, syncIfIdle } = engine;
+  const { phase, secondsLeft, phaseSeconds, running, toggle, reset, switchTo, skip, syncIfIdle } =
+    engine;
 
   // Keep the paused countdown in sync with duration setting changes.
   useEffect(() => {
@@ -147,5 +148,5 @@ export function usePomodoroSession({
     // remaining countdown rather than resetting it to the configured duration.
   }, [settings.focus, settings.short, settings.long, phase, syncIfIdle]);
 
-  return { phase, secondsLeft, running, toggle, reset, switchTo, skip };
+  return { phase, secondsLeft, phaseSeconds, running, toggle, reset, switchTo, skip };
 }

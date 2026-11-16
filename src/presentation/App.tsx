@@ -1,6 +1,6 @@
 import { useMemo, useState, type KeyboardEvent } from "react";
 import "./App.css";
-import { phaseMinutes, type Phase } from "../domain/timer";
+import type { Phase } from "../domain/timer";
 import { last7Days } from "../domain/stats";
 import { TopBar } from "./components/TopBar";
 import { TimerView } from "./components/TimerView";
@@ -79,20 +79,21 @@ export default function App() {
   } = useTaskList({ tasks, setTasks, showToast });
 
   // ---- countdown engine + end-of-phase business rules ----
-  const { phase, secondsLeft, running, toggle, reset, switchTo, skip } = usePomodoroSession({
-    settings,
-    dailyProgress,
-    cycleFocusCount,
-    tasks,
-    activeTaskId,
-    history,
-    tr,
-    showToast,
-    setCycleFocusCount,
-    setDailyProgress,
-    setHistory,
-    setTasks,
-  });
+  const { phase, secondsLeft, phaseSeconds, running, toggle, reset, switchTo, skip } =
+    usePomodoroSession({
+      settings,
+      dailyProgress,
+      cycleFocusCount,
+      tasks,
+      activeTaskId,
+      history,
+      tr,
+      showToast,
+      setCycleFocusCount,
+      setDailyProgress,
+      setHistory,
+      setTasks,
+    });
 
   useNoise({ noise, running, phase });
 
@@ -113,7 +114,6 @@ export default function App() {
     resetTimer: reset,
   });
 
-  const phaseSeconds = phaseMinutes(phase, settings) * 60;
   const interruptions = useInterruptions({
     history,
     setHistory,
