@@ -74,9 +74,13 @@ export function clearCompletedTasks(tasks: Task[]): Task[] {
   return tasks.filter((t) => !t.done);
 }
 
-/** A completed focus session feeds one pomodoro to the given (active) task. */
+/**
+ * A completed focus session feeds one pomodoro to the given (active) task.
+ * A task already checked done is not credited, so its count stays the final
+ * one that estimate accuracy compares against.
+ */
 export function recordPomodoro(tasks: Task[], id: string | null): Task[] {
-  if (id === null) return tasks;
+  if (id === null || !tasks.some((t) => t.id === id && !t.done)) return tasks;
   return tasks.map((t) => (t.id === id ? { ...t, pomodoros: t.pomodoros + 1 } : t));
 }
 

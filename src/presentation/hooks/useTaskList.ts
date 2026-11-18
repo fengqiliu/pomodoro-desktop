@@ -115,7 +115,9 @@ export function useTaskList({ tasks, setTasks, showToast }: Options) {
     [setTasks]
   );
 
-  const activeTask = tasks.find((t) => t.id === activeTaskId) || null;
+  // A done task stays selected (unchecking it brings it back) but is not the
+  // current focus: the timer page stops showing it and focus no longer counts.
+  const activeTask = tasks.find((t) => t.id === activeTaskId && !t.done) || null;
 
   return {
     activeTaskId,

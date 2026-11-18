@@ -90,6 +90,11 @@ describe("recordPomodoro", () => {
     const tasks = fixture();
     expect(recordPomodoro(tasks, null)).toBe(tasks);
   });
+
+  it("does not credit a task that is already done", () => {
+    const tasks = fixture().map((t) => (t.id === "a" ? { ...t, done: true } : t));
+    expect(recordPomodoro(tasks, "a")).toBe(tasks);
+  });
 });
 
 describe("task estimates & reordering", () => {

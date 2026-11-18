@@ -95,7 +95,7 @@ export const TasksView = memo(function TasksView({
             key={t.id}
             tr={tr}
             task={t}
-            isActive={t.id === activeTaskId}
+            isActive={t.id === activeTaskId && !t.done}
             isEditing={editingId === t.id}
             canMoveUp={visibleIndex > 0}
             canMoveDown={visibleIndex < displayedTasks.length - 1}
