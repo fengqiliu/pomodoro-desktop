@@ -222,6 +222,32 @@ describe("completePhase use case", () => {
     expect(result.notification).toBeUndefined();
   });
 
+  it("reports the active task that just reached its estimate", () => {
+    const run = (
+      pomodoros: number,
+      extra: Partial<Task> = {},
+      finished: "focus" | "short" = "focus"
+    ) =>
+      completePhase({
+        finished,
+        settings: baseSettings,
+        dailyProgress: initialProgress,
+        cycleFocusCount: 0,
+        tasks: [{ id: "a", title: "A", done: false, pomodoros, estimatedPomodoros: 3, ...extra }],
+        activeTaskId: "a",
+        history: initialHistory,
+        now: fixedDate,
+      }).estimateReachedTask;
+
+    expect(run(2)).toEqual({ id: "a", title: "A", pomodoros: 3 });
+    // Only the session that lands exactly on the estimate; beyond it, no repeat nag.
+    expect(run(1)).toBeUndefined();
+    expect(run(3)).toBeUndefined();
+    expect(run(2, { estimatedPomodoros: undefined })).toBeUndefined();
+    expect(run(2, { done: true })).toBeUndefined();
+    expect(run(2, {}, "short")).toBeUndefined();
+  });
+
   it("flags goalReachedJustNow when completing a focus session hits the dailyGoal", () => {
     const goalSettings: Settings = {
       ...baseSettings,

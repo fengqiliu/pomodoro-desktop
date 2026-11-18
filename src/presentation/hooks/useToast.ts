@@ -5,6 +5,8 @@ export interface ToastAction {
   labelKey: string;
   /** optional i18n key for the button tooltip (e.g. its keyboard shortcut) */
   titleKey?: string;
+  /** true for "Undo" actions — the only ones Ctrl/Cmd+Z may trigger */
+  isUndo?: boolean;
   onAction: () => void;
 }
 
@@ -42,14 +44,20 @@ export function useToast() {
     []
   );
 
-  /** Runs the visible toast's action (button click or Ctrl/Cmd+Z), then hides it. */
-  const runToastAction = useCallback(() => {
-    const action = toastRef.current?.action;
-    if (!action) return;
-    toastRef.current = null;
-    action.onAction();
-    dismissToast();
-  }, [dismissToast]);
+  /**
+   * Runs the visible toast's action, then hides it. `onlyUndo` (Ctrl/Cmd+Z)
+   * skips anything that is not an undo, e.g. "Mark done".
+   */
+  const runToastAction = useCallback(
+    (onlyUndo = false) => {
+      const action = toastRef.current?.action;
+      if (!action || (onlyUndo && !action.isUndo)) return;
+      toastRef.current = null;
+      action.onAction();
+      dismissToast();
+    },
+    [dismissToast]
+  );
 
   return { toast, showToast, dismissToast, runToastAction };
 }

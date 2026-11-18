@@ -8,11 +8,17 @@ import { playChime } from "../../infrastructure/audio/chime";
 import { notificationAdapter } from "../../infrastructure/platform";
 import { historyStore } from "../../infrastructure/storage";
 import { phaseMinutes, type DailyProgress, type Phase } from "../../domain/timer";
-import type { Task } from "../../domain/tasks";
+import { toggleTaskDone, type Task } from "../../domain/tasks";
 import type { History } from "../../domain/stats";
 import type { Settings } from "../../domain/settings";
 import { PHASE_KEY, type Tr } from "../i18n";
 import { usePomodoroEngine } from "./usePomodoroEngine";
+import type { ToastAction } from "./useToast";
+
+// Long task titles would overflow the one-line toast.
+const TOAST_TITLE_MAX = 16;
+const clip = (title: string) =>
+  title.length > TOAST_TITLE_MAX ? `${title.slice(0, TOAST_TITLE_MAX)}…` : title;
 
 interface Options {
   settings: Settings;
@@ -22,7 +28,7 @@ interface Options {
   activeTaskId: string | null;
   history: History;
   tr: Tr;
-  showToast?: (message: string) => void;
+  showToast?: (key: string, action?: ToastAction, params?: Record<string, string | number>) => void;
   setCycleFocusCount: Dispatch<SetStateAction<number>>;
   setDailyProgress: Dispatch<SetStateAction<DailyProgress>>;
   setHistory: Dispatch<SetStateAction<History>>;
@@ -109,10 +115,24 @@ export function usePomodoroSession({
       historyStore.save(result.nextHistory);
       setTasks(result.nextTasks);
 
-      if (result.goalReachedJustNow && showToastRef.current) {
+      // One toast slot: the actionable "mark done" offer wins over the goal celebration.
+      const reached = result.estimateReachedTask;
+      if (reached && showToastRef.current) {
         showToastRef.current(
-          trRef.current("toast.goalReached", { goal: String(settingsRef.current.dailyGoal ?? 0) })
+          "toast.estimateReached",
+          {
+            labelKey: "toast.markDone",
+            onAction: () =>
+              setTasks((ts) =>
+                ts.some((t) => t.id === reached.id && !t.done) ? toggleTaskDone(ts, reached.id) : ts
+              ),
+          },
+          { title: clip(reached.title), n: reached.pomodoros }
         );
+      } else if (result.goalReachedJustNow && showToastRef.current) {
+        showToastRef.current("toast.goalReached", undefined, {
+          goal: String(settingsRef.current.dailyGoal ?? 0),
+        });
       }
 
       if (result.notification && !nativeNotificationSent) {

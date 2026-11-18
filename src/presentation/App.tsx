@@ -128,7 +128,7 @@ export default function App() {
     reset,
     skip,
     interrupt: interruptions.log,
-    undo: runToastAction,
+    undo: () => runToastAction(true),
   });
   useDocumentTitle({ running, secondsLeft, phase, tr });
   useTrayTooltip({ running, secondsLeft, phase, tr });
@@ -292,7 +292,7 @@ export default function App() {
             <button
               type="button"
               className="toast-action"
-              onClick={runToastAction}
+              onClick={() => runToastAction()}
               title={toast.action.titleKey ? tr(toast.action.titleKey) : undefined}
             >
               {tr(toast.action.labelKey)}

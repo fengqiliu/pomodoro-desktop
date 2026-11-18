@@ -89,6 +89,8 @@ export interface CompletePhaseResult {
   playSound: boolean;
   notification?: PhaseNotificationDescriptor;
   goalReachedJustNow: boolean;
+  /** the active task this focus brought exactly to its estimate (offer to mark it done) */
+  estimateReachedTask?: { id: string; title: string; pomodoros: number };
 }
 
 /**
@@ -116,6 +118,7 @@ export function completePhase({
   let nextHistory = history;
   let nextTasks = tasks;
   let goalReachedJustNow = false;
+  let estimateReachedTask: CompletePhaseResult["estimateReachedTask"];
 
   if (finished === "focus") {
     // The setting may have been edited while this focus ran; count what ran.
@@ -140,6 +143,10 @@ export function completePhase({
 
     // Increment active task pomodoros if any
     nextTasks = recordPomodoro(tasks, activeTaskId);
+    const active = nextTasks.find((t) => t.id === activeTaskId);
+    if (active && !active.done && active.pomodoros === active.estimatedPomodoros) {
+      estimateReachedTask = { id: active.id, title: active.title, pomodoros: active.pomodoros };
+    }
   } else {
     nextPhase = nextPhaseAfterCompletedBreak();
   }
@@ -163,5 +170,6 @@ export function completePhase({
     playSound: settings.sound,
     notification,
     goalReachedJustNow,
+    estimateReachedTask,
   };
 }
